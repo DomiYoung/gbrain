@@ -3628,7 +3628,25 @@ export async function checkCycleFreshness(
       const display = source.name && source.name !== source.id
         ? `'${source.id}' (${source.name})`
         : `'${source.id}'`;
-      const raw = source.config?.last_full_cycle_at;
+
+      // v0.40→v0.42 schema drift fix: some legacy sources have `config`
+      // stored as a jsonb ARRAY (e.g. `[{"federated":false}, {"last_full_cycle_at":...}]`)
+      // from pre-v0.40 ingestion. Treat the LAST array element that has
+      // `last_full_cycle_at` as the source of truth, so the check doesn't
+      // false-fail. A real migration (array→object) belongs in
+      // `gbrain apply-migrations` — doctor just reads defensively.
+      let cycleConfig: any = source.config;
+      if (Array.isArray(cycleConfig)) {
+        for (let i = cycleConfig.length - 1; i >= 0; i--) {
+          const elem = cycleConfig[i];
+          if (elem && typeof elem === 'object' && typeof elem.last_full_cycle_at === 'string') {
+            cycleConfig = elem;
+            break;
+          }
+        }
+      }
+
+      const raw = cycleConfig?.last_full_cycle_at;
       if (typeof raw !== 'string') {
         issues.push(`Source ${display} has never completed a full cycle`);
         hasFailures = true;
