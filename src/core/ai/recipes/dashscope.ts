@@ -2,8 +2,9 @@ import type { Recipe } from '../types.ts';
 
 /**
  * Alibaba DashScope (灵积). OpenAI-compatible /embeddings endpoint at
- * dashscope-intl.aliyuncs.com. Hosts text-embedding-v2 (older) and
- * text-embedding-v3 (current; Matryoshka-aware up to 1024 dims).
+ * dashscope-intl.aliyuncs.com. Hosts text-embedding-v2 (older),
+ * text-embedding-v3 (Matryoshka-aware up to 1024 dims), and
+ * text-embedding-v4 (current; supports 2048/1536/1024/768/512/256/128/64 dims).
  *
  * Reference: https://help.aliyun.com/zh/model-studio/getting-started/
  *
@@ -24,14 +25,17 @@ export const dashscope: Recipe = {
   },
   touchpoints: {
     embedding: {
-      models: ['text-embedding-v3', 'text-embedding-v2'],
+      models: ['text-embedding-v4', 'text-embedding-v3', 'text-embedding-v2'],
       default_dims: 1024,
-      dims_options: [64, 128, 256, 512, 768, 1024],
+      // text-embedding-v4 supports 2048/1536/1024/768/512/256/128/64
+      // text-embedding-v3 supports 1024/768/512/256/128/64
+      // text-embedding-v2 fixed 1536
+      dims_options: [64, 128, 256, 512, 768, 1024, 1536, 2048],
       // Alibaba doesn't publish a hard batch-token cap for the OpenAI-compat
       // path. Conservative declaration so the gateway pre-splits before
       // hitting whatever undocumented server-side limit exists.
       max_batch_tokens: 8192,
-      // text-embedding-v3 mixes English + CJK heavily; the tokenizer is
+      // text-embedding-v3/v4 mix English + CJK heavily; the tokenizer is
       // closer to Voyage density than OpenAI tiktoken for CJK-dominant
       // content. Conservative chars_per_token=2 leaves headroom.
       chars_per_token: 2,
