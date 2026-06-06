@@ -19,6 +19,7 @@
 
 import { existsSync, readFileSync, writeFileSync, mkdirSync, appendFileSync, utimesSync, unlinkSync } from 'fs';
 import { join } from 'path';
+import { homedir } from 'os';
 import { execSync } from 'child_process';
 import type { BrainEngine } from '../core/engine.ts';
 import { loadPreferences } from '../core/preferences.ts';
@@ -107,19 +108,43 @@ function logError(phase: string, e: unknown) {
  *   4. Throw with a clear install hint.
  */
 export function resolveGbrainCliPath(): string {
+  // 1. Prefer real $PATH resolution. `which gbrain` returns the wrapper
+  //    script (e.g. /Users/light/.local/bin/gbrain) which exec's the
+  //    bundled binary; spawning through it is correct for autopilot.
   try {
     const which = execSync('which gbrain', { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
     if (which) return which;
   } catch { /* not on $PATH — fall through */ }
 
+  // 2. process.execPath is the bun --compile virtual path
+  //    (`/$bunfs/root/gbrain`), NOT a real filesystem path. Detect and skip.
   const exec = process.execPath ?? '';
-  if (exec.endsWith('/gbrain') || exec.endsWith('\\gbrain.exe')) {
-    return exec;
-  }
+  const isBunfsPath = exec.startsWith('/$bunfs/') || exec.includes('\\$bunfs\\');
 
+  // 3. process.argv[1] is the real argv[0] or the script path
+  //    (for `bun src/cli.ts` it's the .ts file; for compiled binary it's
+  //    the binary path itself). Prefer this when execPath is bunfs.
   const arg1 = process.argv[1] ?? '';
   if (arg1.endsWith('/gbrain') || arg1.endsWith('\\gbrain.exe')) {
     return arg1;
+  }
+
+  // 4. Fall back to process.execPath ONLY if it's a real path (not bunfs).
+  if (!isBunfsPath && (exec.endsWith('/gbrain') || exec.endsWith('\\gbrain.exe'))) {
+    return exec;
+  }
+
+  // 5. Last resort: check common install locations
+  const home = process.env.HOME || homedir();
+  const candidates = [
+    `${home}/.bun/bin/gbrain`,
+    `${home}/gbrain/bin/gbrain`,
+    '/usr/local/bin/gbrain',
+  ];
+  for (const c of candidates) {
+    try {
+      if (existsSync(c)) return c;
+    } catch { /* ignore */ }
   }
 
   throw new Error('Could not resolve the gbrain CLI path. Install gbrain so it is on $PATH (e.g. /usr/local/bin/gbrain), or run autopilot from the compiled binary directly.');
