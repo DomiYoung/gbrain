@@ -273,6 +273,25 @@ describe('runPhaseCalibrationProfile — phase integration', () => {
     expect(insert!.params[6]).toBe(0.6); // grade_completion
   });
 
+  test('passes opts.model through to the production pattern generator seam', async () => {
+    const { engine, captured } = buildMockEngine({ scorecard: ENOUGH_RESOLVED_SCORECARD });
+    let seenModelHint: string | undefined;
+    const patternsGenerator: PatternStatementsGenerator = async input => {
+      seenModelHint = input.modelHint;
+      return ['You called tactics well — 7 of 12 held up.'];
+    };
+
+    await runPhaseCalibrationProfile(buildCtx(engine), {
+      model: 'custom:gpt-5.5',
+      patternsGenerator,
+      voiceGateJudge: passJudge,
+    });
+
+    const insert = captured.find(c => c.sql.includes('INSERT INTO calibration_profiles'));
+    expect(seenModelHint).toBe('custom:gpt-5.5');
+    expect(insert!.params[12]).toBe('custom:gpt-5.5');
+  });
+
   test('bias_tags_generator failure logs warning + phase continues', async () => {
     const { engine } = buildMockEngine({ scorecard: ENOUGH_RESOLVED_SCORECARD });
     const patternsGenerator: PatternStatementsGenerator = async () => ['fine pattern'];

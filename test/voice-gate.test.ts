@@ -16,14 +16,21 @@
  *  - templates produce stable output for fixed slots
  */
 
-import { describe, test, expect } from 'bun:test';
+import { describe, test, expect, afterEach } from 'bun:test';
 import {
   gateVoice,
   parseJudgeOutput,
+  defaultJudge,
   DEFAULT_RUBRICS,
   type VoiceGateJudge,
   type VoiceGateGenerator,
 } from '../src/core/calibration/voice-gate.ts';
+import {
+  configureGateway,
+  resetGateway,
+  __setChatTransportForTests,
+  type ChatOpts,
+} from '../src/core/ai/gateway.ts';
 import {
   VOICE_GATE_MODES,
   patternStatementTemplate,
@@ -36,6 +43,11 @@ import {
 
 const passJudge: VoiceGateJudge = async () => ({ verdict: 'conversational', reason: 'reads natural' });
 const rejectJudge: VoiceGateJudge = async () => ({ verdict: 'academic', reason: 'too clinical' });
+
+afterEach(() => {
+  __setChatTransportForTests(null);
+  resetGateway();
+});
 
 const defaultSlots: PatternStatementSlots = { domain: 'macro tech', nRight: 2, nWrong: 5, direction: 'over-confident' };
 
@@ -76,6 +88,40 @@ describe('parseJudgeOutput', () => {
     const long = 'x'.repeat(200);
     const out = parseJudgeOutput(`{"verdict":"academic","reason":"${long}"}`);
     expect(out.reason.length).toBe(80);
+  });
+});
+
+// ─── production defaultJudge routing ─────────────────────────────────
+
+describe('defaultJudge routing', () => {
+  test('uses configured chat_model instead of a bare Haiku id', async () => {
+    configureGateway({
+      chat_model: 'custom:gpt-5.5',
+      env: { NEWAPI_API_KEY: 'test-key' },
+      base_urls: { custom: 'http://127.0.0.1:3100/v1' },
+    } as any);
+
+    let seenModel: string | undefined;
+    __setChatTransportForTests(async (opts: ChatOpts) => {
+      seenModel = opts.model;
+      return {
+        text: '{"verdict":"conversational","reason":"ok"}',
+        blocks: [],
+        stopReason: 'end',
+        usage: { input_tokens: 1, output_tokens: 1, cache_read_tokens: 0, cache_creation_tokens: 0 },
+        model: opts.model ?? 'unknown',
+        providerId: 'custom',
+      };
+    });
+
+    const out = await defaultJudge({
+      candidate: 'You got 2 of 3 right.',
+      mode: 'pattern_statement',
+      rubric: DEFAULT_RUBRICS.pattern_statement,
+    });
+
+    expect(out.verdict).toBe('conversational');
+    expect(seenModel).toBe('custom:gpt-5.5');
   });
 });
 

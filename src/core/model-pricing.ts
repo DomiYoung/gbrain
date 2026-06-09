@@ -78,6 +78,13 @@ export const CANONICAL_PRICING: Record<string, ModelPricing> = {
   'google:gemini-2.0-flash':              { input:  0.10, output:  0.40 },
   'google:gemini-2-flash':                { input:  0.10, output:  0.40 },
 
+  // ── NewAPI (self-hosted proxy to multiple providers) ──────────────────
+  // Maps to openai pricing tier ($4/$16 per 1M tokens — same as openai:gpt-5.5)
+  'newapi:gpt-5.5':                       { input:  4.00, output: 16.00 },
+  'newapi:claude-opus-4-7':               { input:  5.00, output: 25.00 },
+  'newapi:claude-sonnet-4-6':             { input:  3.00, output: 15.00 },
+  'newapi:deepseek-v4-pro':               { input:  0.14, output:  0.28 },  // deepseek-chat pricing
+
   // ── Together / DeepSeek (cross-modal-eval panel) ───────────────────────
   'together:meta-llama/Llama-3.3-70B-Instruct-Turbo': { input: 0.88, output: 0.88 },
   'deepseek:deepseek-chat':               { input:  0.14, output:  0.28 },

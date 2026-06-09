@@ -25,7 +25,8 @@
  * call wrapped in opts-resolution.
  */
 
-import { chat as gatewayChat } from '../ai/gateway.ts';
+import { chat as gatewayChat, getChatModel } from '../ai/gateway.ts';
+import { TIER_DEFAULTS } from '../model-config.ts';
 import type { VoiceGateMode } from './templates.ts';
 
 /**
@@ -145,6 +146,14 @@ RUBRIC for this surface:
 CANDIDATE:
 {CANDIDATE}`;
 
+function getConfiguredJudgeModel(): string {
+  try {
+    return getChatModel();
+  } catch {
+    return TIER_DEFAULTS.utility;
+  }
+}
+
 /**
  * Default judge — Haiku-based rubric verdict. Production path; tests
  * inject a stub.
@@ -157,9 +166,10 @@ export async function defaultJudge(input: {
   const prompt = HAIKU_GATE_PROMPT
     .replace('{RUBRIC}', input.rubric)
     .replace('{CANDIDATE}', input.candidate);
+  const model = getConfiguredJudgeModel();
   const result = await gatewayChat({
     messages: [{ role: 'user', content: prompt }],
-    model: 'claude-haiku-4-5',
+    model,
     maxTokens: 100,
   });
   return parseJudgeOutput(result.text);

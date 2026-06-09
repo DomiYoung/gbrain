@@ -1906,6 +1906,16 @@ export async function runCycle(
       if (engine) {
         const cfgMod = await import('./config.ts');
         const calibrationConfig = cfgMod.loadConfig() ?? ({} as ReturnType<typeof cfgMod.loadConfig> & object);
+        // Domi custom: merge DB config for cycle.* keys
+        const calibrationConfigAny = calibrationConfig as any;
+        try {
+          const dbMinAge = await engine.getConfig('cycle.grade_takes.min_age_months');
+          if (dbMinAge) {
+            calibrationConfigAny.cycle = calibrationConfigAny.cycle || {};
+            calibrationConfigAny.cycle.grade_takes = calibrationConfigAny.cycle.grade_takes || {};
+            calibrationConfigAny.cycle.grade_takes.min_age_months = parseInt(dbMinAge, 10);
+          }
+        } catch { /* ignore if config table missing */ }
         const calibrationSourceId = cycleSourceId;
         const calibrationCtx = {
           engine,
@@ -1931,7 +1941,18 @@ export async function runCycle(
           checkAborted(opts.signal);
           progress.start('cycle.grade_takes');
           const { runPhaseGradeTakes } = await import('./cycle/grade-takes.ts');
-          const { result, duration_ms } = await timePhase(() => runPhaseGradeTakes(calibrationCtx, {}) as Promise<PhaseResult>);
+          const gradeOpts: Parameters<typeof runPhaseGradeTakes>[1] = {};
+          // Domi custom: allow configurable min_age_months for new brains (default 6)
+          const cfgAny = calibrationConfig as any;
+          if (cfgAny?.cycle?.grade_takes?.min_age_months !== undefined) {
+            gradeOpts.minAgeMonths = cfgAny.cycle.grade_takes.min_age_months;
+          }
+          // Domi custom: use models.grade from DB config (default custom:glm-5.1)
+          try {
+            const dbModel = await engine.getConfig('models.grade');
+            if (dbModel) gradeOpts.model = dbModel;
+          } catch { /* ignore */ }
+          const { result, duration_ms } = await timePhase(() => runPhaseGradeTakes(calibrationCtx, gradeOpts) as Promise<PhaseResult>);
           result.duration_ms = duration_ms;
           phaseResults.push(result);
           progress.finish();
