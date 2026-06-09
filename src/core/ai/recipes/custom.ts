@@ -7,7 +7,7 @@ import type { Recipe } from '../types.ts';
 export const custom: Recipe = {
   id: 'custom',
   name: 'Custom (OpenAI-compatible)',
-  tier: 'custom',
+  tier: 'openai-compat',
   implementation: 'openai-compatible',
   auth_env: {
     required: ['NEWAPI_API_KEY'],
