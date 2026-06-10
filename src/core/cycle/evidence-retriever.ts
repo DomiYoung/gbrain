@@ -5,8 +5,10 @@
  * keyword + vector hybrid search over GBrain content chunks.
  *
  * Strategy:
- *   1. Keyword search (tokenmax mode) → top-3 chunks
- *   2. Vector search (embedding similarity) → top-2 chunks
+ *   1. Vector search (embedding similarity) → top-6 chunks (primary path;
+ *      works for Chinese claims where Postgres english FTS returns 0 hits)
+ *   2. Keyword search (tokenmax mode) → top-2 chunks (precision boost for
+ *      English/code-ish claims)
  *   3. Dedup by chunk_id, format into evidence block
  *   4. since_date filter: only pages updated AFTER the take was created
  *      (prevents "prophecy" — using future evidence to judge past claims)
@@ -22,11 +24,11 @@ import { embedOne } from "../ai/gateway.ts";
 // ---------------------------------------------------------------------------
 
 export interface EvidenceRetrieverOpts {
-  /** Max keyword results to fetch (default 3) */
-  keywordLimit?: number;
-  /** Max vector results to fetch (default 2) */
+  /** Max vector results to fetch (default 6) — primary path for Chinese claims */
   vectorLimit?: number;
-  /** Max total evidence chunks after dedup (default 5) */
+  /** Max keyword results to fetch (default 2) — precision boost for English/code */
+  keywordLimit?: number;
+  /** Max total evidence chunks after dedup (default 8) */
   maxTotal?: number;
   /** Search mode for keyword search (default 'tokenmax') */
   searchMode?: string;
@@ -89,9 +91,9 @@ export function createHybridEvidenceRetriever(
   engine: BrainEngine,
   opts: EvidenceRetrieverOpts = {},
 ): (take: Take, _scope: ScopedReadOpts) => Promise<string> {
-  const keywordLimit = opts.keywordLimit ?? 3;
-  const vectorLimit = opts.vectorLimit ?? 2;
-  const maxTotal = opts.maxTotal ?? 5;
+  const vectorLimit = opts.vectorLimit ?? 6;
+  const keywordLimit = opts.keywordLimit ?? 2;
+  const maxTotal = opts.maxTotal ?? 8;
   const searchMode = opts.searchMode ?? "tokenmax";
 
   return async (take: Take, _scope: ScopedReadOpts): Promise<string> => {
@@ -105,20 +107,9 @@ export function createHybridEvidenceRetriever(
       ? new Date(take.since_date).toISOString().slice(0, 10)
       : undefined;
 
-    const searchOpts: Record<string, unknown> = {
-      limit: Math.max(keywordLimit, vectorLimit),
-      mode: searchMode,
-    };
-    if (since) {
-      searchOpts.since = since;
-    }
-
     try {
-      // Phase 1: keyword search
-      const kwResults: SearchResult[] = await engine.searchKeyword(query, searchOpts as any);
-      if (process.env.GBRAIN_DEBUG_EVIDENCE) console.error(`[evidence] keyword: ${kwResults.length} results for "${query.slice(0, 60)}"`);
-
-      // Phase 2: vector search (best-effort — embedding may not exist)
+      // Phase 1: vector search (PRIMARY — works for Chinese claims where
+      // Postgres english FTS returns 0 hits)
       let vecResults: SearchResult[] = [];
       try {
         const embedding = await embedOne(query);
@@ -126,11 +117,36 @@ export function createHybridEvidenceRetriever(
           limit: vectorLimit,
           ...(since ? { since } : {}),
         } as any);
-      } catch {
-        // Vector search is optional — keyword alone is usually sufficient
+        if (process.env.GBRAIN_DEBUG_EVIDENCE) {
+          console.error(`[evidence] vector: ${vecResults.length} results for "${query.slice(0, 60)}"`);
+        }
+      } catch (err) {
+        if (process.env.GBRAIN_DEBUG_EVIDENCE) {
+          console.error(`[evidence] vector search failed: ${err instanceof Error ? err.message : String(err)}`);
+        }
       }
 
-      // Phase 3: dedup by chunk_id (or slug + start_line as fallback)
+      // Phase 2: keyword search (best-effort — precision boost for English/code)
+      let kwResults: SearchResult[] = [];
+      try {
+        const searchOpts: Record<string, unknown> = {
+          limit: keywordLimit,
+          mode: searchMode,
+        };
+        if (since) {
+          searchOpts.since = since;
+        }
+        kwResults = await engine.searchKeyword(query, searchOpts as any);
+        if (process.env.GBRAIN_DEBUG_EVIDENCE) {
+          console.error(`[evidence] keyword: ${kwResults.length} results for "${query.slice(0, 60)}"`);
+        }
+      } catch (err) {
+        if (process.env.GBRAIN_DEBUG_EVIDENCE) {
+          console.error(`[evidence] keyword search failed: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
+
+      // Phase 3: dedup by chunk_id (or slug + chunk_index as fallback)
       const seen = new Set<string>();
       const merged: Array<{ chunk: SearchResult; source: "keyword" | "vector"; rank: number }> = [];
 
@@ -142,8 +158,9 @@ export function createHybridEvidenceRetriever(
         merged.push({ chunk, source, rank });
       };
 
-      kwResults.forEach((c, i) => addChunk(c, "keyword", i + 1));
+      // Vector results first (primary), then keyword results (secondary)
       vecResults.forEach((c, i) => addChunk(c, "vector", i + 1));
+      kwResults.forEach((c, i) => addChunk(c, "keyword", i + 1));
 
       // Phase 4: sort by score descending, cap at maxTotal
       merged.sort((a, b) => (b.chunk.score ?? 0) - (a.chunk.score ?? 0));

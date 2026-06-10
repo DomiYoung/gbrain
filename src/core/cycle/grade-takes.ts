@@ -49,8 +49,10 @@ import { createHybridEvidenceRetriever } from './evidence-retriever.ts';
  * LLM tokens.
  *
  * v0.42.38.0-domi — evidence retrieval upgraded from stub to hybrid search.
+ * v0.42.38.1-domi-vectorfirst — vector search primary (works for Chinese claims),
+ *                                keyword search secondary (English/code precision).
  */
-export const GRADE_TAKES_PROMPT_VERSION = 'v0.42.38.0-domi';
+export const GRADE_TAKES_PROMPT_VERSION = 'v0.42.38.1-domi-vectorfirst';
 
 export const GRADE_TAKE_PROMPT = `[v0.36.1.0-stub] You are grading a single forecasting take. The author
 made this claim on the given date. Based on the evidence provided, did the
