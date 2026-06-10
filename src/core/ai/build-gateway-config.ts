@@ -36,6 +36,8 @@ export function buildGatewayConfig(c: GBrainConfig): AIGatewayConfig {
   if (c.zeroentropy_api_key) envFromConfig.ZEROENTROPY_API_KEY = c.zeroentropy_api_key;
   // v0.42 codex fix: custom provider requires NEWAPI_API_KEY
   if (c.newapi_api_key) envFromConfig.NEWAPI_API_KEY = c.newapi_api_key;
+  // v0.42 codex fix: dashscope provider requires DASHSCOPE_API_KEY
+  if (c.dashscope_api_key) envFromConfig.DASHSCOPE_API_KEY = c.dashscope_api_key;
 
   // v0.32 codex finding #4+#5 fix: thread local-server _BASE_URL env vars
   // into base_urls so the gateway hits the user's configured port. Without
