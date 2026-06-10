@@ -41,13 +41,16 @@ import { GBrainError } from '../types.ts';
 import type { OperationContext } from '../operations.ts';
 import type { BrainEngine, Take, TakeResolution } from '../engine.ts';
 import type { PhaseStatus, CyclePhase } from '../cycle.ts';
+import { createHybridEvidenceRetriever } from './evidence-retriever.ts';
 
 /**
  * Bump when the judge prompt or the JSON output shape changes. Old verdicts
  * stay valid (composite cache key includes prompt_version); new runs re-spend
  * LLM tokens.
+ *
+ * v0.42.38.0-domi — evidence retrieval upgraded from stub to hybrid search.
  */
-export const GRADE_TAKES_PROMPT_VERSION = 'v0.36.1.0-stub';
+export const GRADE_TAKES_PROMPT_VERSION = 'v0.42.38.0-domi';
 
 export const GRADE_TAKE_PROMPT = `[v0.36.1.0-stub] You are grading a single forecasting take. The author
 made this claim on the given date. Based on the evidence provided, did the
@@ -388,10 +391,13 @@ class GradeTakesPhase extends BaseCyclePhase {
     opts: GradeTakesOpts,
   ): Promise<{ summary: string; details: Record<string, unknown>; status?: PhaseStatus }> {
     const judge = opts.judge ?? defaultJudge;
-    const evidenceRetriever = opts.evidenceRetriever ?? defaultEvidenceRetriever;
+    const evidenceRetriever = opts.evidenceRetriever ?? createHybridEvidenceRetriever(engine);
     const promptVersion = opts.promptVersion ?? GRADE_TAKES_PROMPT_VERSION;
     const minAgeMonths = opts.minAgeMonths ?? 6;
-    const takeLimit = opts.takeLimit ?? 50;
+    const envTakeLimit = process.env.GBRAIN_GRADE_TAKES_LIMIT
+      ? Number.parseInt(process.env.GBRAIN_GRADE_TAKES_LIMIT, 10)
+      : undefined;
+    const takeLimit = opts.takeLimit ?? (Number.isFinite(envTakeLimit) ? envTakeLimit : 50);
     const autoResolve = opts.autoResolve ?? false; // D17 default OFF
     const autoResolveThreshold = opts.autoResolveThreshold ?? 0.95; // D12 conservative
     const resolvedByLabel = opts.resolvedByLabel ?? 'gbrain:grade_takes';
@@ -436,7 +442,10 @@ class GradeTakesPhase extends BaseCyclePhase {
       }
 
       // Retrieve evidence first — the signature depends on it.
+      const t0 = Date.now();
       const evidence = await evidenceRetriever(take, scope);
+      const t1 = Date.now();
+      if (process.env.GBRAIN_DEBUG_EVIDENCE) console.error(`[grade_takes:debug] take_id=${take.id} evidence_retrieved=${t1-t0}ms evidence_len=${evidence.length} minAgeMonths=${minAgeMonths}`);
       const sig = evidenceSignature(evidence, judgeModelId);
 
       // Idempotency: skip when (take_id, prompt_version, judge_model_id, evidence_signature) exists.
@@ -446,6 +455,7 @@ class GradeTakesPhase extends BaseCyclePhase {
          LIMIT 1`,
         [take.id, promptVersion, judgeModelId, sig],
       );
+      if (process.env.GBRAIN_DEBUG_EVIDENCE) console.error(`[grade_takes:debug] cache_lookup take_id=${take.id} prompt=${promptVersion} model=${judgeModelId} sig=${sig.slice(0, 10)} hit=${cached.length}`);
       if (cached.length > 0) {
         result.cache_hits += 1;
         continue;
@@ -471,6 +481,7 @@ class GradeTakesPhase extends BaseCyclePhase {
         verdict = await judge({ take, evidence, modelHint: opts.model });
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
+        if (process.env.GBRAIN_DEBUG_EVIDENCE) console.error(`[grade_takes:debug] judge_failed take_id=${take.id} ${msg}`);
         result.warnings.push(`judge failed on take ${take.id}: ${msg}`);
         continue;
       }
@@ -548,6 +559,7 @@ class GradeTakesPhase extends BaseCyclePhase {
          ON CONFLICT (take_id, prompt_version, judge_model_id, evidence_signature) DO NOTHING`,
         [take.id, promptVersion, recordedJudgeModelId, recordedSig, recordedVerdict.verdict, recordedVerdict.confidence, shouldApply],
       );
+      if (process.env.GBRAIN_DEBUG_EVIDENCE) console.error(`[grade_takes:debug] cache_insert take_id=${take.id} verdict=${recordedVerdict.verdict} conf=${recordedVerdict.confidence}`);
       result.verdicts_written += 1;
 
       // Apply to canonical takes if eligible.
@@ -594,6 +606,8 @@ class GradeTakesPhase extends BaseCyclePhase {
     }
 
     if (opts.reporter) opts.reporter.finish();
+
+    if (process.env.GBRAIN_DEBUG_EVIDENCE) console.error(`[grade_takes:debug] DONE scanned=${result.takes_scanned} too_recent=${result.too_recent} minAgeMonths=${minAgeMonths}`);
 
     const summary =
       `grade_takes: scanned ${result.takes_scanned} takes ` +
