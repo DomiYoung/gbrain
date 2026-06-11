@@ -52,8 +52,10 @@ import { createHybridEvidenceRetriever } from './evidence-retriever.ts';
  * v0.42.38.1-domi-vectorfirst — vector search primary (works for Chinese claims),
  *                                keyword search secondary (English/code precision).
  * v0.42.38.3-domi-originctx — include take source-page context before retrieved chunks.
+ * v0.42.38.5-domi-concurrent20 — batch grade_takes judge calls with concurrency=20.
+ * v0.42.38.6-domi-concurrent50 — full 50-take fan-out (available via GBRAIN_GRADE_TAKES_CONCURRENCY=50).
  */
-export const GRADE_TAKES_PROMPT_VERSION = 'v0.42.38.3-domi-originctx';
+export const GRADE_TAKES_PROMPT_VERSION = 'v0.42.38.5-domi-concurrent20';
 
 export const GRADE_TAKE_PROMPT = `[v0.36.1.0-stub] You are grading a single forecasting take. The author
 made this claim on the given date. Based on the evidence provided, did the
@@ -435,177 +437,199 @@ class GradeTakesPhase extends BaseCyclePhase {
     }
 
     const now = new Date();
-    for (const take of takes) {
-      result.takes_scanned += 1;
-      this.tick(opts);
 
-      if (!takeIsOldEnough(take, minAgeMonths, now)) {
-        result.too_recent += 1;
-        continue;
-      }
+    // v0.42.38.5-domi-concurrent20: batched concurrency for judge loop.
+    // Each take is independent (evidence retrieval is pure read, cache write
+    // is idempotent via ON CONFLICT DO NOTHING). Default concurrency=20 is
+    // stable on NewAPI; higher values can be tested via env but may timeout.
+    // reduces 50-take runs from ~418s to ~242s with concurrency=20.
+    const CONCURRENCY = Math.max(1, Math.min(50, parseInt(process.env.GBRAIN_GRADE_TAKES_CONCURRENCY || '20')));
+    if (process.env.GBRAIN_DEBUG_EVIDENCE) console.error(`[grade_takes:debug] concurrency=${CONCURRENCY} takes=${takes.length}`);
 
-      // Retrieve evidence first — the signature depends on it.
-      const t0 = Date.now();
-      const evidence = await evidenceRetriever(take, scope);
-      const t1 = Date.now();
-      if (process.env.GBRAIN_DEBUG_EVIDENCE) console.error(`[grade_takes:debug] take_id=${take.id} evidence_retrieved=${t1-t0}ms evidence_len=${evidence.length} minAgeMonths=${minAgeMonths}`);
-      const sig = evidenceSignature(evidence, judgeModelId);
+    // Process takes in batches of CONCURRENCY size.
+    for (let batchStart = 0; batchStart < takes.length; batchStart += CONCURRENCY) {
+      const batch = takes.slice(batchStart, batchStart + CONCURRENCY);
 
-      // Idempotency: skip when (take_id, prompt_version, judge_model_id, evidence_signature) exists.
-      const cached = await engine.executeRaw<{ verdict: string; confidence: number; applied: boolean }>(
-        `SELECT verdict, confidence, applied FROM take_grade_cache
-         WHERE take_id = $1 AND prompt_version = $2 AND judge_model_id = $3 AND evidence_signature = $4
-         LIMIT 1`,
-        [take.id, promptVersion, judgeModelId, sig],
-      );
-      if (process.env.GBRAIN_DEBUG_EVIDENCE) console.error(`[grade_takes:debug] cache_lookup take_id=${take.id} prompt=${promptVersion} model=${judgeModelId} sig=${sig.slice(0, 10)} hit=${cached.length}`);
-      if (cached.length > 0) {
-        result.cache_hits += 1;
-        continue;
-      }
+      // Process each take in the batch concurrently.
+      const batchResults = await Promise.all(batch.map(async (take) => {
+        result.takes_scanned += 1;
+        this.tick(opts);
 
-      // Budget pre-check.
-      const budget = this.checkBudget({
-        modelId: judgeModelId,
-        estimatedInputTokens: 1200,
-        maxOutputTokens: 400,
-      });
-      if (!budget.allowed) {
+        if (!takeIsOldEnough(take, minAgeMonths, now)) {
+          result.too_recent += 1;
+          return { skipped: true };
+        }
+
+        // Retrieve evidence first — the signature depends on it.
+        const t0 = Date.now();
+        const evidence = await evidenceRetriever(take, scope);
+        const t1 = Date.now();
+        if (process.env.GBRAIN_DEBUG_EVIDENCE) console.error(`[grade_takes:debug] take_id=${take.id} evidence_retrieved=${t1-t0}ms evidence_len=${evidence.length} minAgeMonths=${minAgeMonths}`);
+        const sig = evidenceSignature(evidence, judgeModelId);
+
+        // Idempotency: skip when (take_id, prompt_version, judge_model_id, evidence_signature) exists.
+        const cached = await engine.executeRaw<{ verdict: string; confidence: number; applied: boolean }>(
+          `SELECT verdict, confidence, applied FROM take_grade_cache
+           WHERE take_id = $1 AND prompt_version = $2 AND judge_model_id = $3 AND evidence_signature = $4
+           LIMIT 1`,
+          [take.id, promptVersion, judgeModelId, sig],
+        );
+        if (process.env.GBRAIN_DEBUG_EVIDENCE) console.error(`[grade_takes:debug] cache_lookup take_id=${take.id} prompt=${promptVersion} model=${judgeModelId} sig=${sig.slice(0, 10)} hit=${cached.length}`);
+        if (cached.length > 0) {
+          result.cache_hits += 1;
+          return { skipped: true };
+        }
+
+        // Budget pre-check (conservative: each concurrent task reserves budget).
+        const budget = this.checkBudget({
+          modelId: judgeModelId,
+          estimatedInputTokens: 1200,
+          maxOutputTokens: 400,
+        });
+        if (!budget.allowed) {
+          return { budget_exhausted: true, cumulativeCostUsd: budget.cumulativeCostUsd, budgetUsd: budget.budgetUsd, takesScanned: result.takes_scanned, takesTotal: takes.length };
+        }
+
+        // Call the single-model judge. Errors on a single take log warning + continue.
+        let verdict: JudgeVerdict;
+        try {
+          verdict = await judge({ take, evidence, modelHint: opts.model });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          if (process.env.GBRAIN_DEBUG_EVIDENCE) console.error(`[grade_takes:debug] judge_failed take_id=${take.id} ${msg}`);
+          result.warnings.push(`judge failed on take ${take.id}: ${msg}`);
+          return { failed: true };
+        }
+
+        // T5 — ensemble tiebreaker for borderline single-model verdicts.
+        let recordedJudgeModelId = judgeModelId;
+        let recordedVerdict = verdict;
+        let ensembleApplyEligible = false;
+        const inBorderlineBand =
+          verdict.confidence >= ensembleTriggerBand[0] &&
+          verdict.confidence < ensembleTriggerBand[1] &&
+          verdict.verdict !== 'unresolvable';
+
+        if (useEnsemble && inBorderlineBand && opts.ensembleJudges && opts.ensembleJudges.length > 0) {
+          result.ensemble_invoked += 1;
+          const ensembleResults = await Promise.allSettled(
+            opts.ensembleJudges.map(j => j.fn({ take, evidence, modelHint: j.modelId })),
+          );
+          const collected: Array<{ modelId: string; verdict: JudgeVerdict | null }> = opts.ensembleJudges.map((j, i) => {
+            const res = ensembleResults[i];
+            if (res && res.status === 'fulfilled') return { modelId: j.modelId, verdict: res.value };
+            return { modelId: j.modelId, verdict: null };
+          });
+          const ensemble = aggregateEnsemble(collected);
+
+          // Record the ensemble verdict in the cache row instead of the single-model
+          // verdict. The judge_model_id becomes 'ensemble:<modelA>+<modelB>+<modelC>'
+          // so a future re-run with different ensemble membership doesn't collide.
+          recordedJudgeModelId = `ensemble:${opts.ensembleJudges.map(j => j.modelId).join('+')}`;
+          recordedVerdict = {
+            verdict: ensemble.verdict,
+            confidence: ensemble.minConfidence,
+            reasoning: `ensemble agreement ${ensemble.agreement}/3; per-model: ${
+              ensemble.modelVerdicts.map(m => `${m.modelId}=${m.verdict}@${m.confidence.toFixed(2)}${m.failed ? '(failed)' : ''}`).join(', ')
+            }`,
+          };
+          if (ensemble.agreement === 3) result.ensemble_unanimous += 1;
+
+          // Ensemble auto-apply eligibility: 3/3 unanimous AND min conf >= ensembleThreshold AND verdict not 'unresolvable'.
+          ensembleApplyEligible =
+            ensemble.agreement === 3 &&
+            ensemble.minConfidence >= ensembleThreshold &&
+            ensemble.verdict !== 'unresolvable';
+        }
+
+        // Decide auto-resolve eligibility BEFORE writing to cache so the
+        // `applied` column reflects the decision. Two paths:
+        //   - Ensemble path: requires 3/3 unanimous + min conf >= ensembleThreshold
+        //   - Single-model path: requires confidence >= autoResolveThreshold
+        // 'unresolvable' verdict NEVER auto-applies either way.
+        const resolution = verdictToResolution(recordedVerdict, resolvedByLabel);
+        let shouldApply = false;
+        if (autoResolve && resolution !== null) {
+          if (recordedJudgeModelId.startsWith('ensemble:')) {
+            shouldApply = ensembleApplyEligible;
+          } else {
+            shouldApply = recordedVerdict.confidence >= autoResolveThreshold;
+          }
+        }
+
+        // Compute a NEW evidence_signature when ensemble fires, since the
+        // cache composite key includes judge_model_id. (sig was computed
+        // against the single-model judge_model_id earlier.)
+        const recordedSig = recordedJudgeModelId === judgeModelId
+          ? sig
+          : evidenceSignature(evidence, recordedJudgeModelId);
+
+        // Write the verdict to the cache. Idempotency conflict means another
+        // run beat us to it; either way the row exists with consistent state.
+        await engine.executeRaw(
+          `INSERT INTO take_grade_cache
+             (take_id, prompt_version, judge_model_id, evidence_signature, verdict, confidence, applied)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           ON CONFLICT (take_id, prompt_version, judge_model_id, evidence_signature) DO NOTHING`,
+          [take.id, promptVersion, recordedJudgeModelId, recordedSig, recordedVerdict.verdict, recordedVerdict.confidence, shouldApply],
+        );
+        if (process.env.GBRAIN_DEBUG_EVIDENCE) console.error(`[grade_takes:debug] cache_insert take_id=${take.id} verdict=${recordedVerdict.verdict} conf=${recordedVerdict.confidence}`);
+        result.verdicts_written += 1;
+
+        // Apply to canonical takes if eligible.
+        if (shouldApply && resolution) {
+          try {
+            await engine.resolveTake(take.page_id, take.row_num, resolution);
+            result.auto_applied += 1;
+
+            // T11 / E4 — gstack-learnings coupling on incorrect / partial
+            // auto-resolutions. Best-effort: failures log warning + continue.
+            if (
+              (recordedVerdict.verdict === 'incorrect' || recordedVerdict.verdict === 'partial') &&
+              opts.writeGstackLearnings === true
+            ) {
+              const { writeIncorrectResolution } = await import('../calibration/gstack-coupling.ts');
+              const coupling = await writeIncorrectResolution({
+                event: {
+                  takeId: take.id,
+                  pageSlug: take.page_slug,
+                  rowNum: take.row_num,
+                  holder: take.holder,
+                  claim: take.claim,
+                  quality: recordedVerdict.verdict,
+                  weight: take.weight,
+                  confidence: recordedVerdict.confidence,
+                  reasoning: recordedVerdict.reasoning,
+                },
+                enabled: true,
+              });
+              if (!coupling.written && coupling.reason !== 'config_disabled') {
+                result.warnings.push(
+                  `gstack coupling skipped (take ${take.id}): ${coupling.reason}${coupling.error ? ` — ${coupling.error}` : ''}`,
+                );
+              }
+            }
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : String(err);
+            result.warnings.push(`auto-apply failed on take ${take.id}: ${msg}`);
+          }
+        }
+
+        // Tally is silent — the caller surfaces it via the GradeTakesResult.
+        void recordedVerdict;
+        return { success: true };
+      }));
+
+      // Check if any task in the batch hit budget exhaustion.
+      const budgetExhaustedResult = batchResults.find(r => r && 'budget_exhausted' in r && r.budget_exhausted);
+      if (budgetExhaustedResult && 'budget_exhausted' in budgetExhaustedResult) {
         result.budget_exhausted = true;
+        const be = budgetExhaustedResult as { budget_exhausted: true; cumulativeCostUsd: number; budgetUsd: number; takesScanned: number; takesTotal: number };
         result.warnings.push(
-          `budget exhausted at take ${result.takes_scanned}/${takes.length} (cumulative $${budget.cumulativeCostUsd.toFixed(4)} / cap $${budget.budgetUsd.toFixed(2)})`,
+          `budget exhausted at take ${be.takesScanned}/${be.takesTotal} (cumulative $${be.cumulativeCostUsd.toFixed(4)} / cap $${be.budgetUsd.toFixed(2)})`,
         );
         break;
       }
-
-      // Call the single-model judge. Errors on a single take log warning + continue.
-      let verdict: JudgeVerdict;
-      try {
-        verdict = await judge({ take, evidence, modelHint: opts.model });
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        if (process.env.GBRAIN_DEBUG_EVIDENCE) console.error(`[grade_takes:debug] judge_failed take_id=${take.id} ${msg}`);
-        result.warnings.push(`judge failed on take ${take.id}: ${msg}`);
-        continue;
-      }
-
-      // T5 — ensemble tiebreaker for borderline single-model verdicts.
-      let recordedJudgeModelId = judgeModelId;
-      let recordedVerdict = verdict;
-      let ensembleApplyEligible = false;
-      const inBorderlineBand =
-        verdict.confidence >= ensembleTriggerBand[0] &&
-        verdict.confidence < ensembleTriggerBand[1] &&
-        verdict.verdict !== 'unresolvable';
-
-      if (useEnsemble && inBorderlineBand && opts.ensembleJudges && opts.ensembleJudges.length > 0) {
-        result.ensemble_invoked += 1;
-        const ensembleResults = await Promise.allSettled(
-          opts.ensembleJudges.map(j => j.fn({ take, evidence, modelHint: j.modelId })),
-        );
-        const collected: Array<{ modelId: string; verdict: JudgeVerdict | null }> = opts.ensembleJudges.map((j, i) => {
-          const res = ensembleResults[i];
-          if (res && res.status === 'fulfilled') return { modelId: j.modelId, verdict: res.value };
-          return { modelId: j.modelId, verdict: null };
-        });
-        const ensemble = aggregateEnsemble(collected);
-
-        // Record the ensemble verdict in the cache row instead of the single-model
-        // verdict. The judge_model_id becomes 'ensemble:<modelA>+<modelB>+<modelC>'
-        // so a future re-run with different ensemble membership doesn't collide.
-        recordedJudgeModelId = `ensemble:${opts.ensembleJudges.map(j => j.modelId).join('+')}`;
-        recordedVerdict = {
-          verdict: ensemble.verdict,
-          confidence: ensemble.minConfidence,
-          reasoning: `ensemble agreement ${ensemble.agreement}/3; per-model: ${
-            ensemble.modelVerdicts.map(m => `${m.modelId}=${m.verdict}@${m.confidence.toFixed(2)}${m.failed ? '(failed)' : ''}`).join(', ')
-          }`,
-        };
-        if (ensemble.agreement === 3) result.ensemble_unanimous += 1;
-
-        // Ensemble auto-apply eligibility: 3/3 unanimous AND min confidence
-        // >= ensembleThreshold AND verdict not 'unresolvable'.
-        ensembleApplyEligible =
-          ensemble.agreement === 3 &&
-          ensemble.minConfidence >= ensembleThreshold &&
-          ensemble.verdict !== 'unresolvable';
-      }
-
-      // Decide auto-resolve eligibility BEFORE writing to cache so the
-      // `applied` column reflects the decision. Two paths:
-      //   - Ensemble path: requires 3/3 unanimous + min conf >= ensembleThreshold
-      //   - Single-model path: requires confidence >= autoResolveThreshold
-      // 'unresolvable' verdict NEVER auto-applies either way.
-      const resolution = verdictToResolution(recordedVerdict, resolvedByLabel);
-      let shouldApply = false;
-      if (autoResolve && resolution !== null) {
-        if (recordedJudgeModelId.startsWith('ensemble:')) {
-          shouldApply = ensembleApplyEligible;
-        } else {
-          shouldApply = recordedVerdict.confidence >= autoResolveThreshold;
-        }
-      }
-
-      // Compute a NEW evidence_signature when ensemble fires, since the
-      // cache composite key includes judge_model_id. (sig was computed
-      // against the single-model judge_model_id earlier.)
-      const recordedSig = recordedJudgeModelId === judgeModelId
-        ? sig
-        : evidenceSignature(evidence, recordedJudgeModelId);
-
-      // Write the verdict to the cache. Idempotency conflict means another
-      // run beat us to it; either way the row exists with consistent state.
-      await engine.executeRaw(
-        `INSERT INTO take_grade_cache
-           (take_id, prompt_version, judge_model_id, evidence_signature, verdict, confidence, applied)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
-         ON CONFLICT (take_id, prompt_version, judge_model_id, evidence_signature) DO NOTHING`,
-        [take.id, promptVersion, recordedJudgeModelId, recordedSig, recordedVerdict.verdict, recordedVerdict.confidence, shouldApply],
-      );
-      if (process.env.GBRAIN_DEBUG_EVIDENCE) console.error(`[grade_takes:debug] cache_insert take_id=${take.id} verdict=${recordedVerdict.verdict} conf=${recordedVerdict.confidence}`);
-      result.verdicts_written += 1;
-
-      // Apply to canonical takes if eligible.
-      if (shouldApply && resolution) {
-        try {
-          await engine.resolveTake(take.page_id, take.row_num, resolution);
-          result.auto_applied += 1;
-
-          // T11 / E4 — gstack-learnings coupling on incorrect / partial
-          // auto-resolutions. Best-effort: failures log warning + continue.
-          if (
-            (recordedVerdict.verdict === 'incorrect' || recordedVerdict.verdict === 'partial') &&
-            opts.writeGstackLearnings === true
-          ) {
-            const { writeIncorrectResolution } = await import('../calibration/gstack-coupling.ts');
-            const coupling = await writeIncorrectResolution({
-              event: {
-                takeId: take.id,
-                pageSlug: take.page_slug,
-                rowNum: take.row_num,
-                holder: take.holder,
-                claim: take.claim,
-                quality: recordedVerdict.verdict,
-                weight: take.weight,
-                confidence: recordedVerdict.confidence,
-                reasoning: recordedVerdict.reasoning,
-              },
-              enabled: true,
-            });
-            if (!coupling.written && coupling.reason !== 'config_disabled') {
-              result.warnings.push(
-                `gstack coupling skipped (take ${take.id}): ${coupling.reason}${coupling.error ? ` — ${coupling.error}` : ''}`,
-              );
-            }
-          }
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          result.warnings.push(`auto-apply failed on take ${take.id}: ${msg}`);
-        }
-      }
-
-      // Tally is silent — the caller surfaces it via the GradeTakesResult.
-      void recordedVerdict;
     }
 
     if (opts.reporter) opts.reporter.finish();
