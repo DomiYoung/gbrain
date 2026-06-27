@@ -13,7 +13,7 @@ import {
   startResolveIpcServer,
   cleanupStaleSocket,
 } from '../core/context/resolve-ipc.ts';
-import { resolveEntitiesToPointers } from '../core/context/retrieval-reflex.ts';
+import { resolveEntitiesToPointers, logDeliveredReflexPointers } from '../core/context/retrieval-reflex.ts';
 import { resolveSourceId } from '../core/source-resolver.ts';
 
 export async function startMcpServer(engine: BrainEngine) {
@@ -76,13 +76,24 @@ export async function startMcpServer(engine: BrainEngine) {
       resolveSocket = resolveSocketPath(cfg.database_path);
       // v0.42 (CTO fix 2026-06-19): use the same resolveSourceId as tool calls
       const defaultSource = await resolveSourceId(engine, null).catch(() => 'default');
-      resolveServer = await startResolveIpcServer(resolveSocket, (req) =>
-        resolveEntitiesToPointers(
-          engine,
-          req.sourceId || defaultSource,
-          req.candidates ?? [],
-          { priorContextText: req.priorContextText, maxPointers: req.maxPointers },
-        ),
+      resolveServer = await startResolveIpcServer(
+        resolveSocket,
+        (req) =>
+          resolveEntitiesToPointers(
+            engine,
+            req.sourceId || defaultSource,
+            req.candidates ?? [],
+            {
+              priorContextText: req.priorContextText,
+              maxPointers: req.maxPointers,
+              suppression: req.suppression,
+            },
+          ),
+        // The IPC resolve path IS the ambient reflex channel. Logging happens
+        // at DELIVERY (post-write), not inside the resolver — a block the
+        // client's 250ms budget abandoned was never injected, and counting it
+        // would corrupt the volunteered-vs-used precision stats (red-team).
+        (block) => logDeliveredReflexPointers(engine, block.pointers),
       );
     }
   } catch {
