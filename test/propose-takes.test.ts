@@ -18,6 +18,7 @@ import { describe, test, expect } from 'bun:test';
 import {
   runPhaseProposeTakes,
   parseExtractorOutput,
+  normalizeKind,
   contentHash,
   hasCompleteFence,
   extractExistingTakesForDedup,
@@ -151,6 +152,25 @@ describe('parseExtractorOutput', () => {
     expect(out[0]!.kind).toBe('take');
     expect(out[0]!.weight).toBe(1);
     expect(out[1]!.weight).toBe(0);
+  });
+
+  test('maps prompt kind aliases to canonical takes-table kinds', () => {
+    expect(normalizeKind('prediction')).toBe('bet');
+    expect(normalizeKind('bet')).toBe('bet');
+    expect(normalizeKind('judgment')).toBe('take');
+    expect(normalizeKind('judgement')).toBe('take');
+    expect(normalizeKind('take')).toBe('take');
+    expect(normalizeKind('unknown_kind')).toBe('take');
+  });
+
+  test('parseExtractorOutput maps prediction rows to bet proposals', () => {
+    const raw = JSON.stringify([
+      { claim_text: 'ARR will double by Q4', kind: 'prediction', holder: 'brain', weight: 0.75 },
+      { claim_text: 'Founder has execution risk', kind: 'judgment', holder: 'brain', weight: 0.55 },
+    ]);
+    const out = parseExtractorOutput(raw);
+    expect(out[0]!.kind).toBe('bet');
+    expect(out[1]!.kind).toBe('take');
   });
 
   test('preserves optional domain field', () => {

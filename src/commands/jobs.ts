@@ -1949,7 +1949,7 @@ export async function registerBuiltinHandlers(
       lr: Number(data.lr ?? 4),
       lrSchedule: (data.lr_schedule as 'cosine' | 'linear' | 'constant') ?? 'cosine',
       split: (data.split as [number, number, number]) ?? [4, 1, 5],
-      optimizerModel: String(data.optimizer_model ?? 'anthropic:claude-opus-4-7'),
+      optimizerModel: String(data.optimizer_model ?? 'x5m5x_claude:claude-opus-4-7'),
       targetModel: String(data.target_model ?? 'anthropic:claude-sonnet-4-6'),
       judgeModel: String(data.judge_model ?? 'anthropic:claude-sonnet-4-6'),
       mode: (data.mode as 'patch' | 'rewrite') ?? 'patch',

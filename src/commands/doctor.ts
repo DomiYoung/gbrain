@@ -1165,16 +1165,20 @@ export async function checkAbandonedThreads(engine: BrainEngine): Promise<Check>
 
 /**
  * calibration_freshness: warns when the active calibration profile is
- * older than 7 days (configurable). Default holder 'garry'. Multi-source
- * brains see one row per source; this check uses the most recent across
- * all sources.
+ * older than 7 days (configurable). Uses the latest profile across holders;
+ * multi-source brains see one row per source and this check uses the most
+ * recent across all sources.
  */
 export async function checkCalibrationFreshness(engine: BrainEngine): Promise<Check> {
   try {
-    const rows = await engine.executeRaw<{ generated_at: Date | null }>(
-      `SELECT MAX(generated_at) AS generated_at FROM calibration_profiles WHERE holder = 'garry'`,
+    const rows = await engine.executeRaw<{ generated_at: Date | null; holder: string | null }>(
+      `SELECT holder, generated_at
+         FROM calibration_profiles
+         ORDER BY generated_at DESC
+         LIMIT 1`,
     );
     const generated = rows[0]?.generated_at;
+    const holder = rows[0]?.holder ?? 'unknown';
     if (!generated) {
       return {
         name: 'calibration_freshness',
@@ -1189,13 +1193,13 @@ export async function checkCalibrationFreshness(engine: BrainEngine): Promise<Ch
       return {
         name: 'calibration_freshness',
         status: 'warn',
-        message: `Calibration profile is ${ageDays} days old (stale at >${staleDays}d). Run \`gbrain calibration --regenerate\``,
+        message: `Calibration profile for holder "${holder}" is ${ageDays} days old (stale at >${staleDays}d). Run \`gbrain calibration --regenerate --holder ${holder}\``,
       };
     }
     return {
       name: 'calibration_freshness',
       status: 'ok',
-      message: `Calibration profile generated ${ageDays}d ago`,
+      message: `Calibration profile for holder "${holder}" generated ${ageDays}d ago`,
     };
   } catch (e) {
     return {

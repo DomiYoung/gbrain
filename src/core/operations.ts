@@ -2395,13 +2395,42 @@ const sync_brain: Operation = {
   localOnly: true,
   handler: async (ctx, p) => {
     const { performSync } = await import('../commands/sync.ts');
-    return performSync(ctx.engine, {
-      repoPath: p.repo as string | undefined,
-      dryRun: ctx.dryRun || (p.dry_run as boolean) || false,
-      noEmbed: (p.no_embed as boolean) || false,
-      noPull: (p.no_pull as boolean) || false,
-      full: (p.full as boolean) || false,
-    });
+    if (p.repo) {
+      // Single-source sync when repo path is explicitly provided
+      return performSync(ctx.engine, {
+        repoPath: p.repo as string,
+        dryRun: ctx.dryRun || (p.dry_run as boolean) || false,
+        noEmbed: (p.no_embed as boolean) || false,
+        noPull: (p.no_pull as boolean) || false,
+        full: (p.full as boolean) || false,
+      });
+    }
+    // No repo specified: iterate all registered sources with a local_path
+    // and sync each one, returning an aggregated result.
+    const sources = await ctx.engine.listAllSources({ localPathOnly: true });
+    const synced: Array<{ sourceId: string; status: string }> = [];
+    const skipped: Array<{ sourceId: string; reason: string }> = [];
+    const failed: Array<{ sourceId: string; error: string }> = [];
+    for (const src of sources) {
+      if (!src.local_path) {
+        skipped.push({ sourceId: src.id, reason: 'no local_path configured' });
+        continue;
+      }
+      try {
+        const result = await performSync(ctx.engine, {
+          repoPath: src.local_path,
+          sourceId: src.id,
+          dryRun: ctx.dryRun || (p.dry_run as boolean) || false,
+          noEmbed: (p.no_embed as boolean) || false,
+          noPull: (p.no_pull as boolean) || false,
+          full: (p.full as boolean) || false,
+        });
+        synced.push({ sourceId: src.id, status: result.status });
+      } catch (e) {
+        failed.push({ sourceId: src.id, error: e instanceof Error ? e.message : String(e) });
+      }
+    }
+    return { synced, skipped, failed, total: sources.length };
   },
   cliHints: { name: 'sync', hidden: true },
 };
@@ -3094,7 +3123,7 @@ const get_calibration_profile: Operation = {
     holder: {
       type: 'string',
       description:
-        "Holder slug, e.g. 'garry' or 'people/charlie-example'. Defaults to 'garry' when omitted.",
+        "Holder slug, e.g. 'brain' or 'people/charlie-example'. Defaults to 'brain' when omitted.",
     },
   },
   handler: async (ctx, p) => {
@@ -4736,7 +4765,7 @@ const run_skillopt: Operation = {
     if (!skillsDir) {
       throw new OperationError('run_skillopt: skills directory not found', 'config_error');
     }
-    const optimizerModel = await resolveModel(ctx.engine, { tier: 'deep', fallback: 'anthropic:claude-opus-4-7' });
+    const optimizerModel = await resolveModel(ctx.engine, { tier: 'deep', fallback: 'x5m5x_claude:claude-opus-4-7' });
     const targetModel = await resolveModel(ctx.engine, { tier: 'subagent', fallback: 'anthropic:claude-sonnet-4-6' });
     const judgeModel = await resolveModel(ctx.engine, { tier: 'reasoning', fallback: 'anthropic:claude-sonnet-4-6' });
     const skillName = p.skill_name as string;

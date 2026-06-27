@@ -140,7 +140,7 @@ export const DEFAULT_MAX_COST_USD = 5.0;
  * `--types` flag is an explicit per-run override; cycle config is
  * the single source of truth.
  */
-export const ALLOWED_TYPES = ['conversation', 'meeting', 'slack', 'email'] as const;
+export const ALLOWED_TYPES = ['conversation', 'meeting', 'slack', 'email', 'signal'] as const;
 export type AllowedType = (typeof ALLOWED_TYPES)[number];
 
 /**

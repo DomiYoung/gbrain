@@ -1,6 +1,20 @@
 /**
  * v0.36.1.0 (T3) — propose_takes cycle phase.
  *
+ * v0.42.40.0-domi-bet-mapping (2026-06-17) — fix kind-enum drift.
+ *   The prompt asks for 'prediction' | 'judgment' | 'bet', but the prior
+ *   parseExtractorOutput accepted only the canonical takes-table enum
+ *   ('fact' | 'take' | 'bet' | 'hunch') and silently coerced everything
+ *   to 'take'. That collapsed the bet→take signal so propose_takes never
+ *   produced gradeable bets at scale. The new map normalizes:
+ *     'prediction' | 'bet'  → 'bet'   (gradeable forecast)
+ *     'judgment' | 'take'   → 'take'
+ *     'fact'                → 'fact'
+ *     'hunch'               → 'hunch'
+ *   The prompt version is bumped so the take_proposals idempotency cache
+ *   re-fires extraction on every page already scanned by the previous
+ *   prompt — old proposals stay as audit history.
+ *
  * Scans markdown pages updated since last run, sends each page's prose to
  * a tuned LLM extractor, writes the extracted gradeable claims to the
  * `take_proposals` queue. User accepts/rejects via `gbrain takes propose`.
@@ -47,13 +61,46 @@ import type { Page, PageFilters } from '../types.ts';
 import type { OperationContext } from '../operations.ts';
 import type { BrainEngine } from '../engine.ts';
 import type { PhaseStatus, CyclePhase } from '../cycle.ts';
+import { autoAcceptProposals, type AutoAcceptConfig } from './auto-accept-proposals.ts';
 
 /**
  * Bump when the extractor prompt or the JSON output shape changes. Old
  * verdicts in `take_proposals` (composite key includes prompt_version) stay
  * valid as audit history; new runs re-spend LLM tokens on every page.
  */
-export const PROPOSE_TAKES_PROMPT_VERSION = 'v0.36.1.0-tuned-cat15';
+export const PROPOSE_TAKES_PROMPT_VERSION = 'v0.42.40.0-domi-bet-mapping';
+
+/**
+ * Canonical kind enum for the takes table is ('fact'|'take'|'bet'|'hunch').
+ * The prompt instructs the LLM to emit ('prediction'|'judgment'|'bet') because
+ * those words land more reliably with general-purpose chat models than the
+ * gbrain-internal labels. Map them at parse time:
+ *
+ *   'prediction' → 'bet'   (forecast about the world; gradeable)
+ *   'judgment'   → 'take'  (interpretive call; not a calibrated bet)
+ *   'bet'        → 'bet'
+ *   'fact'       → 'fact'
+ *   'hunch'      → 'hunch'
+ *
+ * Anything outside this set falls through to 'take' as a soft default so a
+ * single weird LLM output doesn't drop the whole proposal.
+ */
+const KIND_ALIAS_MAP: Record<string, ProposedTake['kind']> = {
+  prediction: 'bet',
+  judgment: 'take',
+  judgement: 'take',
+  bet: 'bet',
+  fact: 'fact',
+  hunch: 'hunch',
+  take: 'take',
+};
+
+/** Public for tests — normalize an LLM-emitted kind string to the canonical enum. */
+export function normalizeKind(raw: unknown): ProposedTake['kind'] {
+  if (typeof raw !== 'string') return 'take';
+  const k = raw.trim().toLowerCase();
+  return KIND_ALIAS_MAP[k] ?? 'take';
+}
 
 /**
  * Tuned extractor prompt, validated against the hand-labeled synthetic
@@ -145,6 +192,12 @@ export interface ProposeTakesOpts extends BasePhaseOpts {
   model?: string;
   /** Skip pages that already have a complete takes fence. Default: true. */
   skipPagesWithFence?: boolean;
+  /** Auto-accept high-quality proposals (v0.42.41.0). Default: disabled. */
+  autoAccept?: {
+    enabled: boolean;
+    min_weight?: number;
+    kind_filter?: string[];
+  };
 }
 
 export interface ProposeTakesResult {
@@ -267,9 +320,7 @@ export function parseExtractorOutput(raw: string): ProposedTake[] {
     const r = raw as Record<string, unknown>;
     const claim_text = typeof r.claim_text === 'string' ? r.claim_text.trim() : '';
     if (!claim_text || claim_text.length > 500) continue;
-    const kind = ['fact', 'take', 'bet', 'hunch'].includes(r.kind as string)
-      ? (r.kind as ProposedTake['kind'])
-      : 'take';
+    const kind = normalizeKind(r.kind);
     const holder = typeof r.holder === 'string' && r.holder.length > 0 ? r.holder : 'brain';
     const weightRaw = typeof r.weight === 'number' ? r.weight : 0.5;
     const weight = Math.max(0, Math.min(1, weightRaw));
@@ -445,8 +496,29 @@ class ProposeTakesPhase extends BaseCyclePhase {
       halt_delta: result.budget_exhausted ? 1 : 0,
     });
 
+    // v0.42.41.0-domi-auto-accept: optionally auto-accept high-quality proposals
+    const autoAcceptEnabled = (opts as any).autoAccept?.enabled ?? false;
+    const autoAcceptConfig: AutoAcceptConfig = {
+      enabled: autoAcceptEnabled,
+      min_weight: (opts as any).autoAccept?.min_weight ?? 0.7,
+      kind_filter: (opts as any).autoAccept?.kind_filter ?? ['bet'],
+    };
+
+    let autoAcceptSummary = '';
+    if (autoAcceptConfig.enabled && result.proposals_inserted > 0) {
+      try {
+        const acceptResult = await autoAcceptProposals(this.ctx, autoAcceptConfig);
+        autoAcceptSummary = `, ${acceptResult.summary}`;
+        result.warnings.push(
+          `auto-accepted ${acceptResult.accepted_count}/${acceptResult.pending_before} pending proposals`,
+        );
+      } catch (err) {
+        result.warnings.push(`auto-accept failed: ${(err as Error).message}`);
+      }
+    }
+
     return {
-      summary: `propose_takes: scanned ${result.pages_scanned} pages, ${result.cache_hits} cached, ${result.proposals_inserted} new proposals (run ${proposalRunId})`,
+      summary: `propose_takes: scanned ${result.pages_scanned} pages, ${result.cache_hits} cached, ${result.proposals_inserted} new proposals (run ${proposalRunId})${autoAcceptSummary}`,
       details: { ...result, proposal_run_id: proposalRunId, prompt_version: promptVersion },
       status: result.budget_exhausted ? 'warn' : 'ok',
     };

@@ -220,6 +220,23 @@ describe('dispatchPerSource — integration with stubbed engine + queue', () => 
     // source_id threaded through job data
     const sourceIds = added.map(j => (j.data as Record<string, unknown>).source_id).sort();
     expect(sourceIds).toEqual(['alpha', 'beta']);
+    const repoPaths = added.map(j => (j.data as Record<string, unknown>).repoPath).sort();
+    expect(repoPaths).toEqual(['/tmp/alpha', '/tmp/beta']);
+  });
+
+  test('per-source fan-out payload uses each source local_path as repoPath', async () => {
+    const { engine, queue, added, fanoutOpts } = makeStubs([
+      { ...src('domi-feishu-brain'), local_path: '/sources/domi-feishu-brain' },
+      { ...src('signals'), local_path: '/sources/signals' },
+    ]);
+
+    await dispatchPerSource(engine, queue, fanoutOpts);
+
+    const payloadBySource = new Map(
+      added.map(j => [(j.data as Record<string, unknown>).source_id, j.data as Record<string, unknown>]),
+    );
+    expect(payloadBySource.get('domi-feishu-brain')?.repoPath).toBe('/sources/domi-feishu-brain');
+    expect(payloadBySource.get('signals')?.repoPath).toBe('/sources/signals');
   });
 
   test('pull: true only when source.config.remote_url is set', async () => {

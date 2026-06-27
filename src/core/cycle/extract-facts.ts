@@ -178,6 +178,30 @@ export async function runExtractFacts(
     // Caller explicitly passed a list (possibly empty). Empty array is a
     // real incremental no-op; don't escalate to full-brain walk.
     slugs = opts.slugs;
+    
+    // CTO 2026-06-27: If sync returned empty (no incremental changes),
+    // but there are pages pending extraction, scan for them explicitly.
+    // This fixes the v0.32+ regression where extract_facts became fully
+    // dependent on sync's changeset, causing fact extraction to stall
+    // when signal-drain syncs independently of dream cycle.
+    if (slugs.length === 0 && !opts.dryRun) {
+      const pending = await engine.executeRaw(`
+        SELECT slug FROM pages
+        WHERE type IN ('signal', 'chat', 'intake', 'conversation', 'meeting')
+        AND (frontmatter->>'facts_extracted_at' IS NULL 
+             OR frontmatter->>'facts_extracted_at' = '')
+        AND (frontmatter->>'dream_generated' IS NULL 
+             OR frontmatter->>'dream_generated' = 'false')
+        ${sourceId ? `AND source_id = '${sourceId}'` : ''}
+        LIMIT 1000
+      `);
+      slugs = pending.map((r: any) => r.slug);
+      if (slugs.length > 0) {
+        result.warnings.push(
+          `Sync returned 0 changes but found ${slugs.length} pages pending extraction; scanning explicitly`
+        );
+      }
+    }
   } else {
     // Full walk: every page in the brain. Bounded by engine.getAllSlugs
     // which is already the precedent for full-extract paths.
@@ -228,7 +252,51 @@ export async function runExtractFacts(
     const deleted = await engine.deleteFactsForPage(slug, sourceId);
     result.factsDeleted += deleted.deleted;
 
-    if (parsed.facts.length === 0) continue;
+    if (parsed.facts.length === 0) {
+      // CTO 2026-06-27: Signal pages don't have ## Facts fence, but should
+      // still generate a fact from their query + metadata. This fixes the
+      // signal fact extraction gap reported in cron health monitoring.
+      if (page.type === 'signal' && page.frontmatter?.query) {
+        const signalTypes = page.frontmatter.signal_types || [];
+        if (signalTypes.includes('fact')) {
+          const fact: any = {
+            fact: page.frontmatter.query,
+            source: 'cycle:extract_facts:signal',
+            entity_slug: null,
+            valid_from: page.effective_date ? new Date(page.effective_date) : new Date(),
+            valid_until: null,
+            confidence: 0.8,
+            context: `Signal from ${page.frontmatter.platform || 'unknown platform'}`,
+            source_markdown_slug: slug,
+            row_num: 1,
+            embedding: null,
+            claim_metric: null,
+            claim_value: null,
+            claim_unit: null,
+            claim_period: null
+          };
+          
+          // Embed the signal text
+          if (isAvailable('embedding')) {
+            try {
+              const embeddings = await embed([fact.fact], { abortSignal: opts.signal });
+              if (embeddings.length > 0) {
+                fact.embedding = embeddings[0];
+              }
+            } catch (err) {
+              result.warnings.push(
+                `${slug}: signal fact embed failed: ${err instanceof Error ? err.message : String(err)}`
+              );
+            }
+          }
+          
+          const inserted = await engine.insertFacts([fact], { source_id: sourceId });
+          result.factsInserted += inserted.inserted;
+          result.pagesWithFacts += 1;
+        }
+      }
+      continue;
+    }
 
     // v0.35.4 (D-ENG-1) — thread page.effective_date as the fallback
     // valid_from. Without this, fence rows without explicit `validFrom:`

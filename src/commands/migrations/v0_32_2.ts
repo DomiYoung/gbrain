@@ -198,13 +198,44 @@ async function phaseBFenceFacts(
     }
 
     // Walk legacy rows in (source_id, entity_slug) groups for per-page
-    // atomic writes.
+    // atomic writes. Pre-v0.32.2 facts can be stranded on the seed
+    // `default` source even though their entity page already lives in a
+    // filesystem-backed non-default source. Reassign only the unambiguous
+    // default-source case before fencing: exactly one live same-slug page
+    // with a local_path in another source. This is reversible at the DB row
+    // level and avoids fabricating a local_path for `default`.
     const legacy = await engine.executeRaw<LegacyFactRow>(
-      `SELECT id, source_id, entity_slug, fact, kind, visibility, notability,
-              context, valid_from, valid_until, source, confidence
-         FROM facts
-        WHERE row_num IS NULL
-        ORDER BY source_id, entity_slug, id`,
+      `WITH legacy AS (
+         SELECT id, source_id, entity_slug, fact, kind, visibility, notability,
+                context, valid_from, valid_until, source, confidence
+           FROM facts
+          WHERE row_num IS NULL
+       ), live_targets AS (
+         SELECT DISTINCT l.id AS fact_id,
+                p.source_id AS target_source_id
+           FROM legacy l
+           JOIN pages p
+             ON p.slug = l.entity_slug
+            AND l.source_id = 'default'
+            AND p.source_id <> l.source_id
+            AND p.deleted_at IS NULL
+           JOIN sources s
+             ON s.id = p.source_id
+            AND s.local_path IS NOT NULL
+          WHERE l.entity_slug IS NOT NULL
+       ), resolved AS (
+         SELECT fact_id, MIN(target_source_id) AS target_source_id
+           FROM live_targets
+          GROUP BY fact_id
+          HAVING COUNT(DISTINCT target_source_id) = 1
+       )
+       SELECT l.id,
+              COALESCE(r.target_source_id, l.source_id) AS source_id,
+              l.entity_slug, l.fact, l.kind, l.visibility, l.notability,
+              l.context, l.valid_from, l.valid_until, l.source, l.confidence
+         FROM legacy l
+         LEFT JOIN resolved r ON r.fact_id = l.id
+        ORDER BY COALESCE(r.target_source_id, l.source_id), l.entity_slug, l.id`,
     );
 
     const outcome: PhaseBOutcome = {
@@ -317,11 +348,13 @@ async function phaseBFenceFacts(
         }
         renameSync(tmpPath, filePath);
 
-        // UPDATE the DB rows with their new row_nums + source_markdown_slug.
+        // UPDATE the DB rows with their new source assignment + row_nums +
+        // source_markdown_slug. The source_id update is the reversible
+        // default-source drift repair for unambiguous legacy rows.
         for (const a of assignments) {
           await engine.executeRaw(
-            `UPDATE facts SET row_num = $1, source_markdown_slug = $2 WHERE id = $3`,
-            [a.row_num, entitySlug, a.id],
+            `UPDATE facts SET source_id = $1, row_num = $2, source_markdown_slug = $3 WHERE id = $4`,
+            [sourceId, a.row_num, entitySlug, a.id],
           );
         }
         outcome.fenced += assignments.length;

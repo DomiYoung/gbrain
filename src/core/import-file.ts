@@ -1292,6 +1292,16 @@ export interface ImportTransactionSpec {
   file?: FileSpec;
   /** Inside-transaction hook for type-specific work (tags, links). */
   after?: (tx: BrainEngine) => Promise<void>;
+  /**
+   * v0.42 Bug 4 — source_id routing for createVersion + putPage. When set,
+   * the existing-page version snapshot is taken from the (slug, source_id)
+   * row, NOT the schema DEFAULT 'default' source. Required for multi-source
+   * brains where the same slug exists under multiple source_ids.
+   *
+   * When undefined, callers fall back to engine-level cross-source lookup
+   * (the v0.42 createVersion fallback picks the most-recently-updated row).
+   */
+  sourceId?: string;
 }
 
 export async function withImportTransaction(
@@ -1299,7 +1309,10 @@ export async function withImportTransaction(
   spec: ImportTransactionSpec,
 ): Promise<void> {
   await engine.transaction(async (tx) => {
-    if (spec.hadExisting) await tx.createVersion(spec.slug);
+    // v0.42 Bug 4: thread sourceId so createVersion targets the right
+    // (slug, source_id) row instead of falling back to the 'default' source.
+    const txOpts = spec.sourceId ? { sourceId: spec.sourceId } : undefined;
+    if (spec.hadExisting) await tx.createVersion(spec.slug, txOpts);
     await tx.putPage(spec.slug, spec.page);
     if (spec.file) {
       // page_id resolution after putPage so the new row's id is available.
@@ -1634,6 +1647,9 @@ export async function importImageFile(
     },
     chunks: [chunk],
     file: fileSpec,
+    // v0.42 Bug 4: thread sourceId so the version snapshot of the existing
+    // image row is taken from (slug, source_id), not the 'default' source.
+    sourceId: opts.sourceId,
     after: async (tx) => {
       // Cherry-3: path-proximity auto-link to a sibling text page. The first
       // matching candidate gets an image_of edge. Best-effort — addLink

@@ -215,7 +215,7 @@ describe('resolveModel — v0.31.12 tier system', () => {
   test('isAnthropicProvider matches provider-prefixed and bare claude-* ids', () => {
     expect(isAnthropicProvider('anthropic:claude-sonnet-4-6')).toBe(true);
     expect(isAnthropicProvider('claude-opus-4-7')).toBe(true);
-    expect(isAnthropicProvider('openai:gpt-5.5')).toBe(false);
+    expect(isAnthropicProvider('openai:deepseek-v4-pro')).toBe(false);
     expect(isAnthropicProvider('gemini-3-pro')).toBe(false);
     expect(isAnthropicProvider('')).toBe(false);
   });

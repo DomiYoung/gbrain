@@ -39,6 +39,10 @@ beforeEach(async () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (engine as any).db.query('DELETE FROM facts');
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (engine as any).db.query(`DELETE FROM pages WHERE source_id <> 'default'`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (engine as any).db.query(`DELETE FROM sources WHERE id <> 'default'`);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await (engine as any).db.query(
     `UPDATE sources SET local_path = $1 WHERE id = 'default'`,
     [brainDir],
@@ -235,6 +239,125 @@ describe('phaseBFenceFacts — happy path backfill', () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rows = await (engine as any).db.query('SELECT row_num FROM facts');
     expect(rows.rows[0].row_num).toBeNull();
+  });
+
+  test('routes default legacy facts to the single live filesystem-backed matching source page', async () => {
+    const obsidianDir = mkdtempSync(join(tmpdir(), 'mig-v0_32_2-obsidian-'));
+    mkdirSync(join(obsidianDir, 'people'), { recursive: true });
+    writeFileSync(
+      join(obsidianDir, 'people/alice.md'),
+      '---\ntype: person\ntitle: Alice\nslug: people/alice\n---\n\n# Alice\n',
+      'utf-8',
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (engine as any).db.query(
+      `INSERT INTO sources (id, name, local_path, config)
+       VALUES ('obsidian', 'obsidian', $1, '{}'::jsonb)`,
+      [obsidianDir],
+    );
+    await engine.putPage('people/alice', {
+      type: 'person',
+      title: 'Alice',
+      compiled_truth: '# Alice\n',
+    }, { sourceId: 'obsidian' });
+    await seedLegacyFact({ entity_slug: 'people/alice', fact: 'Belongs in obsidian' });
+
+    const r = await __testing.phaseBFenceFacts(engine, OPTS);
+    expect(r.status).toBe('complete');
+    expect(r.detail).toContain('fenced=1');
+    expect(r.detail).not.toContain('skipped_no_local_path=1');
+
+    const body = readFileSync(join(obsidianDir, 'people/alice.md'), 'utf-8');
+    expect(body).toContain('Belongs in obsidian');
+    expect(existsSync(join(brainDir, 'people/alice.md'))).toBe(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const moved = await (engine as any).db.query(
+      `SELECT source_id, row_num, source_markdown_slug FROM facts WHERE fact = 'Belongs in obsidian'`,
+    );
+    expect(moved.rows[0]).toMatchObject({
+      source_id: 'obsidian',
+      row_num: 1,
+      source_markdown_slug: 'people/alice',
+    });
+    rmSync(obsidianDir, { recursive: true, force: true });
+  });
+
+  test('does not route default legacy facts when matching live source pages are ambiguous', async () => {
+    const obsidianDir = mkdtempSync(join(tmpdir(), 'mig-v0_32_2-obsidian-'));
+    const feishuDir = mkdtempSync(join(tmpdir(), 'mig-v0_32_2-feishu-'));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (engine as any).db.query(
+      `INSERT INTO sources (id, name, local_path, config)
+       VALUES ('obsidian', 'obsidian', $1, '{}'::jsonb),
+              ('feishu', 'feishu', $2, '{}'::jsonb)`,
+      [obsidianDir, feishuDir],
+    );
+    for (const [sourceId, dir] of [['obsidian', obsidianDir], ['feishu', feishuDir]] as const) {
+      mkdirSync(join(dir, 'people'), { recursive: true });
+      writeFileSync(
+        join(dir, 'people/alice.md'),
+        '---\ntype: person\ntitle: Alice\nslug: people/alice\n---\n\n# Alice\n',
+        'utf-8',
+      );
+      await engine.putPage('people/alice', {
+        type: 'person',
+        title: 'Alice',
+        compiled_truth: '# Alice\n',
+      }, { sourceId });
+    }
+    // Mirror the production drift shape: default has DB-only legacy facts,
+    // but no filesystem-backed system-of-record to write into.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (engine as any).db.query(`UPDATE sources SET local_path = NULL WHERE id = 'default'`);
+    await seedLegacyFact({ entity_slug: 'people/alice', fact: 'Ambiguous target' });
+
+    const r = await __testing.phaseBFenceFacts(engine, OPTS);
+    expect(r.status).toBe('complete');
+    expect(r.detail).toContain('skipped_no_local_path=1');
+
+    expect(readFileSync(join(obsidianDir, 'people/alice.md'), 'utf-8')).not.toContain('Ambiguous target');
+    expect(readFileSync(join(feishuDir, 'people/alice.md'), 'utf-8')).not.toContain('Ambiguous target');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ambiguous = await (engine as any).db.query(
+      `SELECT row_num FROM facts WHERE fact = 'Ambiguous target'`,
+    );
+    expect(ambiguous.rows[0].row_num).toBeNull();
+    rmSync(obsidianDir, { recursive: true, force: true });
+    rmSync(feishuDir, { recursive: true, force: true });
+  });
+
+  test('does not route non-default legacy facts to another same-slug source', async () => {
+    const obsidianDir = mkdtempSync(join(tmpdir(), 'mig-v0_32_2-obsidian-'));
+    mkdirSync(join(obsidianDir, 'people'), { recursive: true });
+    writeFileSync(
+      join(obsidianDir, 'people/alice.md'),
+      '---\ntype: person\ntitle: Alice\nslug: people/alice\n---\n\n# Alice\n',
+      'utf-8',
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (engine as any).db.query(
+      `INSERT INTO sources (id, name, local_path, config)
+       VALUES ('tita', 'tita', NULL, '{}'::jsonb),
+              ('obsidian', 'obsidian', $1, '{}'::jsonb)`,
+      [obsidianDir],
+    );
+    await engine.putPage('people/alice', {
+      type: 'person',
+      title: 'Alice',
+      compiled_truth: '# Alice\n',
+    }, { sourceId: 'obsidian' });
+    await seedLegacyFact({ source_id: 'tita', entity_slug: 'people/alice', fact: 'Stay in tita' });
+
+    const r = await __testing.phaseBFenceFacts(engine, OPTS);
+    expect(r.status).toBe('complete');
+    expect(r.detail).toContain('skipped_no_local_path=1');
+    expect(readFileSync(join(obsidianDir, 'people/alice.md'), 'utf-8')).not.toContain('Stay in tita');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rows = await (engine as any).db.query(
+      `SELECT source_id, row_num FROM facts WHERE fact = 'Stay in tita'`,
+    );
+    expect(rows.rows[0]).toMatchObject({ source_id: 'tita', row_num: null });
+    rmSync(obsidianDir, { recursive: true, force: true });
   });
 });
 

@@ -35,7 +35,7 @@ import { DEFAULT_CYCLES_NONTTY } from '../eval/cycle-default.ts';
 
 export const DEFAULT_MODEL_PANEL = [
   'openai:gpt-4o',
-  'anthropic:claude-opus-4-7',
+  'x5m5x_claude:claude-opus-4-7',
   'google:gemini-1.5-pro',
 ] as const;
 

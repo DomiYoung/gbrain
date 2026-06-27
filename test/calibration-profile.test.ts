@@ -30,15 +30,19 @@ interface CapturedSql {
   params: unknown[];
 }
 
-function buildMockEngine(opts: { scorecard: TakesScorecard }): {
+function buildMockEngine(opts: { scorecard: TakesScorecard; config?: Record<string, string> }): {
   engine: BrainEngine;
   captured: CapturedSql[];
 } {
   const captured: CapturedSql[] = [];
+  const config = new Map<string, string>(Object.entries(opts.config ?? {}));
   const engine = {
     kind: 'pglite',
     async getScorecard() {
       return opts.scorecard;
+    },
+    async getConfig(key: string) {
+      return config.get(key) ?? null;
     },
     async executeRaw<T>(sql: string, params?: unknown[]): Promise<T[]> {
       captured.push({ sql, params: params ?? [] });
@@ -232,7 +236,7 @@ describe('runPhaseCalibrationProfile — phase integration', () => {
     // grade_completion, domain_scorecards_json, patterns[], voice_passed, voice_attempts,
     // bias_tags[], model_id
     expect(insert!.params[0]).toBe('default'); // source_id
-    expect(insert!.params[1]).toBe('garry'); // holder
+    expect(insert!.params[1]).toBe('brain'); // holder
     expect(insert!.params[2]).toBe(12); // total_resolved
     expect(insert!.params[9]).toBe(true); // voice_gate_passed
     expect(insert!.params[10]).toBe(1); // voice_gate_attempts
@@ -282,14 +286,33 @@ describe('runPhaseCalibrationProfile — phase integration', () => {
     };
 
     await runPhaseCalibrationProfile(buildCtx(engine), {
-      model: 'custom:gpt-5.5',
+      model: 'custom:deepseek-v4-pro',
       patternsGenerator,
       voiceGateJudge: passJudge,
     });
 
     const insert = captured.find(c => c.sql.includes('INSERT INTO calibration_profiles'));
-    expect(seenModelHint).toBe('custom:gpt-5.5');
-    expect(insert!.params[12]).toBe('custom:gpt-5.5');
+    expect(seenModelHint).toBe('custom:deepseek-v4-pro');
+    expect(insert!.params[12]).toBe('custom:deepseek-v4-pro');
+  });
+
+  test('resolves calibration_profile model from config when opts.model is absent', async () => {
+    const { engine } = buildMockEngine({
+      scorecard: ENOUGH_RESOLVED_SCORECARD,
+      config: { 'models.calibration_profile': 'custom:deepseek-v4-pro' },
+    });
+    let seenModelHint: string | undefined;
+    const patternsGenerator: PatternStatementsGenerator = async input => {
+      seenModelHint = input.modelHint;
+      return ['You called tactics well — 7 of 12 held up.'];
+    };
+
+    await runPhaseCalibrationProfile(buildCtx(engine), {
+      patternsGenerator,
+      voiceGateJudge: passJudge,
+    });
+
+    expect(seenModelHint).toBe('custom:deepseek-v4-pro');
   });
 
   test('bias_tags_generator failure logs warning + phase continues', async () => {

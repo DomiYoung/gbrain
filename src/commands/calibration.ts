@@ -67,7 +67,19 @@ export async function getLatestProfile(
   sql += ` ORDER BY generated_at DESC LIMIT 1`;
 
   const rows = await engine.executeRaw<CalibrationProfileRow>(sql, params);
-  return rows[0] ?? null;
+
+  const row = rows[0];
+  if (!row) return null;
+
+  // PostgreSQL BIGSERIAL id returns as JS BigInt via postgres.js
+  // (types.bigint = postgres.BigInt). JSON.stringify cannot serialize
+  // BigInt — convert before any downstream serialization.
+  // Also normalize Date → ISO string for type-safety across MCP/CLI.
+  return {
+    ...row,
+    id: typeof row.id === 'bigint' ? Number(row.id) : row.id,
+    generated_at: row.generated_at instanceof Date ? row.generated_at.toISOString() : row.generated_at,
+  };
 }
 
 /** Human format the profile for terminal output. */
@@ -158,7 +170,7 @@ export async function runCalibration(
   config: GBrainConfig,
 ): Promise<void> {
   const { opts } = parseArgs(args);
-  const holder = opts.holder ?? 'garry';
+  const holder = opts.holder ?? 'brain';
   const sourceId = 'default';
 
   if (opts.undoWave) {
@@ -240,13 +252,16 @@ export async function getCalibrationProfileOp(
   ctx: OperationContext,
   params: { holder?: string },
 ): Promise<CalibrationProfileRow | null> {
-  const holder = params.holder ?? 'garry';
+  const holder = params.holder ?? 'brain';
   if (typeof holder !== 'string' || holder.length === 0) {
     throw new GBrainError(
       'INVALID_HOLDER',
       'get_calibration_profile.holder must be a non-empty string',
-      'pass holder="<slug>" or omit to default to "garry"',
+      'pass holder="<slug>" or omit to default to "brain"',
     );
+  }
+  if (ctx.takesHoldersAllowList && !ctx.takesHoldersAllowList.includes(holder)) {
+    return null;
   }
   const scope = sourceScopeOpts(ctx);
   return getLatestProfile(ctx.engine, { holder, ...scope });

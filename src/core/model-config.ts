@@ -55,7 +55,7 @@ export interface ResolveModelOpts {
  *  cause `resolveRecipe()` to throw "unknown provider" and the queue rejects
  *  the submit. */
 export const DEFAULT_ALIASES: Record<string, string> = {
-  opus:   'anthropic:claude-opus-4-7',
+  opus:   'x5m5x_claude:claude-opus-4-7',
   sonnet: 'anthropic:claude-sonnet-4-6',
   haiku:  'anthropic:claude-haiku-4-5-20251001',
   gemini: 'google:gemini-3-pro',
@@ -74,7 +74,7 @@ export const DEFAULT_ALIASES: Record<string, string> = {
 export const TIER_DEFAULTS: Record<ModelTier, string> = {
   utility:   'anthropic:claude-haiku-4-5-20251001',
   reasoning: 'anthropic:claude-sonnet-4-6',
-  deep:      'anthropic:claude-opus-4-7',
+  deep:      'x5m5x_claude:claude-opus-4-7',
   subagent:  'anthropic:claude-sonnet-4-6',
 };
 

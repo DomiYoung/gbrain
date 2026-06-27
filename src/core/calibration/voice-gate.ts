@@ -42,6 +42,7 @@ export type VoiceGateJudge = (input: {
   candidate: string;
   mode: VoiceGateMode;
   rubric: string;
+  judgeModel?: string;
 }) => Promise<VoiceGateJudgeVerdict>;
 
 export interface VoiceGateResult<T = unknown> {
@@ -85,6 +86,8 @@ export interface VoiceGateOpts<S> {
   judge?: VoiceGateJudge;
   /** Override the rubric per mode (rarely needed). */
   rubric?: string;
+  /** Override the model used by the default judge. */
+  judgeModel?: string;
 }
 
 /**
@@ -162,11 +165,12 @@ export async function defaultJudge(input: {
   candidate: string;
   mode: VoiceGateMode;
   rubric: string;
+  judgeModel?: string;
 }): Promise<VoiceGateJudgeVerdict> {
   const prompt = HAIKU_GATE_PROMPT
     .replace('{RUBRIC}', input.rubric)
     .replace('{CANDIDATE}', input.candidate);
-  const model = getConfiguredJudgeModel();
+  const model = input.judgeModel ?? getConfiguredJudgeModel();
   const result = await gatewayChat({
     messages: [{ role: 'user', content: prompt }],
     model,
@@ -229,7 +233,12 @@ export async function gateVoice<S>(opts: VoiceGateOpts<S>): Promise<VoiceGateRes
       lastReason = 'empty_generation';
       continue;
     }
-    const verdict = await judge({ candidate, mode: opts.mode, rubric });
+    const verdict = await judge({
+      candidate,
+      mode: opts.mode,
+      rubric,
+      ...(opts.judgeModel ? { judgeModel: opts.judgeModel } : {}),
+    });
     if (verdict.verdict === 'conversational') {
       return { text: candidate, passed: true, attempts: attempt, lastReason: verdict.reason };
     }

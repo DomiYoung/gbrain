@@ -55,7 +55,7 @@ export const CANONICAL_PRICING: Record<string, ModelPricing> = {
   // Opus 4.x: $5 in / $25 out. 4.8 (released 2026-05-28) shares 4.7's
   // per-token rate — closes gbrain#1819.
   'anthropic:claude-opus-4-8':            { input:  5.00, output: 25.00 },
-  'anthropic:claude-opus-4-7':            { input:  5.00, output: 25.00 },
+  'x5m5x_claude:claude-opus-4-7':            { input:  5.00, output: 25.00 },
   'anthropic:claude-opus-4-6':            { input:  5.00, output: 25.00 },
   'anthropic:claude-sonnet-4-6':          { input:  3.00, output: 15.00 },
   // Haiku 4.5 — both the dateless canonical id and the dated snapshot.
@@ -68,8 +68,6 @@ export const CANONICAL_PRICING: Record<string, ModelPricing> = {
   'openai:gpt-4o':                        { input:  2.50, output: 10.00 },
   'openai:gpt-4o-mini':                   { input:  0.15, output:  0.60 },
   'openai:gpt-5':                         { input:  5.00, output: 20.00 },
-  'openai:gpt-5.5':                       { input:  4.00, output: 16.00 },
-
   // ── Google ─────────────────────────────────────────────────────────────
   'google:gemini-1.5-pro':                { input:  1.25, output:  5.00 },
   // Gemini 2.0 Flash: $0.10 in / $0.40 out (verified 2026-06-03). Reconciled
@@ -78,12 +76,21 @@ export const CANONICAL_PRICING: Record<string, ModelPricing> = {
   'google:gemini-2.0-flash':              { input:  0.10, output:  0.40 },
   'google:gemini-2-flash':                { input:  0.10, output:  0.40 },
 
-  // ── NewAPI (self-hosted proxy to multiple providers) ──────────────────
-  // Maps to openai pricing tier ($4/$16 per 1M tokens — same as openai:gpt-5.5)
-  'newapi:gpt-5.5':                       { input:  4.00, output: 16.00 },
+  // ── NewAPI / Custom (self-hosted proxy to multiple providers) ─────────
+  // newapi:gpt-5.5 removed — spanagent is now the sole provider
   'newapi:claude-opus-4-7':               { input:  5.00, output: 25.00 },
   'newapi:claude-sonnet-4-6':             { input:  3.00, output: 15.00 },
   'newapi:deepseek-v4-pro':               { input:  0.14, output:  0.28 },  // deepseek-chat pricing
+  'newapi:deepseek-v4-flash':             { input:  0.08, output:  0.16 },
+
+  // custom:gpt-5.5 removed — spanagent is now the sole provider
+  'custom:claude-opus-4-7':               { input:  5.00, output: 25.00 },
+  'custom:claude-sonnet-4-6':             { input:  3.00, output: 15.00 },
+  'custom:deepseek-v4-pro':               { input:  0.14, output:  0.28 },
+  'custom:deepseek-v4-flash':             { input:  0.08, output:  0.16 },
+  'custom:kimi-k2.6':                     { input:  1.00, output:  1.00 },
+  'custom:kimi-k2.7-code':                { input:  1.00, output:  1.00 },
+  'custom:kimi-2.6-code':                 { input:  1.00, output:  1.00 },
 
   // ── Together / DeepSeek (cross-modal-eval panel) ───────────────────────
   'together:meta-llama/Llama-3.3-70B-Instruct-Turbo': { input: 0.88, output: 0.88 },

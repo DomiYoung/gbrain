@@ -15,7 +15,7 @@ export const custom: Recipe = {
   },
   touchpoints: {
     chat: {
-      models: ['gpt-5.5', 'claude-opus-4-7', 'claude-sonnet-4-6'],
+      models: ['claude-opus-4-7', 'claude-sonnet-4-6'],
       supports_tools: true,
       supports_subagent_loop: true,
       supports_prompt_cache: false,

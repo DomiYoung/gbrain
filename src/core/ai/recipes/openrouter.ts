@@ -83,7 +83,6 @@ export const openrouter: Recipe = {
       models: [
         'openai/gpt-5.2',
         'openai/gpt-5.2-chat',
-        'openai/gpt-5.5',
         'anthropic/claude-haiku-4.5',
         'anthropic/claude-sonnet-4.6',
         'anthropic/claude-opus-4.7',

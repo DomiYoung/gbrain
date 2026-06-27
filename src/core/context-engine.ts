@@ -71,11 +71,7 @@ export interface ContextEngine {
   }): Promise<CompactResult>;
 }
 
-// Runtime helpers — loaded lazily on first assemble()/compact() call. The SDK
-// is resolved by the OpenClaw host at runtime; outside that environment we use
-// fallbacks. Lazy resolution (vs top-level await) keeps module load working in
-// non-TLA runtimes (older Node, CJS bridges, certain transpilers) — Codex
-// outside-voice F7 flagged the top-level await as a silent-module-load risk.
+// Runtime helpers — loaded lazily on first assemble()/compact() call.
 let _sdkLoaded = false;
 let _delegateCompactionToRuntime: ((params: any) => Promise<CompactResult>) | undefined;
 let _buildMemorySystemPromptAddition: ((params: any) => string | undefined) | undefined;
@@ -83,16 +79,8 @@ let _buildMemorySystemPromptAddition: ((params: any) => string | undefined) | un
 async function ensureSdkLoaded(): Promise<void> {
   if (_sdkLoaded) return;
   _sdkLoaded = true;
-  try {
-    // @ts-ignore — openclaw/plugin-sdk is resolved at runtime by the OpenClaw host; not a build-time dep.
-    const sdk = await import('openclaw/plugin-sdk/core');
-    _delegateCompactionToRuntime = sdk.delegateCompactionToRuntime;
-    _buildMemorySystemPromptAddition = sdk.buildMemorySystemPromptAddition;
-  } catch {
-    // Not running inside OpenClaw — use fallbacks
-    _delegateCompactionToRuntime = async () => ({ ok: true, compacted: false, reason: 'no-runtime' });
-    _buildMemorySystemPromptAddition = () => undefined;
-  }
+  _delegateCompactionToRuntime = async () => ({ ok: true, compacted: false, reason: 'no-runtime' });
+  _buildMemorySystemPromptAddition = () => undefined;
 }
 
 /** Test-only: reset the lazy-load state so a test can re-exercise the load path. */

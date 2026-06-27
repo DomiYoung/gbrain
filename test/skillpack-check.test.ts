@@ -19,6 +19,7 @@ import { mkdtempSync, rmSync, mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import { execFileSync } from 'child_process';
+import { __testing as skillpackCheckTesting } from '../src/commands/skillpack-check.ts';
 
 const CLI = join(__dirname, '..', 'src', 'cli.ts');
 
@@ -130,5 +131,21 @@ describe('gbrain skillpack-check', () => {
     const report = JSON.parse(result.stdout);
     expect(report.summary).toMatch(/\d+ action\(s\)/);
     expect(report.summary).toContain(report.actions[0]);
+  });
+
+  test('gbrainSpawn ignores bunfs execPath and resolves a real shim on PATH', () => {
+    const origArg1 = process.argv[1];
+    const origExec = (process as { execPath?: string }).execPath;
+    process.argv[1] = '/$bunfs/root/gbrain';
+    if (origExec) (process as { execPath?: string }).execPath = '/$bunfs/root/gbrain';
+
+    try {
+      const resolved = skillpackCheckTesting.gbrainSpawn();
+      expect(resolved.cmd).not.toContain('$bunfs');
+      expect(resolved.prefix).toEqual([]);
+    } finally {
+      process.argv[1] = origArg1;
+      if (origExec) (process as { execPath?: string }).execPath = origExec;
+    }
   });
 });

@@ -356,7 +356,7 @@ export async function runAutopilot(engine: BrainEngine, args: string[]) {
   }
 
   const repoPath = parseArg(args, '--repo') || await engine.getConfig('sync.repo_path');
-  const baseInterval = parseInt(parseArg(args, '--interval') || '300', 10);
+  const baseInterval = parseInt(parseArg(args, '--interval') || '600', 10);
   const jsonMode = args.includes('--json');
   const forceInline = args.includes('--inline');
   const noWorker = !shouldSpawnAutopilotWorker(args);
@@ -870,12 +870,12 @@ export async function runAutopilot(engine: BrainEngine, args: string[]) {
         const minutesSinceLastFull = (Date.now() - lastFullCycleAt) / 60000;
 
         const shouldFullCycle =
-          (score >= 95 && plan.length === 0 && minutesSinceLastFull >= FULL_CYCLE_FLOOR_MIN) ||
+          (score >= 80 && minutesSinceLastFull >= FULL_CYCLE_FLOOR_MIN) ||
           plan.length > 3 ||
           estTotal >= 300 ||
           score < 70;
 
-        const shouldSleep = score >= 95 && plan.length === 0 && minutesSinceLastFull < FULL_CYCLE_FLOOR_MIN;
+        const shouldSleep = score >= 80 && plan.length === 0 && minutesSinceLastFull < FULL_CYCLE_FLOOR_MIN;
 
         if (shouldSleep) {
           if (jsonMode) {

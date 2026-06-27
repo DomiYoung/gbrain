@@ -39,8 +39,8 @@ function buildMockEngine(opts: {
       if (sql.includes('FROM takes')) {
         return [{ count: opts.abandonedCount ?? 0 } as unknown as T];
       }
-      if (sql.includes('FROM calibration_profiles WHERE holder')) {
-        return [{ generated_at: opts.freshGeneratedAt ?? null } as unknown as T];
+      if (sql.includes('FROM calibration_profiles') && sql.includes('ORDER BY generated_at DESC')) {
+        return [{ holder: 'brain', generated_at: opts.freshGeneratedAt ?? null } as unknown as T];
       }
       if (sql.includes('FROM take_grade_cache')) {
         return [{ applied_count: opts.gradeAppliedCount ?? 0 } as unknown as T];
@@ -117,7 +117,7 @@ describe('checkCalibrationFreshness', () => {
 
   test('engine throw → warn with diagnostic', async () => {
     const out = await checkCalibrationFreshness(
-      buildMockEngine({ throwOn: /FROM calibration_profiles WHERE holder/ }),
+      buildMockEngine({ throwOn: /ORDER BY generated_at DESC/ }),
     );
     expect(out.status).toBe('warn');
     expect(out.message).toContain('Could not check calibration freshness');

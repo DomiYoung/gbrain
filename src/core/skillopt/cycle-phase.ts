@@ -103,7 +103,7 @@ export async function runPhaseSkillopt(opts: SkilloptPhaseOpts): Promise<Skillop
   }
 
   // Resolve models once. Tiers default to deep/subagent/reasoning.
-  const optimizerModel = await resolveModel(engine, { tier: 'deep', fallback: 'anthropic:claude-opus-4-7' });
+  const optimizerModel = await resolveModel(engine, { tier: 'deep', fallback: 'x5m5x_claude:claude-opus-4-7' });
   const targetModel = await resolveModel(engine, { tier: 'subagent', fallback: 'anthropic:claude-sonnet-4-6' });
   const judgeModel = await resolveModel(engine, { tier: 'reasoning', fallback: 'anthropic:claude-sonnet-4-6' });
 

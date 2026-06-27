@@ -87,7 +87,7 @@ export async function runSkillOptCommand(engine: BrainEngine | null, args: strin
 
   // Resolve models via the tier system.
   const optimizerModel = parsed.optimizerModel
-    ?? await resolveModel(engine, { tier: 'deep', fallback: 'anthropic:claude-opus-4-7' });
+    ?? await resolveModel(engine, { tier: 'deep', fallback: 'x5m5x_claude:claude-opus-4-7' });
   const targetModel = parsed.targetModel
     ?? await resolveModel(engine, { tier: 'subagent', fallback: 'anthropic:claude-sonnet-4-6' });
   const judgeModel = parsed.judgeModel

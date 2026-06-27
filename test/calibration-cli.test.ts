@@ -46,7 +46,7 @@ function buildMockEngine(opts: { rows: CalibrationProfileRow[] }): {
   return { engine, capturedSql, capturedParams };
 }
 
-function buildCtx(engine: BrainEngine, opts: { sourceId?: string; allowedSources?: string[] } = {}): OperationContext {
+function buildCtx(engine: BrainEngine, opts: { sourceId?: string; allowedSources?: string[]; takesHoldersAllowList?: string[] } = {}): OperationContext {
   const ctx: OperationContext = {
     engine,
     config: {} as never,
@@ -56,6 +56,7 @@ function buildCtx(engine: BrainEngine, opts: { sourceId?: string; allowedSources
     sourceId: opts.sourceId ?? 'default',
   };
   if (opts.allowedSources) ctx.auth = { allowedSources: opts.allowedSources } as never;
+  if (opts.takesHoldersAllowList) ctx.takesHoldersAllowList = opts.takesHoldersAllowList;
   return ctx;
 }
 
@@ -116,6 +117,19 @@ describe('getLatestProfile', () => {
     const profile = await getLatestProfile(engine, { holder: 'garry', sourceId: 'default' });
     expect(profile).not.toBeNull();
     expect(profile!.holder).toBe('garry');
+  });
+
+  test('normalizes postgres BigInt id and Date timestamp before serialization', async () => {
+    const row = {
+      ...buildProfile({ holder: 'garry' }),
+      id: 42n,
+      generated_at: new Date('2026-01-01T00:00:00.000Z'),
+    } as unknown as CalibrationProfileRow;
+    const { engine } = buildMockEngine({ rows: [row] });
+    const profile = await getLatestProfile(engine, { holder: 'garry', sourceId: 'default' });
+    expect(profile?.id).toBe(42);
+    expect(profile?.generated_at).toBe('2026-01-01T00:00:00.000Z');
+    expect(() => JSON.stringify(profile)).not.toThrow();
   });
 
   test('returns null when no profile exists', async () => {
@@ -194,17 +208,17 @@ describe('formatProfileText', () => {
 // ─── getCalibrationProfileOp ────────────────────────────────────────
 
 describe('getCalibrationProfileOp (MCP)', () => {
-  test('defaults holder to "garry" when omitted', async () => {
-    const { engine } = buildMockEngine({ rows: [buildProfile({ holder: 'garry' })] });
+  test('defaults holder to "brain" when omitted', async () => {
+    const { engine } = buildMockEngine({ rows: [buildProfile({ holder: 'brain' })] });
     const ctx = buildCtx(engine);
     const result = await getCalibrationProfileOp(ctx, {});
-    expect(result?.holder).toBe('garry');
+    expect(result?.holder).toBe('brain');
   });
 
   test('routes through sourceScopeOpts: scalar source-bound client gets source-scoped result', async () => {
     const rows = [
-      buildProfile({ holder: 'garry', source_id: 'default' }),
-      buildProfile({ holder: 'garry', source_id: 'tenant-b' }),
+      buildProfile({ holder: 'brain', source_id: 'default' }),
+      buildProfile({ holder: 'brain', source_id: 'tenant-b' }),
     ];
     const { engine } = buildMockEngine({ rows });
     const ctx = buildCtx(engine, { sourceId: 'tenant-b' });
@@ -214,8 +228,8 @@ describe('getCalibrationProfileOp (MCP)', () => {
 
   test('federated read scope sees the union of allowed sources', async () => {
     const rows = [
-      buildProfile({ holder: 'garry', source_id: 'tenant-a' }),
-      buildProfile({ holder: 'garry', source_id: 'tenant-z' }),
+      buildProfile({ holder: 'brain', source_id: 'tenant-a' }),
+      buildProfile({ holder: 'brain', source_id: 'tenant-z' }),
     ];
     const { engine } = buildMockEngine({ rows });
     const ctx = buildCtx(engine, { allowedSources: ['tenant-a', 'tenant-b'] });
@@ -228,6 +242,18 @@ describe('getCalibrationProfileOp (MCP)', () => {
     const { engine } = buildMockEngine({ rows: [] });
     const ctx = buildCtx(engine);
     expect(await getCalibrationProfileOp(ctx, { holder: 'people/nobody' })).toBeNull();
+  });
+
+  test('remote allow-list hides disallowed holder profiles', async () => {
+    const { engine } = buildMockEngine({ rows: [buildProfile({ holder: 'brain' })] });
+    const ctx = buildCtx(engine, { takesHoldersAllowList: ['world'] });
+    expect(await getCalibrationProfileOp(ctx, { holder: 'brain' })).toBeNull();
+  });
+
+  test('remote allow-list permits explicitly allowed holder profiles', async () => {
+    const { engine } = buildMockEngine({ rows: [buildProfile({ holder: 'brain' })] });
+    const ctx = buildCtx(engine, { takesHoldersAllowList: ['world', 'brain'] });
+    expect((await getCalibrationProfileOp(ctx, { holder: 'brain' }))?.holder).toBe('brain');
   });
 
   test('throws on empty/non-string holder', async () => {

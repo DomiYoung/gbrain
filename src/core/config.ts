@@ -43,6 +43,8 @@ export interface GBrainConfig {
   zeroentropy_api_key?: string;
   /** NewAPI / custom OpenAI-compatible proxy API key. v0.42 codex fix: custom recipe requires NEWAPI_API_KEY. */
   newapi_api_key?: string;
+  x5m5x_claude_api_key?: string;
+  cc_vibe_api_key?: string;
   /** DashScope / Alibaba Bailian API key. v0.42 codex fix: dashscope recipe requires DASHSCOPE_API_KEY for embedding/routing. */
   dashscope_api_key?: string;
   /** AI gateway config (v0.14+). v0.36+ default: "zeroentropyai:zembed-1" / 1280 / "anthropic:claude-haiku-4-5-20251001". */
@@ -426,6 +428,7 @@ export function loadConfig(): GBrainConfig | null {
     ...(process.env.ANTHROPIC_API_KEY ? { anthropic_api_key: process.env.ANTHROPIC_API_KEY } : {}),
     ...(process.env.ZEROENTROPY_API_KEY ? { zeroentropy_api_key: process.env.ZEROENTROPY_API_KEY } : {}),
     ...(process.env.NEWAPI_API_KEY ? { newapi_api_key: process.env.NEWAPI_API_KEY } : {}),
+    ...(process.env.CC_VIBE_API_KEY ? { cc_vibe_api_key: process.env.CC_VIBE_API_KEY } : {}),
     ...(process.env.DASHSCOPE_API_KEY ? { dashscope_api_key: process.env.DASHSCOPE_API_KEY } : {}),
     ...(process.env.GBRAIN_EMBEDDING_MODEL ? { embedding_model: process.env.GBRAIN_EMBEDDING_MODEL } : {}),
     ...(process.env.GBRAIN_EMBEDDING_DIMENSIONS ? { embedding_dimensions: parseInt(process.env.GBRAIN_EMBEDDING_DIMENSIONS, 10) } : {}),
@@ -714,6 +717,8 @@ export const KNOWN_CONFIG_KEYS: readonly string[] = [
   'anthropic_api_key',
   'zeroentropy_api_key',
   'newapi_api_key',
+  'x5m5x_claude_api_key',
+  'cc_vibe_api_key',
   'dashscope_api_key',
   'embedding_model',
   'embedding_dimensions',

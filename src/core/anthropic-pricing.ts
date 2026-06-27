@@ -42,7 +42,7 @@ export const ANTHROPIC_PRICING: Record<string, ModelPricing> = Object.fromEntrie
  * Returns null when the model isn't in the pricing map. Callers warn-once
  * and treat as zero-cost (the cycle runs unbounded for that submit).
  *
- * Accepts bare (`claude-opus-4-7`), colon-prefixed (`anthropic:claude-opus-4-7`),
+ * Accepts bare (`claude-opus-4-7`), colon-prefixed (`x5m5x_claude:claude-opus-4-7`),
  * and slash-prefixed (`anthropic/claude-opus-4-7`) ids. Routes through
  * `splitProviderModelId` so the slash-form (which arrives via CLI `--judge-model`
  * and OpenRouter recipe lists) hits the pricing table. Pre-v0.41.21.0 the inline

@@ -1,0 +1,587 @@
+slug,current_source,intended_source,collision_status,default_page_id,target_page_id,local_path,target_deleted_at
+entities/people/dontbesilent,default,domi-feishu-brain,active_target_collision,256100,248867,/Users/light/.hermes/gbrain-sources/domi-feishu-brain,
+personal/family/lucky-health-record,default,domi-feishu-brain,active_target_collision,254952,248861,/Users/light/.hermes/gbrain-sources/domi-feishu-brain,
+readme,default,domi-feishu-brain,active_target_collision,256097,235820,/Users/light/.hermes/gbrain-sources/domi-feishu-brain,
+companies/anker-innovation,default,feishu-calendar-essence,active_target_collision,250239,252068,/Users/light/.hermes/gbrain-sources/feishu-calendar-essence,
+meetings/2026-06-09-anker-ai-soil,default,feishu-calendar-essence,active_target_collision,250238,252065,/Users/light/.hermes/gbrain-sources/feishu-calendar-essence,
+people/steven-yang,default,feishu-calendar-essence,active_target_collision,250241,252064,/Users/light/.hermes/gbrain-sources/feishu-calendar-essence,
+people/william-sang,default,feishu-calendar-essence,active_target_collision,250240,252067,/Users/light/.hermes/gbrain-sources/feishu-calendar-essence,
+personal/health/domi-health-record,default,feishu-calendar-essence,active_target_collision,250246,252066,/Users/light/.hermes/gbrain-sources/feishu-calendar-essence,
+00_inbox/capture/2026-05-24_ai-shopping-engine-thoughts_grok,default,obsidian,active_target_collision,250548,251740,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+00_maps/root,default,obsidian,active_target_collision,250539,252036,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+00_maps/vault-总导航,default,obsidian,active_target_collision,250537,252034,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+00_maps/汇报文档结构地图,default,obsidian,active_target_collision,250536,252033,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/0305wechat/0601_cdn_bypass_video_snapshot,default,obsidian,active_target_collision,250535,252032,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/0305wechat/0608_wechat_login_response_compatibility,default,obsidian,active_target_collision,250534,252031,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/0305wechat/credentials_vault,default,obsidian,active_target_collision,250533,252030,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/0530wechat_meijia/2026-05-30_requirement_analysis_db_insights,default,obsidian,active_target_collision,250532,252029,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/0530wechat_meijia/2026-05-31_designer_handoff,default,obsidian,active_target_collision,250531,252028,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/0530wechat_meijia/2026-05-31_overall_tech_design,default,obsidian,active_target_collision,250529,252026,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/0530wechat_meijia/2026-06-08_unified_ai_nail_design_requirements,default,obsidian,active_target_collision,250530,252027,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/0530wechat_meijia/learnings_avatar_fix,default,obsidian,active_target_collision,250528,252025,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/0530wechat_meijia/learnings_design_revolution,default,obsidian,active_target_collision,250527,252024,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/0530wechat_meijia/learnings_login_loop_fix,default,obsidian,active_target_collision,250526,252022,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/0530wechat_meijia/learnings_nailart_issues_fix_20260601,default,obsidian,active_target_collision,250525,252023,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/0530wechat_meijia/learnings_nav_reconstruct,default,obsidian,active_target_collision,250524,252021,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/0530wechat_meijia/nailart_design_system,default,obsidian,active_target_collision,250523,252020,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/hermes/decisions/2026-05-26-gpt-5-reasoning-content-padding,default,obsidian,active_target_collision,250522,252019,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/hermes/decisions/20260526-newapi-developer-role-fix,default,obsidian,active_target_collision,250521,252018,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/ipc/learnings-20260527-req011-progress-regression-mitigation,default,obsidian,active_target_collision,250520,252017,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/ipc/real_data_proxy_lessons,default,obsidian,active_target_collision,250519,252016,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/ipc排程系统/tita_api_info,default,obsidian,active_target_collision,250518,252015,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/newapi/2026-05-26-hermes-newapi-developer-role-http-400-fix,default,obsidian,active_target_collision,250517,252014,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/newapi/2026-05-26-newapi-go-binary-defensive-rewrite-developer-role-fix,default,obsidian,active_target_collision,250516,252013,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/newapi/2026-05-26-newapi-protocol-adaptation-architecture,default,obsidian,active_target_collision,250515,252012,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/newapi/2026-05-26-newapi-recharge-and-admin-management,default,obsidian,active_target_collision,250514,252011,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/newapi/2026-05-26-newapi-stability-diagnosis-report,default,obsidian,active_target_collision,250513,252010,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/newapi/architecture/20260526-gpt5.5-model-abstraction-and-deepseek-quirks,default,obsidian,active_target_collision,250512,252009,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/vps_openclaw/agents,default,obsidian,active_target_collision,250511,252007,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/vps_openclaw/code_intelligence_eval_2026_05_27,default,obsidian,active_target_collision,250510,252006,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/vps_openclaw/codewhale_install,default,obsidian,active_target_collision,250509,252005,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/vps_openclaw/database_audit_20260527,default,obsidian,active_target_collision,250508,252004,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/vps_openclaw/gemini,default,obsidian,active_target_collision,250507,252003,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/vps_openclaw/learnings-20260527-codex-cli-nonstandard-api-fix,default,obsidian,active_target_collision,250506,252002,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/vps_openclaw/learnings-20260602-codex-cli-rollback-gpt55,default,obsidian,active_target_collision,250505,252001,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/vps_openclaw/openclaw_config_upgrade_20260527,default,obsidian,active_target_collision,250504,252000,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/vps_openclaw/openclaw_config_upgrade_20260602,default,obsidian,active_target_collision,250503,251999,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/vps_openclaw/skills_comparison_report_2026_05_27,default,obsidian,active_target_collision,250502,251998,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/vps_openclaw/tita_api_info,default,obsidian,active_target_collision,250501,251997,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/wedding/decisions/20250601-索引审计与cdn决策,default,obsidian,active_target_collision,250500,251996,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+01_projects/项目总索引,default,obsidian,active_target_collision,250498,251994,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/ai_memory/conversation-insights/2026-06-02-daily-summary,default,obsidian,target_soft_deleted_collision,256084,251734,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/conversation-insights/2026-06-02-domi-mbti-correction,default,obsidian,target_soft_deleted_collision,256081,251733,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/conversation-insights/2026-06-02-gbrain-search-lesson,default,obsidian,target_soft_deleted_collision,256082,251732,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/conversation-insights/2026-06-02-health-intervention-correction,default,obsidian,target_soft_deleted_collision,256080,251731,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/conversation-insights/2026-06-02-meijia-mini-program-decisions,default,obsidian,target_soft_deleted_collision,256078,251730,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/conversation-insights/2026-06-02-soul-profile-modification,default,obsidian,target_soft_deleted_collision,256077,251729,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/conversation-insights/2026-06-02-team-personality-profiles,default,obsidian,target_soft_deleted_collision,256079,251728,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/conversation-insights/2026-06-04-daily-summary,default,obsidian,target_soft_deleted_collision,250497,251992,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/conversation-insights/2026-06-04-domi-english-preference-tbbt,default,obsidian,target_soft_deleted_collision,250496,251991,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/conversation-insights/2026-06-04-funasr-stt-plugin-failure,default,obsidian,target_soft_deleted_collision,250495,251990,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/conversation-insights/2026-06-04-gbrain-mcp-source-fix,default,obsidian,target_soft_deleted_collision,250494,251989,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/conversation-insights/2026-06-04-hermes-busy-mode-config,default,obsidian,target_soft_deleted_collision,250493,251988,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/conversation-insights/2026-06-04-lucky-sleep-regression-weaning,default,obsidian,target_soft_deleted_collision,250492,251987,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/conversation-insights/2026-06-04-profile-skills-autoload-fix,default,obsidian,target_soft_deleted_collision,250491,251986,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/conversation_log,default,obsidian,target_soft_deleted_collision,250499,251993,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/general/domi_light_long_distance_context,default,obsidian,target_soft_deleted_collision,250490,251985,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/general/lucky_and_light_routine_20260611,default,obsidian,target_soft_deleted_collision,250489,251984,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/newapi/dashscope_flagship_upgrade_20260605,default,obsidian,target_soft_deleted_collision,250488,251983,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/newapi/newapi_channel_failover_403_fix_20260603,default,obsidian,target_soft_deleted_collision,250487,251982,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/newapi/newapi_channels_scan_error_blob_fix_20260602,default,obsidian,target_soft_deleted_collision,250486,251981,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/newapi/newapi_config_tunnel_fix_responses_api_20260604,default,obsidian,target_soft_deleted_collision,250485,251980,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/newapi/newapi_gpt5_context_limit_fix_20260613,default,obsidian,target_soft_deleted_collision,250484,251979,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/newapi/newapi_hermes_401_error_fix_20260602,default,obsidian,target_soft_deleted_collision,250483,251978,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/newapi/newapi_rebuild_and_403_upstream_fix_20260604,default,obsidian,target_soft_deleted_collision,250482,251977,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/newapi/newapi_tunnel_shadowrocket_conflict_direct_fix_20260602,default,obsidian,target_soft_deleted_collision,250481,251976,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/newapi/newapi_version_injection_rebuild_20260604,default,obsidian,target_soft_deleted_collision,250480,251975,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/newapi/xiaocase_proxy_stream_fix_20260614,default,obsidian,target_soft_deleted_collision,250479,251974,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/systems/executive_insight_20260607,default,obsidian,target_soft_deleted_collision,250478,251973,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/systems/gateway_mixed_model_refactoring_20260614,default,obsidian,target_soft_deleted_collision,250477,251972,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/systems/gbrain_embedding_auth_fix_20260602,default,obsidian,target_soft_deleted_collision,250476,251971,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/systems/gbrain_mcp_closure_probe_20260607,default,obsidian,target_soft_deleted_collision,250475,251970,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/systems/gbrain_think_model_config_investigation_20260602,default,obsidian,target_soft_deleted_collision,250474,251969,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/systems/hermes_weixin_profile_setup_20260610,default,obsidian,target_soft_deleted_collision,250473,251968,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/systems/newapi_caching_routing_isolation_20260614,default,obsidian,target_soft_deleted_collision,250472,251967,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/systems/tita_strategic_radar_upgrade_20260607,default,obsidian,target_soft_deleted_collision,250471,251966,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/ai_memory/vps_openclaw/thread_vps_openclaw_server_config_audit_2026-06-15/conversation_log,default,obsidian,target_soft_deleted_collision,250470,251965,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+02_areas/hermes/gbrain健康状态-2026-06-07,default,obsidian,active_target_collision,250469,251964,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/hermes/manager定位调整-2026-06-07,default,obsidian,active_target_collision,250468,251963,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/hermes/对话高价值蒸馏-2026-06-07,default,obsidian,active_target_collision,250467,251962,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/hermes/纠正信号汇总-2026-06,default,obsidian,active_target_collision,250466,251961,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/hermes/输出规范-结构化数据-2026-06-07,default,obsidian,active_target_collision,250465,251960,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/知识网络/domi认知维度进化论,default,obsidian,active_target_collision,250464,251959,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/知识网络/事实索引/ai工程化事实索引,default,obsidian,active_target_collision,250463,251958,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/知识网络/事实索引/组织管理事实索引,default,obsidian,active_target_collision,250462,251957,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/知识网络/人物/冯章程,default,obsidian,active_target_collision,250461,251956,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/知识网络/人物/史绒绒,default,obsidian,active_target_collision,250460,251955,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/知识网络/人物/叶云,default,obsidian,active_target_collision,250459,251954,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/知识网络/人物/向征,default,obsidian,active_target_collision,250458,251953,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/知识网络/人物/庞宇鹏,default,obsidian,active_target_collision,250457,251952,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/知识网络/人物/张瑞花,default,obsidian,active_target_collision,250456,251951,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/知识网络/人物/杨涛,default,obsidian,active_target_collision,250455,251950,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/知识网络/人物/潘丽吉,default,obsidian,active_target_collision,250454,251949,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/知识网络/人物/蔡晓东,default,obsidian,active_target_collision,250453,251948,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/知识网络/技术方法论/gemini-web-reverse,default,obsidian,active_target_collision,250452,251947,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/daily/2026-06-15,default,obsidian,active_target_collision,250451,251946,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-departments/且初产品营销部,default,obsidian,active_target_collision,250450,251945,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-departments/京东渠道组,default,obsidian,active_target_collision,250449,251944,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh3929,default,obsidian,active_target_collision,250448,251943,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh3959,default,obsidian,active_target_collision,250447,251942,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh3997,default,obsidian,active_target_collision,250446,251941,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4013,default,obsidian,active_target_collision,250445,251940,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4019,default,obsidian,active_target_collision,250444,251939,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4023,default,obsidian,active_target_collision,250443,251938,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4024,default,obsidian,active_target_collision,250442,251937,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4030,default,obsidian,active_target_collision,250441,251936,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4037,default,obsidian,active_target_collision,250440,251935,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4041,default,obsidian,active_target_collision,250439,251934,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4043,default,obsidian,active_target_collision,250438,251933,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4050,default,obsidian,active_target_collision,250437,251932,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4056,default,obsidian,active_target_collision,250436,251931,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4059,default,obsidian,active_target_collision,250435,251930,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4062,default,obsidian,active_target_collision,250434,251929,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4065,default,obsidian,active_target_collision,250433,251928,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4075,default,obsidian,active_target_collision,250432,251927,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4081,default,obsidian,active_target_collision,250431,251926,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4082,default,obsidian,active_target_collision,250430,251925,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/okr-owners/sh4085,default,obsidian,active_target_collision,250429,251924,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/people/张日文,default,obsidian,active_target_collision,250428,251923,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/people/肖明诚,default,obsidian,active_target_collision,250427,251922,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_27935152_7_20_639041845002429961,default,obsidian,active_target_collision,250426,251921,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28350660_7_20_639127274748253652,default,obsidian,active_target_collision,250425,251920,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28366893_7_20_639129950010688825,default,obsidian,active_target_collision,250424,251919,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28375708_7_20_639131533563798228,default,obsidian,active_target_collision,250423,251918,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28437930_7_20_639143613446717200,default,obsidian,active_target_collision,250421,251917,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28437931_7_20_639143613850336713,default,obsidian,active_target_collision,250422,251916,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28460668_7_20_639148090037359604,default,obsidian,active_target_collision,250420,251915,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28470657_7_20_639149836952828583,default,obsidian,active_target_collision,250419,251914,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28513035_7_20_639159174766265450,default,obsidian,active_target_collision,250418,251913,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28527545_7_20_639161632701643817,default,obsidian,active_target_collision,250417,251912,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28527550_7_20_639161633362158873,default,obsidian,active_target_collision,250416,251911,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28527568_7_20_639161634511004776,default,obsidian,active_target_collision,250415,251910,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28527601_7_20_639161635959492770,default,obsidian,active_target_collision,250414,251909,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28527603_7_20_639161636414258033,default,obsidian,active_target_collision,250413,251908,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28546639_7_20_639165401465574941,default,obsidian,active_target_collision,250412,251907,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28546647_7_20_639165402377791390,default,obsidian,active_target_collision,250411,251906,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28546703_7_20_639165403982793102,default,obsidian,active_target_collision,250410,251905,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28546730_7_20_639165408535080668,default,obsidian,active_target_collision,250409,251904,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28546735_7_20_639165408934436789,default,obsidian,active_target_collision,250408,251903,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28546739_7_20_639165410458239338,default,obsidian,active_target_collision,250407,251902,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/tita/tasks/698587_28546740_7_20_639165410821610305,default,obsidian,active_target_collision,250406,251901,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/个人管理/domi-fengshui-profile,default,obsidian,active_target_collision,250405,251900,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/事件/2026-05-29_openclaw服务器配置修复,default,obsidian,active_target_collision,250404,251899,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/3生万物,default,obsidian,active_target_collision,250403,251898,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/冯章程,default,obsidian,active_target_collision,250402,251897,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/刘嘉欣,default,obsidian,active_target_collision,250401,251896,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/刘成荣,default,obsidian,active_target_collision,250400,251895,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/刘江,default,obsidian,active_target_collision,250399,251894,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/史绒绒,default,obsidian,active_target_collision,250398,251893,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/叶云,default,obsidian,active_target_collision,250397,251892,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/向征,default,obsidian,active_target_collision,250396,251891,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/和添松,default,obsidian,active_target_collision,250395,251890,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/奚朱清,default,obsidian,active_target_collision,250394,251889,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/庞宇鹏,default,obsidian,active_target_collision,250393,251888,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/张平祥,default,obsidian,active_target_collision,250392,251887,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/张康,default,obsidian,active_target_collision,250391,251886,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/张瑞花,default,obsidian,active_target_collision,250390,251885,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/李博,default,obsidian,active_target_collision,250389,251884,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/李坤,default,obsidian,active_target_collision,250388,251883,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/杨涛,default,obsidian,active_target_collision,250387,251882,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/柴显荣,default,obsidian,active_target_collision,250386,251881,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/梁贺鑫,default,obsidian,active_target_collision,250385,251880,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/潘丽吉,default,obsidian,active_target_collision,250384,251879,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/熊忠国,default,obsidian,active_target_collision,250383,251878,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/聂啟磊,default,obsidian,active_target_collision,250382,251877,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/蔡晓东,default,obsidian,active_target_collision,250381,251876,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/许云岗,default,obsidian,active_target_collision,250380,251875,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/人员/黄鹏,default,obsidian,active_target_collision,250379,251874,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/家庭管理/宝宝成长与家庭照护事件-2026,default,obsidian,active_target_collision,250378,251872,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/缙嘉组织动态/关慧瑾-wendy-组织观测,default,obsidian,active_target_collision,250377,251868,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/缙嘉组织动态/叶云-组织观测,default,obsidian,active_target_collision,250376,251870,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/缙嘉组织动态/赵悦-maggie-组织观测,default,obsidian,active_target_collision,250375,251869,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+02_areas/组织与管理/缙嘉读书会,default,obsidian,active_target_collision,250373,251871,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/feishu/base/base-essence,default,obsidian,target_soft_deleted_collision,256083,250708,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/minutes/obcn873c69941a9r8w1i1878,default,obsidian,target_soft_deleted_collision,250374,251867,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/akavdicthoytrfxe04ic8cdanpe,default,obsidian,target_soft_deleted_collision,256071,250707,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/aqo0d83hdo84rhxtswbchvqtnec,default,obsidian,target_soft_deleted_collision,256069,250706,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/aueadf17voyysdxf9iscxlefnqc,default,obsidian,target_soft_deleted_collision,256070,250705,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/blu8dx17kokf4axgzgycrkhanqe,default,obsidian,target_soft_deleted_collision,256068,250704,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/bp4zdljeko0mybxnfkrclsxsntd,default,obsidian,target_soft_deleted_collision,256067,250703,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/bp5ddpdkkopfr8xd1eccpa9pnng,default,obsidian,target_soft_deleted_collision,256065,250702,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/bppzdafblobl7fxhbnxcu1cbnoe,default,obsidian,target_soft_deleted_collision,256066,250701,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/breedt8w3owavgxkqdxcdpavndc,default,obsidian,target_soft_deleted_collision,256064,250700,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/bsnad5hheouf2uxq0n0ce52lndf,default,obsidian,target_soft_deleted_collision,256063,250699,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/c8i7dzvavohcgjxpbuwcyjvmned,default,obsidian,target_soft_deleted_collision,256061,250698,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/c9umdqsyeocto9xulehcibi6n9e,default,obsidian,target_soft_deleted_collision,256062,250697,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/chaqdj1ioo6uhaxi8c9cg6plnuh,default,obsidian,target_soft_deleted_collision,256060,250696,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/cn6vdqdeloqrv5xscapc5jqznuf,default,obsidian,target_soft_deleted_collision,256059,250695,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/cumndjyy3owtf7xps7scr9l0ndg,default,obsidian,target_soft_deleted_collision,256057,250694,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/cwejdsryaouhwmxgrd7ca1plnae,default,obsidian,target_soft_deleted_collision,256058,250693,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/cwrxdz2izosh8jxc25bcpleznuc,default,obsidian,target_soft_deleted_collision,256056,250692,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/d4gtdfepvookjhxm4wqc40bknwb,default,obsidian,target_soft_deleted_collision,256055,250691,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/dfc8dfnksomljoxljjwczc0unve,default,obsidian,target_soft_deleted_collision,256053,250690,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/dfkkdsba0o438oxbhymcd7winmg,default,obsidian,target_soft_deleted_collision,256054,250689,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/dj8cddc5wodswrxgujycob3cnje,default,obsidian,target_soft_deleted_collision,256052,250688,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/dmxzdfrfgomrhaxplgecyhwznnc,default,obsidian,target_soft_deleted_collision,256050,250687,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/dncsdtfqoojl3ixgklmcsmronmb,default,obsidian,target_soft_deleted_collision,256051,250686,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/dtmkdulwxofkzyxolikcvyspnek,default,obsidian,target_soft_deleted_collision,256049,250685,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/dudkdcudvomav0x33sic5juendf,default,obsidian,target_soft_deleted_collision,256048,250684,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/dxzpdqyxjofmvyxksfhce1iun5d,default,obsidian,target_soft_deleted_collision,256046,250683,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/e17rdl9gdoudd7xtrjycg9jmnhh,default,obsidian,target_soft_deleted_collision,256047,250682,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/efh4dopoko5mozx8hcxcvx0rnhc,default,obsidian,target_soft_deleted_collision,256045,250681,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/el1yd1jlwoh1k5xruf7co7hsnrb,default,obsidian,target_soft_deleted_collision,256043,250680,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/elrddvkkxokiorxz4gicpciwnic,default,obsidian,target_soft_deleted_collision,256041,250679,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/eyvsdi7hhog9knxyibxcdagynzh,default,obsidian,target_soft_deleted_collision,256042,250678,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/ezsgdv4drou5exxf125ciaipnhb,default,obsidian,target_soft_deleted_collision,256044,250677,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/f5ohdyyw0ojpi8xjgyscguywn8f,default,obsidian,target_soft_deleted_collision,256039,250676,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/f5yrdf47io3g3gxdttqcumonnty,default,obsidian,target_soft_deleted_collision,256040,250675,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/fdq7df9wlo5vvsxf1wwcm0sin2e,default,obsidian,target_soft_deleted_collision,256038,250674,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/ficid6kvqotwx9xm4yacgorcnig,default,obsidian,target_soft_deleted_collision,256037,250673,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/fkandp7itoaunuxy93cc6gkhnqe,default,obsidian,target_soft_deleted_collision,256036,250672,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/fkjedydsto80zjx9nmzcqtusnld,default,obsidian,target_soft_deleted_collision,256035,250671,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/fqi5dc58aoew01x6setc7s0unad,default,obsidian,target_soft_deleted_collision,256034,250670,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/g8pxdwnbqomk0hxi74qcyjyinjh,default,obsidian,target_soft_deleted_collision,256033,250669,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/gg8id47ixoqazex0yjmc0ih6ndb,default,obsidian,target_soft_deleted_collision,256031,250668,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/gjbadul7wogtv5xn7k8cjipknuc,default,obsidian,target_soft_deleted_collision,256032,250667,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/gjprde0tdoxhsmxllvkcwabbnjh,default,obsidian,target_soft_deleted_collision,256030,250666,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/gnasd0zy3ohwkyxkrfhclrhqnwh,default,obsidian,target_soft_deleted_collision,250372,251866,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/gqicd3jiqobe1cx7xqockj9pngi,default,obsidian,target_soft_deleted_collision,256029,250665,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/hhxudqol7o4oy8xl0xpcs30sntf,default,obsidian,target_soft_deleted_collision,256028,250664,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/htbzdrlaronqhuxrlxrclkw4njh,default,obsidian,target_soft_deleted_collision,256027,250663,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/i28ddspcgolivhxv4qic2pfrnjb,default,obsidian,target_soft_deleted_collision,256025,250662,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/i5jcd4yedowzwmxadczcxxajnug,default,obsidian,target_soft_deleted_collision,256026,250661,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/i8u5dvuzpod8jvxq2accgci1ncg,default,obsidian,target_soft_deleted_collision,256022,250660,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/iazmdyephossbexjnq7cndrgnnh,default,obsidian,target_soft_deleted_collision,256023,250659,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/ieqtdloyyoyd9ex2rckcvnlfnyc,default,obsidian,target_soft_deleted_collision,256024,250658,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/ifwldwtp7omxe4x8mpdcwlmjn2d,default,obsidian,target_soft_deleted_collision,256021,250657,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/izaydbhxuopzvyxe8htchjf2nfg,default,obsidian,target_soft_deleted_collision,256019,250656,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/j4x0dwczoojahrxazogcwwwxnnc,default,obsidian,target_soft_deleted_collision,256020,250655,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/jbqxdxojoofd0ox99txc8i3wnwe,default,obsidian,target_soft_deleted_collision,256018,250654,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/jojtdsjmyoa4nxx4agjc69fun4f,default,obsidian,target_soft_deleted_collision,256017,250653,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/jxjvdpsriofh21xpbsycuko8njc,default,obsidian,target_soft_deleted_collision,256016,250652,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/kiyxdgujvongqhxexb9cqk6dnam,default,obsidian,target_soft_deleted_collision,256014,250651,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/kkrydvgqkoodfgxvjszcj7qrnec,default,obsidian,target_soft_deleted_collision,256015,250650,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/klikdgdeno9rirxb3shcrztvndh,default,obsidian,target_soft_deleted_collision,256013,250649,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/kny4dsohaonnqgxpqoncqmpsnpc,default,obsidian,target_soft_deleted_collision,256011,250648,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/ktdhdqxetolsznxqis1cqn1jnih,default,obsidian,target_soft_deleted_collision,256012,250647,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/kwvaddjsnovejnxxmcuckeuuntg,default,obsidian,target_soft_deleted_collision,256010,250646,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/l6ipdqwqkobggyxfbdfcthlbnxc,default,obsidian,target_soft_deleted_collision,256009,250645,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/l7didlstjot0enx8cyuch68nn7g,default,obsidian,target_soft_deleted_collision,256008,250644,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/layhdwilqops1qx90h8cdnyonmc,default,obsidian,target_soft_deleted_collision,256005,250643,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/liz5djacbovwu1xunkicyqflnpc,default,obsidian,target_soft_deleted_collision,256007,250642,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/lrpmdaz16oa3yox91nfcvqlynjb,default,obsidian,target_soft_deleted_collision,256003,250641,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/lsnddb6wioq0v7xpzrlctlt4nic,default,obsidian,target_soft_deleted_collision,256004,250640,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/lz1vdasexocgfuxboo3cfrannmc,default,obsidian,target_soft_deleted_collision,256006,250639,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/m62edywo0obefaxldazckexinum,default,obsidian,target_soft_deleted_collision,256002,250638,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/mcgzdqti1o95bbxmxpmcqiblnp3,default,obsidian,target_soft_deleted_collision,256000,250637,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/mf6uddescotaf5xlkitcyvwynz7,default,obsidian,target_soft_deleted_collision,255998,250636,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/mujgdnldtoqevcxnm7yc7i47nfe,default,obsidian,target_soft_deleted_collision,255999,250635,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/mujrdnjqzok1x6xx3icc7bxrnue,default,obsidian,target_soft_deleted_collision,256001,250634,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/n8ord3oryonwxrxh0kfclu15npf,default,obsidian,target_soft_deleted_collision,255996,250633,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/nh3ndxksiowl7uxcjtncgbodnlg,default,obsidian,target_soft_deleted_collision,255995,250632,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/nkgzdncpho4v6fx6nt9c0s7inbb,default,obsidian,target_soft_deleted_collision,255997,250631,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/nmdzdjtwioedxkxmpvocqvkznhh,default,obsidian,target_soft_deleted_collision,255994,250630,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/nvdsd46l5o2xlixfxztcdzkin6d,default,obsidian,target_soft_deleted_collision,255993,250629,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/o3iydcz6foebz7xgacoczjuinke,default,obsidian,target_soft_deleted_collision,255991,250628,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/o4tkduaxsonxiux0kvicynrenkg,default,obsidian,target_soft_deleted_collision,255992,250627,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/oas0dlfhfoxhfhx6cj2cmaq0nfh,default,obsidian,target_soft_deleted_collision,255990,250626,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/ofyldbln6o01flxcrzdck1ganob,default,obsidian,target_soft_deleted_collision,250371,251865,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/olpldmw0bouymkxnqwmcmlnzndd,default,obsidian,target_soft_deleted_collision,255988,250625,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/pbgqdxk7doeernxrmhycbzsdnff,default,obsidian,target_soft_deleted_collision,255986,250624,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/pd0rdtqxmozxytxwndmca6u7nfg,default,obsidian,target_soft_deleted_collision,255987,250623,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/pebqduxu1okowaxsl6qccel2nwg,default,obsidian,target_soft_deleted_collision,255989,250622,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/pjs5dx47zokuswxyegacflz2nzb,default,obsidian,target_soft_deleted_collision,255984,250621,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/pqcvdtuasopr6nxrazdchjkgnve,default,obsidian,target_soft_deleted_collision,255985,250620,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/psyxd0looofwwcxz32kck0rbndc,default,obsidian,target_soft_deleted_collision,255982,250619,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/q04vdqzg0occrixx9jscsmywnmd,default,obsidian,target_soft_deleted_collision,255983,250618,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/q0qgdyqvmobddbxlie5ckkbnnph,default,obsidian,target_soft_deleted_collision,255980,250617,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/q6fkdhfcgopa6ixpothc8wbtnwh,default,obsidian,target_soft_deleted_collision,255978,250616,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/q6uad3itrolejtx6vcvczxhdnkc,default,obsidian,target_soft_deleted_collision,255979,250615,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/qctmduo8goby6zxglt6ctpktnl8,default,obsidian,target_soft_deleted_collision,255981,250614,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/qi5cdaljrob0ijxyb0ncdnjinwf,default,obsidian,target_soft_deleted_collision,255977,250613,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/qkvldt6xvoipntx02h6c7xomnhg,default,obsidian,target_soft_deleted_collision,255975,250612,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/qyigdatn5odsthxvnphcr7cvnuc,default,obsidian,target_soft_deleted_collision,255976,250611,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/rc3pdbe3mopxkmxhqmdcvhscn4f,default,obsidian,target_soft_deleted_collision,255974,250610,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/rfrxd5gjcoy6fzxklglcjzaonef,default,obsidian,target_soft_deleted_collision,255970,250609,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/rhf9dtarroxqbmxjrhacqcwmndb,default,obsidian,target_soft_deleted_collision,255972,250608,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/ripmdsvvrom71zxjujnczifznad,default,obsidian,target_soft_deleted_collision,255971,250607,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/rm4zdapqxoeshwxsaqgc74yenjb,default,obsidian,target_soft_deleted_collision,250370,251864,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/rzokddzrno1nmlxdl62cniqvnkd,default,obsidian,target_soft_deleted_collision,255973,250606,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/sau3dnv5yoithpxcnnscstdhn7d,default,obsidian,target_soft_deleted_collision,255969,250605,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/sdvfdu3w7oqksyxuranc5drantb,default,obsidian,target_soft_deleted_collision,255967,250604,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/sozndhr8vojgddxnzvbc6vg3n9c,default,obsidian,target_soft_deleted_collision,255968,250603,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/sphddg254o7h48xgomec00qynfg,default,obsidian,target_soft_deleted_collision,255966,250602,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/svqgdtzbwowmoaxtby3cefiontf,default,obsidian,target_soft_deleted_collision,255964,250601,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/szwsdaklwoheegxq1b7cgc2qnuc,default,obsidian,target_soft_deleted_collision,255963,250600,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/tfobd8sqaovn9fxgelfchfaxnmh,default,obsidian,target_soft_deleted_collision,250369,251863,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/tgbnddx1hob8kixtdsmchk3qnmm,default,obsidian,target_soft_deleted_collision,255965,250599,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/tlpsd7k4aozl91x7melcjxn3nah,default,obsidian,target_soft_deleted_collision,255962,250598,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/tnwtdxb7jonq75xigmfc4hk7npg,default,obsidian,target_soft_deleted_collision,255960,250597,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/to9kda51co3be6xqc0ucrvzknme,default,obsidian,target_soft_deleted_collision,255961,250596,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/tpnfdspxuo6rouxrstecet2gnhg,default,obsidian,target_soft_deleted_collision,255959,250595,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/tuhbdhcfhozelqxg5t7cja6cntf,default,obsidian,target_soft_deleted_collision,255958,250594,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/tvmjdtsggod3ezxgryvckmbanlh,default,obsidian,target_soft_deleted_collision,255957,250593,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/ubqida0v3onqrpxwvelckyjvnfc,default,obsidian,target_soft_deleted_collision,255956,250592,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/usuzdecteopkdexzbzwcibbjn7f,default,obsidian,target_soft_deleted_collision,255955,250591,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/v8nkd53wbosvlvx788gcyyw9nhd,default,obsidian,target_soft_deleted_collision,255954,250590,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/v8wgdktmlozssbxawjjcx1kindf,default,obsidian,target_soft_deleted_collision,255952,250589,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/vaiediadoo5l1hxbzfqcjgbcnbd,default,obsidian,target_soft_deleted_collision,255953,250588,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/vdywdomieoyjryxiixxcqg8ln6c,default,obsidian,target_soft_deleted_collision,255951,250587,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/vpicdlrizokhsexu1phcxvv4n4e,default,obsidian,target_soft_deleted_collision,255950,250586,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/vwzvdd28rofgtpxkwdfcjaq9neg,default,obsidian,target_soft_deleted_collision,255946,250585,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/w5qkdmsccou48bxgk8lctto1nnb,default,obsidian,target_soft_deleted_collision,255949,250584,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/wdzvd8jcfo7jruxwyb5cvfsknmc,default,obsidian,target_soft_deleted_collision,255948,250583,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/wjxudmpzsors4xxamydck5s5nre,default,obsidian,target_soft_deleted_collision,250368,251862,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/wpnpd8ev9o06xhxnzuwccmbrnnd,default,obsidian,target_soft_deleted_collision,255947,250582,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/ws46dbpq8oaeotxoa0kc5uybn1b,default,obsidian,target_soft_deleted_collision,255945,250581,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/wsqkddhh9ovm8nxksytc102pnmb,default,obsidian,target_soft_deleted_collision,255943,250580,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/wumodlommoisvjxejw3cn5i1n3g,default,obsidian,target_soft_deleted_collision,255944,250579,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/wxjmd25eyopjknxvh7fcjh0wnze,default,obsidian,target_soft_deleted_collision,255942,250578,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/wypwdkxw8ov8rixcesucbhq1ncd,default,obsidian,target_soft_deleted_collision,255941,250577,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/xgcvdzt4dompi1xbnahcixf1nlg,default,obsidian,target_soft_deleted_collision,255939,250576,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/xkitdkc3aovhezxnxw4cm4cinbh,default,obsidian,target_soft_deleted_collision,255940,250575,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/xkzadiqznojlnlxpi2pchlaense,default,obsidian,target_soft_deleted_collision,255938,250574,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/xpoxdwy4aof3owxfxetcotq5nhh,default,obsidian,target_soft_deleted_collision,255937,250573,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/xu0cdzpjtoozjjxavgfchynrneb,default,obsidian,target_soft_deleted_collision,255936,250572,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/xuztdgp2xolciexxfgoc8hxente,default,obsidian,target_soft_deleted_collision,255935,250571,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/xv0cdsbrioffvaxvgslcuaignre,default,obsidian,target_soft_deleted_collision,255934,250570,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/xvq9dmieholzypxq9r6c2dqinad,default,obsidian,target_soft_deleted_collision,255933,250569,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/yobydh2yzovlw3xjpwpccapcnve,default,obsidian,target_soft_deleted_collision,255931,250568,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/yth1dej4zod5lpxt8arc53p4ne5,default,obsidian,target_soft_deleted_collision,255932,250567,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/zaydda0zxokbcaxc2u0c58nxnzh,default,obsidian,target_soft_deleted_collision,255930,250566,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/zg0adzlhhoilzdxahcfceld5nfd,default,obsidian,target_soft_deleted_collision,255929,250565,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/zqaodeyerot1rmxed8ocz9ujnzg,default,obsidian,target_soft_deleted_collision,255928,250564,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/docs/zysddwjato8mqaxa55kccpm2n1g,default,obsidian,target_soft_deleted_collision,255927,250563,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/feishu/wiki/spaces,default,obsidian,target_soft_deleted_collision,255926,250562,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,2026-06-15 23:17:38.018074+08
+03_resources/provenance/github/gemini-web2api/2026-06-05-gemini-web2api,default,obsidian,active_target_collision,250367,251861,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/github/hermes-agent-self-evolution/2026-06-03-nousresearch-hermes-agent-self-evolution,default,obsidian,active_target_collision,250366,251860,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/github/social-intelligence/2026-06-12-mvanhorn-last30days-skill,default,obsidian,active_target_collision,250365,251859,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/wechat/agent-feedback-loop/2026-06-11-feedback-loop-engineering-agent-feedback,default,obsidian,active_target_collision,250364,251858,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/wechat/agent-feedback-loop/2026-06-13-loop-not-while-tool-skill-agent,default,obsidian,active_target_collision,250363,251857,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/wechat/agent-reasoning-paradigms/2026-06-13-skill-reasoning-paradigm-rewoo,default,obsidian,active_target_collision,250362,251856,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/wechat/agent-tools/2026-04-18-skill-推荐-opencli-让你的-ai-agent-真正-掌控-整个互联网,default,obsidian,active_target_collision,250361,251855,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/wechat/browser-automation/2026-05-16-github-8-6k-star-放弃undetected-chromedriver-这个源码级魔改的chromium-彻底终结反爬噩梦,default,obsidian,active_target_collision,250360,251854,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/wechat/browser-automation/2026-05-25-camofox-mcp-让hermes穿透cloudflare的两种神器,default,obsidian,active_target_collision,250359,251853,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/wechat/hermes-10-things-to-do-first/2026-06-06-上手hermes-agent之后我建议你先做这10件事,default,obsidian,active_target_collision,250358,251852,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/wechat/hermes-active-assistant-system/2026-06-06-hermes-active-assistant-system-10-config-ideas,default,obsidian,active_target_collision,250357,251851,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/wechat/hermes-agent-skill-ecosystem/2026-06-06-hermes-agent-skill-ecosystem-infinite-growth,default,obsidian,active_target_collision,250356,251850,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/wechat/hermes-virtual-consultant-guide/2026-05-09-用hermes-agent打造自己的虚拟顾问,default,obsidian,active_target_collision,250355,251849,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/wechat/hermes/2026-06-13-hermes-30-days-4-counterintuitive-uses,default,obsidian,active_target_collision,250354,251848,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/wechat/notebooklm-hermes-knowledge-flywheel/2026-06-03-接上notebooklm之后我的知识库开始自己滚了,default,obsidian,active_target_collision,250353,251847,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/wechat/security-osint/2026-06-12-web-check-32-6k-star-输入一个网址-30秒读完这个站的-底裤,default,obsidian,active_target_collision,250352,251846,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/wechat/so-ul-md/2026-06-02-hermes-soul-md,default,obsidian,active_target_collision,250351,251845,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/x/gbrain-author-usage/2026-06-06-akshay-pachaar-what-is-gbrain,default,obsidian,active_target_collision,250350,251844,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/x/gbrain-author-usage/2026-06-06-garrytan-100k-markdown-second-brain,default,obsidian,active_target_collision,250349,251843,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/x/gbrain-author-usage/2026-06-06-garrytan-gbrain-is-your-company-brain,default,obsidian,active_target_collision,250348,251842,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/x/gbrain-author-usage/2026-06-06-garrytan-gbrain-v0-40-0-voice-agent,default,obsidian,active_target_collision,250347,251841,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/x/gbrain-author-usage/2026-06-06-garrytan-gbrain-v0-42-1-skillopt,default,obsidian,active_target_collision,250346,251840,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/x/gbrain-author-usage/2026-06-06-garrytan-knowledge-extraction-bottleneck,default,obsidian,active_target_collision,250345,251839,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/x/gbrain-author-usage/2026-06-06-shannholmberg-4-levels-of-hermes-agent,default,obsidian,active_target_collision,250344,251838,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/x/gbrain-author-usage/2026-06-06-shannholmberg-agent-company-architecture,default,obsidian,active_target_collision,250343,251837,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/x/gbrain-author-usage/2026-06-06-shannholmberg-gbrain-shared-memory-layer,default,obsidian,active_target_collision,250342,251836,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/x/gbrain-author-usage/2026-06-06-shannholmberg-hermes-company-cost,default,obsidian,active_target_collision,250341,251835,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/x/gbrain-author-usage/2026-06-06-shannholmberg-hermes-control-room-blueprint,default,obsidian,active_target_collision,250340,251834,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/x/gbrain-author-usage/2026-06-06-shannholmberg-xurl-skill,default,obsidian,active_target_collision,250339,251833,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/provenance/x/loop-engineering/2026-06-13-addyosmani-loop-engineering-blocked,default,obsidian,active_target_collision,250338,251832,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+03_resources/资源-provenance索引,default,obsidian,active_target_collision,250337,251831,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_metadata/2026-05-23_145528_deleted-runtime-code-sensitive-cache,default,obsidian,active_target_collision,250336,251830,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_metadata/connector-health-2026-05-23,default,obsidian,active_target_collision,250335,251829,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_metadata/gbrain-obsidian-source-initialization-types,default,obsidian,active_target_collision,250334,251828,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_metadata/governance-ledger/2026-05-23-1852-unified-governance,default,obsidian,active_target_collision,250333,251827,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_metadata/governance-ledger/2026-05-23-2310-unified-governance,default,obsidian,active_target_collision,250332,251826,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_metadata/governance-ledger/2026-05-25-2310-unified-governance,default,obsidian,active_target_collision,250330,251825,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_metadata/governance-ledger/2026-05-27-2315-unified-governance,default,obsidian,active_target_collision,250331,251824,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_metadata/icloud-vault-retirement-audit-2026-05-24,default,obsidian,active_target_collision,250329,251823,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_system/governance-ledger/2026-06-01-unified-knowledge-governance,default,obsidian,active_target_collision,250328,251822,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_system/governance-ledger/2026-06-03-unified-knowledge-governance,default,obsidian,active_target_collision,250327,251821,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_system/governance-ledger/2026-06-06-unified-knowledge-governance,default,obsidian,active_target_collision,250326,251820,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_system/governance-ledger/2026-06-10-grade-takes-hybrid-evidence-validation,default,obsidian,active_target_collision,250325,251819,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_system/governance-ledger/2026-06-10-grade-takes-verdict-distribution,default,obsidian,active_target_collision,250324,251818,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_system/governance-ledger/2026-06-11-grade-takes-concurrent-embedding-cleanup,default,obsidian,active_target_collision,250323,251817,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_system/governance-ledger/2026-06-11-unified-knowledge-governance,default,obsidian,active_target_collision,250322,251816,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_system/governance-ledger/2026-06-12-unified-knowledge-governance,default,obsidian,active_target_collision,250321,251815,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_system/governance-ledger/2026-06-15-takes-flywheel-fix,default,obsidian,active_target_collision,250320,251814,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+06_system/vault-routing-contract,default,obsidian,active_target_collision,250319,251813,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+agents,default,obsidian,active_target_collision,250318,251812,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+analysis/anker-vs-jinjia-data-platform,default,obsidian,active_target_collision,252047,252051,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+articles/codex-agents-md-guide,default,obsidian,active_target_collision,252049,252050,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+companies/spanagent,default,obsidian,active_target_collision,250317,251811,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+concepts/openclaw-local-decommission-architecture-lessons-2026-06-11,default,obsidian,active_target_collision,250316,251810,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+concepts/x-plane-telemetry,default,obsidian,active_target_collision,250315,251809,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+docs/superpowers/plans/2026-05-24-gbrain-safe-sync,default,obsidian,active_target_collision,250314,251808,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+docs/superpowers/specs/2026-05-24-gbrain-safe-sync-design,default,obsidian,active_target_collision,250313,251807,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+entities/people/dontbesilent,default,obsidian,active_target_collision,256100,250549,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/arxiv/2026-06-10-1234.5678-blocked,default,obsidian,active_target_collision,250312,251806,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/github/2026-06-10-test-repo,default,obsidian,active_target_collision,250311,251805,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/github/2026-06-12-mvanhorn-last30days-skill,default,obsidian,active_target_collision,250310,251804,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/github/2026-06-13-obsidian-pkm-vault-awesome-obsidian-vault,default,obsidian,active_target_collision,250309,251803,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/meetings/2026-06-09-anker-ai-data-platform,default,obsidian,active_target_collision,252041,252053,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-03-13-docker-run-internals,default,obsidian,active_target_collision,250308,251802,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-04-18-opencli-agent-internet-control,default,obsidian,active_target_collision,250307,251801,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-05-11-hermes-rtk-caveman,default,obsidian,active_target_collision,250306,251800,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-05-16-cloakbrowser-source-level-chromium,default,obsidian,active_target_collision,250305,251799,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-05-25-camofox-mcp-hermes-cloudflare,default,obsidian,active_target_collision,250304,251798,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-03-hermes-memory-cleanup-template,default,obsidian,active_target_collision,250303,251797,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-06-hermes-agent-skill-ecosystem-infinite-growth,default,obsidian,active_target_collision,250302,251796,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-07-hermes-10-things,default,obsidian,active_target_collision,250301,251795,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-08-mes-erp-scm-wms-aps-scada-plm-qms-crm-eam,default,obsidian,active_target_collision,250300,251794,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-10-browseract-anti-bot-browser-skill,default,obsidian,active_target_collision,250299,251793,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-10-design-agent-loop,default,obsidian,active_target_collision,250298,251792,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-11-feedback-loop-engineering-agent-feedback,default,obsidian,active_target_collision,250297,251791,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-11-hermes-config-yaml-deep-dive,default,obsidian,active_target_collision,250296,251790,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-11-hermes-sleep-time-17-prompts,default,obsidian,active_target_collision,250295,251789,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-11-how-to-design-loop-prompt-agent,default,obsidian,active_target_collision,250294,251788,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-12-hermes-10-active-configs,default,obsidian,active_target_collision,250293,251787,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-12-web-check-osint-site-audit,default,obsidian,active_target_collision,250292,251786,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-13-hermes-30-days-4-counterintuitive-uses,default,obsidian,active_target_collision,250291,251785,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-13-hermes-7-autopilot-gameplays,default,obsidian,active_target_collision,250290,251784,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-13-hermes-advanced-8-hidden-gameplays,default,obsidian,active_target_collision,250289,251783,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-14-gbrain-22k-stars-guide,default,obsidian,active_target_collision,250288,251782,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/wechat/2026-06-16-agent-reach-hermes-openclaw,default,obsidian,safe_to_move,256108,,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/x/2026-06-05-ibuzovskyi-hermes-overnight-architecture,default,obsidian,active_target_collision,250287,251781,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/x/2026-06-07-dontbesilent-content-engineering-system,default,obsidian,active_target_collision,250286,251780,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+intake/x/2026-06-13-kfk-ai-shadowrocket-routing-rules,default,obsidian,active_target_collision,250285,251779,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+knowledge/gbrain-conventions-alignment-2026-06-10,default,obsidian,active_target_collision,250284,251778,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+knowledge/jinjia-systems-map-2026-06-09,default,obsidian,active_target_collision,250283,251777,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+meetings/2026-05-21-minute-openclaw-ops-agent-infra-obcnqx77w75cp6v41415t476,default,obsidian,active_target_collision,250282,251776,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+meetings/2026-05-26-minute-agent-workflow-pm-routing-approval-obcnuj23vq6wn6sf8mre27jc,default,obsidian,active_target_collision,250281,251775,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+meetings/2026-05-28-minute-ops-tool-fallback-server-log-req11-obcnvqm96q9477ck5dw9hn11,default,obsidian,active_target_collision,250280,251774,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+meetings/2026-05-29-minute-ai-workshop-trial-vinkclaw-skills-obcnvu3uz99qoqm6z1kx852h,default,obsidian,active_target_collision,250279,251773,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+meetings/2026-06-08-minute-gitlab-upgrade-ai-engineering-obcnkr6868e9o3opbz91l477,default,obsidian,active_target_collision,250278,251772,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+meetings/2026-06-08-minute-group-at-agent-memory-log-triage-obcnu2r2swu3797n7j4xfyt3,default,obsidian,active_target_collision,250277,251771,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+meetings/2026-06-08-minute-om-attachment-cache-browser-difference-obcntwdp9n7p6zz5y3453pg1,default,obsidian,active_target_collision,250276,251770,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+meetings/2026-06-08-minute-ops-log-cls-ai-ops-expert-obcno6x3y84242bok4b3perm,default,obsidian,active_target_collision,250275,251769,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+meetings/2026-06-08-minute-product-capability-alignment-tita-milestones-obcnrmi4z91o793xx897spt5,default,obsidian,active_target_collision,250274,251768,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+meetings/2026-06-08-minute-video-meeting-工程团队管理群组-obcnh82323rz4883ed8t95qb,default,obsidian,active_target_collision,250273,251767,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+meetings/2026-06-08-minute-xiaoxia-cron-refactor-scaling-roadmap-obcnvy4sg23q97ifepgykoen,default,obsidian,active_target_collision,250272,251766,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+meetings/2026-06-08-minute-杨涛的视频会议-obcnisekxcdjbf3716klh688,default,obsidian,active_target_collision,250271,251765,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+meetings/2026-06-08-minute-杨涛的视频会议-obcnqx77w75cp6v41415t476,default,obsidian,active_target_collision,250270,251764,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+meetings/2026-06-08-minute-杨涛的视频会议-obcnrt18vr36hs8lc6y9f376,default,obsidian,active_target_collision,250269,251763,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+meetings/2026-06-08-minute-秦金喜的视频会议-obcnf37rz4871vb9o7f9yz5m,default,obsidian,active_target_collision,250267,251761,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+originals/2026-06-08-lucky-bedtime-changing-crying-combined,default,obsidian,active_target_collision,250266,251760,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+originals/2026-06-09-spanagent-api-model-context-check,default,obsidian,active_target_collision,250265,251759,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+originals/2026-06-09-xplane-replay-derived-trajectory-architecture-decision,default,obsidian,active_target_collision,250264,251758,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+originals/flight-training-data-system-prototype,default,obsidian,active_target_collision,250263,251757,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+originals/gbrain-usage-gap-2026-06-09,default,obsidian,active_target_collision,250262,251756,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+people/yang-tao,default,obsidian,active_target_collision,250261,251755,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+personal/domi-fengshui-profile,default,obsidian,active_target_collision,250260,251754,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+personal/family/cui-zhiwen,default,obsidian,active_target_collision,250259,251753,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+personal/family/domi,default,obsidian,active_target_collision,250257,251751,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+personal/family/domi-health-record,default,obsidian,active_target_collision,250258,251752,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+personal/family/domi-living-arrangement,default,obsidian,safe_to_move,256089,,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+personal/family/light-diary-index,default,obsidian,active_target_collision,250256,251750,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+personal/family/lucky-health-record,default,obsidian,active_target_collision,254952,250552,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+personal/health/domi-health-record,default,obsidian,safe_to_move,250246,,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+personal/health/domi-hp-test-2026-06-16,default,obsidian,safe_to_move,255916,,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+personal/health/domi-hp-treatment-2026-06,default,obsidian,safe_to_move,256095,,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+personal/light-routine,default,obsidian,active_target_collision,250255,251749,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+personal/reflections/2026-06-05-cross-profile-secret-propagation,default,obsidian,active_target_collision,250254,251748,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+personal/reflections/2026-06-05-foundation-model-strategy,default,obsidian,active_target_collision,250253,251747,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+personal/reflections/2026-06-05-gbrain-flywheel-recovery,default,obsidian,active_target_collision,250252,251746,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+readme,default,obsidian,active_target_collision,256097,250550,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+test/cli-write-20260527,default,obsidian,active_target_collision,250251,251745,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+wiki/concepts/agent-company-architecture-shannholmberg,default,obsidian,active_target_collision,250247,251744,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+wiki/concepts/gbrain-company-brain,default,obsidian,active_target_collision,250249,251743,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+wiki/concepts/hermes-agent-4-levels,default,obsidian,active_target_collision,250250,251742,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+wiki/ideas/2026-06-14-brainstorm-ai-e97b32,default,obsidian,active_target_collision,250248,251741,/Users/light/.hermes/gbrain-sources/domi-obsidian-brain-lite,
+signals/2026-06-15-messageevent-text-4-开始处理gbrain-message-type-mess-e8b29cb02ddc310a,default,signals,active_target_collision,254802,254937,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-agent-reach-是一个依赖包吧-message-ty-8fd116730d769f6f,default,signals,active_target_collision,254801,254936,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-autonomy-level-同时是不是还有个执行多少轮的属-2b78cd1684e94612,default,signals,active_target_collision,254800,254934,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-cronjob-response-gbrain-meetin-300fdd51e2d65bd3,default,signals,active_target_collision,254799,254935,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-cronjob-response-unified-knowl-1d8867c686e777ba,default,signals,active_target_collision,254798,254933,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-https-github-com-evoiz-agentic-220a0e14be43d23b,default,signals,active_target_collision,254797,254932,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-https-github-com-microsoft-mar-232316cea3a9ca61,default,signals,active_target_collision,254796,254931,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-https-github-com-panniantong-a-a43df257da1fe290,default,signals,active_target_collision,254795,254930,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-https-mp-weixin-qq-com-s-dhbj3-7fd4fa028fc39d49,default,signals,active_target_collision,254794,254929,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-https-x-com-0xcodez-status-206-0053e3a1f320e972,default,signals,active_target_collision,254793,254927,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-intake-闭环缺最后一步-提炼可执行洞察-你修好了么-m-4531da5ece31011d,default,signals,active_target_collision,254792,254928,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-lucky一上午都没有睡觉-现在困了-吃奶都闭着眼睛-破涕为-6977c5e9d63b5d1d,default,signals,active_target_collision,254791,254926,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-lucky七点四十睡着了-我去洗奶瓶了-刚洗好就听见luck-381f3b9bf89fe046,default,signals,active_target_collision,254790,254925,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-lucky午觉睡到两点半-下午四点半我把他拉到卧室哄睡-现在-dc7a3ffa3af04111,default,signals,active_target_collision,254789,254924,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-lucky睡的好香-看着他熟睡的小脸蛋-感慨万千啊-好像从他-98e3fd528f767db0,default,signals,active_target_collision,254788,254923,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-reset-message-type-messagetype-14ba8def315317c7,default,signals,active_target_collision,254787,254922,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-reset-message-type-messagetype-3146f81a406ea982,default,signals,active_target_collision,254786,254921,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-reset-message-type-messagetype-5e6e5717f732d66e,default,signals,active_target_collision,254785,254920,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-reset-message-type-messagetype-7d1e026226681a46,default,signals,active_target_collision,254784,254919,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-reset-message-type-messagetype-7f3840a7ad8c970b,default,signals,active_target_collision,254783,254918,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-reset-message-type-messagetype-c3f55191253b101a,default,signals,active_target_collision,254782,254917,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-reset-message-type-messagetype-f59ea34680101ffb,default,signals,active_target_collision,254781,254916,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-skills呢-处理好了么-message-type-mes-6cabad7a186d8431,default,signals,active_target_collision,254780,254914,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-sync-报的不是-git-repo-问题-analysis-dd33ab8182928010,default,signals,active_target_collision,254779,254915,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-telegram-是不是有个富文本渲染的属性-message-36c825d41966ded1,default,signals,active_target_collision,254778,254913,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-the-user-sent-a-message-with-n-45888f6d3c3bc8b7,default,signals,active_target_collision,254777,254912,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-the-user-sent-a-message-with-n-681e296a4c049969,default,signals,active_target_collision,254776,254911,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-the-user-sent-a-message-with-n-fffb044e34d3b271,default,signals,active_target_collision,254775,254910,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-tool-guardrail-halted-web-sear-3dc788fee92c2ef1,default,signals,active_target_collision,254774,254909,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-transcript-api-被拒绝-这个停掉吧-messa-7122b7b102427c5d,default,signals,active_target_collision,254773,254908,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-一年了-message-type-messagetype-t-d7f68089ff1b9936,default,signals,active_target_collision,254771,254906,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-上下文太大了么-报错-message-type-messag-cb0e0007ceb52835,default,signals,active_target_collision,254770,254905,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-不对吧-angel-那边的定时任务呢-你没有删掉吧-mess-77e2d5fb4780bd8c,default,signals,active_target_collision,254769,254904,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-为什么-angel-使用的还是-旧系统的-我们要不要考虑使用-e07b044fa3ceb171,default,signals,active_target_collision,254767,254902,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-之前的哄睡神曲是那种羊水声和心跳声-模拟宝宝在妈妈肚子里听到-a47dcb63f6b1e66e,default,signals,active_target_collision,254766,254901,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-也就是-没有我们学习的价值是吧-message-type-m-fbcb377a752c3fe3,default,signals,active_target_collision,254765,254900,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-从专业角度-你觉得要拆么-要不会不会让上下文太大-messa-6813e5a249fdf26a,default,signals,active_target_collision,254764,254899,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-你不要只检查你自己的-其他的profiles-的定时任务-也-95d72d44a4ebb32d,default,signals,active_target_collision,254763,254898,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-你为什么不使用我们表格渲染的模式呢-message-type-22c9672d47946cfc,default,signals,active_target_collision,254762,254897,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-你会在后台看对吧-待会好了-会通知你-message-typ-357168887855c1db,default,signals,active_target_collision,254761,254895,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-你可以指派给codex-去修-你就做判断-message-t-e6b706c8879049f6,default,signals,active_target_collision,254760,254896,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-你怎么知道我的名字是崔智文-message-type-mes-b48279210d83136f,default,signals,active_target_collision,254759,254894,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-你是专业的-你不是已经有loop了么-自己判断-不要问我-m-6d94c3f3ece2da04,default,signals,active_target_collision,254758,254892,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-你有使用reddit的链接-去检索一下-看看专业群体是怎么做-319181f250270f7c,default,signals,active_target_collision,254757,254893,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-你觉得-我们的链接引入是不是也可以考虑loop-我感觉价值比-a8deedae5b9d6685,default,signals,active_target_collision,254756,254891,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-使用yolo-message-type-messagetyp-e656d427c25755cd,default,signals,active_target_collision,254755,254890,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-做吧-message-type-messagetype-te-d98f55ca6d95681d,default,signals,active_target_collision,254753,254888,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-入库-message-type-messagetype-te-0822981d466991fa,default,signals,active_target_collision,254752,254887,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-入库-message-type-messagetype-te-547aee3b2f279b98,default,signals,active_target_collision,254751,254886,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-入库-message-type-messagetype-te-c5b7db2da6912259,default,signals,active_target_collision,254750,254885,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-去做-不要一直问我-message-type-message-928636ae9555bdde,default,signals,active_target_collision,254749,254883,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-可以发起授权-我们还有agent-reach这个工具的吧-你-4ef19c16749b6096,default,signals,active_target_collision,254747,254882,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-嗯-其他的呢-message-type-messagetyp-dbeee4622078f8db,default,signals,active_target_collision,254745,254880,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-如果-其他的profile-都没有cron-那就删除掉吧-m-99e20e0ec4905bfa,default,signals,active_target_collision,254744,254878,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-对我们有需要改的么-message-type-message-ed56eca2f6d5a56b,default,signals,active_target_collision,254742,254877,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-对我们的-整体的整改配置-有哪些建议-message-typ-1353843e0bcf9043,default,signals,active_target_collision,254741,254876,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-工具全部都处理了吧-message-type-message-25a99d12a8f7e582,default,signals,active_target_collision,254740,254874,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-幽门螺旋感菌不是拉不出来么-但是我拉的挺正常啊-messag-8096b18aac0ac87f,default,signals,active_target_collision,254739,254875,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-怎么样-进度-message-type-messagetyp-f0e8f9560e6852b2,default,signals,active_target_collision,254738,254873,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-我一年没有运动了-message-type-messaget-538535eb7674fc79,default,signals,active_target_collision,254737,254871,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-我以前没事啊-message-type-messagetyp-e95c6224f8fd4f26,default,signals,active_target_collision,254736,254872,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-我们修的呢-message-type-messagetype-9e24df9e50321c4e,default,signals,active_target_collision,254735,254870,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-我们当前的gbrain的治理水准达到了gbrain作者的水平-c8f683636c137ed0,default,signals,active_target_collision,254734,254869,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-我们现在一直会问来问去的-有没有解决办法-message-t-7c854a1d2a9d0520,default,signals,active_target_collision,254732,254868,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-我们现在没有gpt-5-5了-全部都是spanagent里面-0dcc37461230f2ff,default,signals,active_target_collision,254731,254866,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-我们现在没有gpt-5-5了-全部都是spanagent里面-e4742e055914ece6,default,signals,active_target_collision,254730,254865,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-我们的hermes-在discord-支持-rich富文本么-e993e654dd248e51,default,signals,active_target_collision,254728,254863,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-我们还有哪些和gbrain作者使用的差距-message-t-a5386f336eea8459,default,signals,active_target_collision,254727,254862,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-我吃的麻辣烫-message-type-messagetyp-f3836765ce29b29e,default,signals,active_target_collision,254725,254860,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-我基本一吃-肚子就会撑的很大-message-type-me-8cca1b28035a1cde,default,signals,active_target_collision,254724,254859,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-我已经很长时间没有运动过了-message-type-mes-78692af27e643c87,default,signals,active_target_collision,254723,254858,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-我很好奇-小红书那些是不是无法使用啊-message-typ-0553a970bb6de1b8,default,signals,active_target_collision,254722,254857,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-我睡觉了拜拜-message-type-messagetyp-e38e069da6cc3d1c,default,signals,active_target_collision,254721,254856,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-按你的建议做-message-type-messagetyp-0692f83d1854d3cd,default,signals,active_target_collision,254719,254854,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-按你的建议去处理-你不都有优先级么-message-type-2cb1138c82b20630,default,signals,active_target_collision,254718,254853,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-按你说的下一步处理-同时我们刚才那些性能好的工具-我们用上了-be2ecaa0dfb0d8be,default,signals,active_target_collision,254717,254852,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-按您的建议处理-message-type-messagety-ccef76540624fae9,default,signals,active_target_collision,254716,254850,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-挺好的-不哭不闹-还想笑-message-type-mess-ff7579e448de104f,default,signals,active_target_collision,254715,254851,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-晨起现在不手麻了-message-type-messaget-741d9b80a6d12c76,default,signals,active_target_collision,254714,254849,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-未实现的-全部处理-message-type-message-33d00920a175f673,default,signals,active_target_collision,254713,254848,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-消化内科-我感觉是吃的多-运动的少-message-type-bc791555ee18eb9c,default,signals,active_target_collision,254712,254847,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-现在gbrain-的治理质量已经达到了gbrain作者的水准-006d7c22dc927669,default,signals,active_target_collision,254711,254845,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-现在是分了一堆链接读取的skills是么-还是-messag-2fc6ba4e78265b68,default,signals,active_target_collision,254710,254846,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-用-message-type-messagetype-tex-aeffd21048afcf8c,default,signals,active_target_collision,254709,254844,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-由于睡的比较突然-我还没来得及换拉拉裤-今晚什么时候换拉拉裤-819a9698af29aca0,default,signals,active_target_collision,254708,254842,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-登录-他不是支持很多种的么-message-type-mes-adacb4c919164d38,default,signals,active_target_collision,254707,254841,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-登录测试吧-message-type-messagetype-a827312df7e84729,default,signals,active_target_collision,254706,254843,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-确认-message-type-messagetype-te-30bc9d79e58c34e1,default,signals,active_target_collision,254705,254840,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-继续处理了么-message-type-messagetyp-e7f9d5d51e257a68,default,signals,active_target_collision,254700,254835,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-要处理-你可以慢慢改-不要说今天改不完-message-ty-fb0f199875b00477,default,signals,active_target_collision,254699,254834,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-要的-我们不是有个-obsidian-ai-workflow-d103a9f0708acc55,default,signals,active_target_collision,254698,254833,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-要的呀-那为什么现在我们的内容采集之后-没有学习价值的输出呢-073d0c1c08731a3a,default,signals,active_target_collision,254697,254831,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-让cto去做-message-type-messagetyp-51e51d847c97e8cc,default,signals,active_target_collision,254696,254830,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-这咋睡到五点就醒了-就睡半个小时哦-message-type-9c21018177b9b7ff,default,signals,active_target_collision,254694,254829,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-那我们现在的-gbrain治理差距在哪里-还是已经和gbra-98e82049f459cff8,default,signals,active_target_collision,254693,254828,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-那我们现在的-gbrain治理差距在哪里-还是已经和gbra-ca58235b7406ff22,default,signals,active_target_collision,254692,254827,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-那我们现在的-gbrain治理差距在哪里-还是已经和gbra-d724cb499562255a,default,signals,active_target_collision,254691,254826,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-那现在所有的agents都可以使用对吧-message-ty-6b8ef91038e595a9,default,signals,active_target_collision,254690,254825,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-重构-message-type-messagetype-te-1d73345e05292650,default,signals,active_target_collision,254689,254823,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-重试-message-type-messagetype-te-4d603abcdb95a687,default,signals,active_target_collision,254688,254822,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-链接-不用管-先处理我们自己的-message-type-m-4701b0cd4909dab7,default,signals,active_target_collision,254687,254824,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-链接-不用管了-先处理我们自己的事情-message-typ-5f38318d4a6c8fe5,default,signals,active_target_collision,254686,254821,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-需要恢复的-message-type-messagetype-6aa6462f41821a1d,default,signals,active_target_collision,254685,254820,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-messageevent-text-需要的-message-type-messagetype-t-984619b41bcebf41,default,signals,active_target_collision,254684,254819,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-untitled-037ac3916c0eabc2,default,signals,active_target_collision,254683,254818,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-untitled-1c09ff1d739b422c,default,signals,active_target_collision,254682,254817,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-untitled-3203e7cd80127c3a,default,signals,active_target_collision,254681,254816,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-untitled-35a6f1bb2e767d6d,default,signals,active_target_collision,254680,254815,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-untitled-48cbf63106d1a378,default,signals,active_target_collision,254679,254814,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-untitled-5ba267639ed9f25f,default,signals,active_target_collision,254678,254813,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-untitled-5ca0550b0fb1bb7e,default,signals,active_target_collision,254677,254811,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-untitled-65d081d2b13df423,default,signals,active_target_collision,254676,254812,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-untitled-be17f650bfc66c21,default,signals,active_target_collision,254675,254810,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-untitled-beffab9dd4d7e42a,default,signals,active_target_collision,254674,254807,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-untitled-c7d72adca0c9401d,default,signals,active_target_collision,254673,254809,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-15-untitled-ccb7fefab7fcf91c,default,signals,active_target_collision,254672,254808,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-16-messageevent-text-reset-message-type-messagetype-1e910fc8a81bbbd9,default,signals,active_target_collision,254671,254803,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-16-messageevent-text-处理-message-type-messagetype-te-9b3f87d98387eea6,default,signals,active_target_collision,254670,254804,/Users/light/.hermes/gbrain-sources/hermes-signals,
+signals/2026-06-16-messageevent-text-解决问题-我们凑够50以上-message-type-mes-c48d386bfdb544c6,default,signals,active_target_collision,254668,254806,/Users/light/.hermes/gbrain-sources/hermes-signals,
+tasks/active-recent,default,wbs-dashboard-essence,active_target_collision,250237,252062,/Users/light/.hermes/gbrain-sources/wbs-dashboard-essence,
+workflow/recent-runs,default,wbs-dashboard-essence,active_target_collision,250236,252061,/Users/light/.hermes/gbrain-sources/wbs-dashboard-essence,

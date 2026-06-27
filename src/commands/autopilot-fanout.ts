@@ -205,7 +205,7 @@ export async function dispatchPerSource(
       const job = await queue.add(
         'autopilot-cycle',
         {
-          repoPath: opts.repoPath,
+          repoPath: src.local_path,
           source_id: src.id,
           pull: !!remoteUrl,
         },

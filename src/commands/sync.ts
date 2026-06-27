@@ -1166,9 +1166,22 @@ async function performSyncInner(engine: BrainEngine, opts: SyncOpts): Promise<Sy
         case 'corrupted':
           throw new Error(
             `Source "${opts.sourceId}" clone at ${repoPath} is corrupted ` +
-              `(\`git remote get-url origin\` failed). Run: ` +
+              `(\`git remote get-url origin\` failed and HEAD is unreadable). Run: ` +
               `gbrain sources remove ${opts.sourceId} --confirm-destructive && ` +
               `gbrain sources add ${opts.sourceId} --url ${remoteUrl}`,
+          );
+        case 'local-only':
+          // A local-only repo (no origin remote) registered with a remote_url
+          // is a config drift: caller declared a remote but the clone has none.
+          // Surface loudly, but distinct from `corrupted` so operators see the
+          // actionable hint.
+          throw new Error(
+            `Source "${opts.sourceId}" clone at ${repoPath} has no \`origin\` ` +
+              `remote even though config.remote_url=${remoteUrl} is set. ` +
+              `Restore the remote with: ` +
+              `git -C ${repoPath} remote add origin ${remoteUrl} ` +
+              `(or re-clone via: gbrain sources remove ${opts.sourceId} ` +
+              `--confirm-destructive && gbrain sources add ${opts.sourceId} --url ${remoteUrl}).`,
           );
         case 'url-drift':
           throw new Error(

@@ -2534,8 +2534,25 @@ async function classifyGatewayGuardrail(input: {
     // Fail open. A guardrail must never break inference or tool execution.
   }
 }
+let chatQueueChain = Promise.resolve();
+let lastChatTime = 0;
 
 export async function chat(opts: ChatOpts): Promise<ChatResult> {
+  const minIntervalMs = parseInt(process.env.GBRAIN_CHAT_MIN_INTERVAL_MS || '0', 10);
+  if (minIntervalMs > 0) {
+    chatQueueChain = chatQueueChain.then(async () => {
+      const now = Date.now();
+      const elapsed = now - lastChatTime;
+      if (elapsed < minIntervalMs) {
+        await new Promise(resolve => setTimeout(resolve, minIntervalMs - elapsed));
+      }
+      lastChatTime = Date.now();
+    }).catch(() => {
+      lastChatTime = Date.now();
+    });
+    await chatQueueChain;
+  }
+
   const tracker = __budgetStore.getStore() ?? null;
   const modelStrEarly = opts.model ?? getChatModel();
 

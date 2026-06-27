@@ -123,7 +123,9 @@ function defaultPackLocator(name: string): string | null {
     // module path doesn't resolve to the source tree.
     const repoRootFallback = join(here, '..', '..', '..', 'src', 'core', 'schema-pack', 'base', `${name}.yaml`);
     if (existsSync(repoRootFallback)) return repoRootFallback;
-    return null;
+    // Fall through to user-installed pack lookup. Critical for compiled
+    // binaries where bundled YAML files may not reside next to the binary
+    // on disk (e.g. bun build --compile doesn't embed sibling directories).
   }
   // User-installed pack at ~/.gbrain/schema-packs/<name>/pack.{yaml,json}
   const baseDir = gbrainPath('schema-packs', name);

@@ -4542,14 +4542,27 @@ export class PostgresEngine implements BrainEngine {
   // Versions
   async createVersion(slug: string, opts?: { sourceId?: string }): Promise<PageVersion> {
     const sql = this.sql;
-    const sourceId = opts?.sourceId ?? 'default';
+    if (opts?.sourceId) {
+      // Source-scoped: look up the page in the specified source only
+      const rows = await sql`
+        INSERT INTO page_versions (page_id, compiled_truth, frontmatter)
+        SELECT id, compiled_truth, frontmatter
+        FROM pages WHERE slug = ${slug} AND source_id = ${opts.sourceId}
+        RETURNING *
+      `;
+      if (rows.length === 0) throw new Error(`createVersion failed: page "${slug}" (source=${opts.sourceId}) not found`);
+      return rows[0] as unknown as PageVersion;
+    }
+    // No source specified: find the page across all sources (cross-source lookup).
+    // Pick the most recently updated non-deleted page with this slug.
     const rows = await sql`
       INSERT INTO page_versions (page_id, compiled_truth, frontmatter)
       SELECT id, compiled_truth, frontmatter
-      FROM pages WHERE slug = ${slug} AND source_id = ${sourceId}
+      FROM pages WHERE slug = ${slug} AND deleted_at IS NULL
+      ORDER BY updated_at DESC LIMIT 1
       RETURNING *
     `;
-    if (rows.length === 0) throw new Error(`createVersion failed: page "${slug}" (source=${sourceId}) not found`);
+    if (rows.length === 0) throw new Error(`createVersion failed: page "${slug}" not found in any source`);
     return rows[0] as unknown as PageVersion;
   }
 

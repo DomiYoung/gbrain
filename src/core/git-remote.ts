@@ -219,6 +219,7 @@ export function pullRepo(repoPath: string, opts: { timeoutMs?: number } = {}): v
 
 export type RepoState =
   | 'healthy'
+  | 'local-only'
   | 'missing'
   | 'not-a-dir'
   | 'no-git'
@@ -230,6 +231,11 @@ export type RepoState =
  * whether to run pull (healthy), re-clone (missing/no-git/not-a-dir),
  * refuse with corruption error (corrupted), or refuse with rebase-clone
  * hint (url-drift).
+ *
+ * `local-only` is a healthy local git repo without an origin remote (e.g.
+ * ingestion pipelines that materialise their own commits without a remote).
+ * Sync-by-pull is impossible for these, but performSync can still walk the
+ * commit graph; treating them as `corrupted` was the v0.42.40 false positive.
  */
 export function validateRepoState(
   repoPath: string,
@@ -254,7 +260,22 @@ export function validateRepoState(
     });
     remoteUrl = out.toString().trim();
   } catch {
-    return 'corrupted';
+    // No origin remote — distinguish "local-only repo" (healthy, no-remote
+    // case for ingestion pipelines) from genuine corruption. A local-only
+    // repo still has a readable HEAD; a corrupted one does not.
+    try {
+      execFileSync('git', ['-C', repoPath, 'rev-parse', 'HEAD'], {
+        stdio: ['ignore', 'pipe', 'pipe'],
+        timeout: 10_000,
+        env: { ...process.env, ...GIT_ENV },
+      });
+      // HEAD readable. If the caller expected a remote, this is still a
+      // problem (treat as corrupted to surface the missing remote). If no
+      // remote was expected, classify as local-only.
+      return expectedRemoteUrl === undefined ? 'local-only' : 'corrupted';
+    } catch {
+      return 'corrupted';
+    }
   }
 
   if (expectedRemoteUrl !== undefined && remoteUrl !== expectedRemoteUrl) {

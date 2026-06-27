@@ -25,11 +25,7 @@ import { logFriction, frictionDir } from '../core/friction.ts';
 import { loadScenario, listScenarios, readBrief, type ScenarioConfig } from '../core/claw-test/scenarios.ts';
 import { parseProgressEvents, verifyExpectedPhases } from '../core/claw-test/progress-tail.ts';
 import { resolveAgentRunner, listRegisteredAgents, registerAgentRunner } from '../core/claw-test/agent-runner.ts';
-import { OpenClawRunner } from '../core/claw-test/runners/openclaw.ts';
 import { createTranscriptSink } from '../core/claw-test/transcript-capture.ts';
-
-// Ensure built-in runners are registered.
-registerAgentRunner('openclaw', () => new OpenClawRunner());
 
 interface HarnessOpts {
   scenario: string;

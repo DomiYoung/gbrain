@@ -293,7 +293,7 @@ export async function runThink(
     try {
       const { getLatestProfile } = await import('../../commands/calibration.ts');
       const profile = await getLatestProfile(engine, {
-        holder: opts.calibrationHolder ?? 'garry',
+        holder: opts.calibrationHolder ?? 'brain',
       });
       if (profile) {
         calibrationBlockOpts = {
@@ -592,7 +592,7 @@ export async function persistSynthesis(
 //   2. Real availability check via try/catch around resolveRecipe + assertion
 //      (NOT the false-positive `getChatModel()` truthy check)
 //   3. Model-id resolution: handle both bare (`claude-opus-4-7`) and
-//      provider-prefixed (`anthropic:claude-opus-4-7`) shapes
+//      provider-prefixed (`x5m5x_claude:claude-opus-4-7`) shapes
 //   4. Response-shape conversion: ChatResult → Anthropic.Message
 //
 // `opts.client` injection path is preserved (test seam — see ThinkLLMClient).

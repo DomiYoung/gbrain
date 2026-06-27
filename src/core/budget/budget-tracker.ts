@@ -35,6 +35,7 @@ import { ANTHROPIC_PRICING, type ModelPricing } from '../anthropic-pricing.ts';
 import { EMBEDDING_PRICING, lookupEmbeddingPrice } from '../embedding-pricing.ts';
 import { splitProviderModelId } from '../model-id.ts';
 import { isoWeekFilename, resolveAuditDir } from '../audit-week-file.ts';
+import { canonicalLookup } from '../model-pricing.ts';
 
 export type BudgetKind = 'chat' | 'embed' | 'rerank';
 
@@ -194,6 +195,8 @@ function lookupPricing(modelId: string, kind: BudgetKind): ModelPricing | null {
     const tailHit = ANTHROPIC_PRICING[modelTail];
     if (tailHit) return tailHit;
   }
+  const canonicalHit = canonicalLookup(modelId);
+  if (canonicalHit) return canonicalHit;
   // v0.40.6.1: zero-price local-inference rerank providers so the budget
   // tracker's TX2 hard-fail doesn't trip on `llama-server-reranker:<model>`
   // under `--max-cost`. Only the rerank kind — chat/embed already have

@@ -16,7 +16,7 @@
  *   2 — Could not determine (missing binary / crashed).
  */
 
-import { execFileSync } from 'child_process';
+import { execFileSync, execSync } from 'child_process';
 import { VERSION } from '../version.ts';
 import { getCliOptions } from '../core/cli-options.ts';
 
@@ -29,17 +29,29 @@ import { getCliOptions } from '../core/cli-options.ts';
  */
 function gbrainSpawn(): { cmd: string; prefix: string[] } {
   const arg1 = process.argv[1] ?? '';
-  if (arg1.endsWith('/gbrain') || arg1.endsWith('\\gbrain.exe')) {
+  if (isGbrainBinaryPath(arg1) && !isBunfsPath(arg1)) {
     return { cmd: arg1, prefix: [] };
   }
   if (arg1.endsWith('.ts') || arg1.endsWith('.mjs') || arg1.endsWith('.js')) {
     return { cmd: 'bun', prefix: ['run', arg1] };
   }
   const execPath = process.execPath ?? '';
-  if (execPath.endsWith('/gbrain') || execPath.endsWith('\\gbrain.exe')) {
+  if (isGbrainBinaryPath(execPath) && !isBunfsPath(execPath)) {
     return { cmd: execPath, prefix: [] };
   }
+  try {
+    const which = execSync('command -v gbrain', { encoding: 'utf-8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
+    if (which) return { cmd: which, prefix: [] };
+  } catch { /* not on PATH — fall through */ }
   return { cmd: 'gbrain', prefix: [] };
+}
+
+function isGbrainBinaryPath(path: string): boolean {
+  return path.endsWith('/gbrain') || path.endsWith('\\gbrain.exe');
+}
+
+function isBunfsPath(path: string): boolean {
+  return path.startsWith('/$bunfs/') || path.includes('\\$bunfs\\');
 }
 
 interface DoctorCheck {
@@ -262,4 +274,4 @@ function isSkillpackCheckSubcommand(): boolean {
 }
 
 /** Exported for unit tests. */
-export const __testing = { buildReport, runDoctor, runMigrationsList };
+export const __testing = { buildReport, runDoctor, runMigrationsList, gbrainSpawn };

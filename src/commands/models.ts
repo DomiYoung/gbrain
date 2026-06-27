@@ -41,6 +41,7 @@ const PER_TASK_KEYS: Array<{ key: string; tier: ModelTier; description: string }
   { key: 'models.dream.synthesize',         tier: 'reasoning', description: 'Dream synthesis (conversation → brain pages)' },
   { key: 'models.dream.synthesize_verdict', tier: 'utility',   description: 'Dream synthesis verdict (Haiku judge)' },
   { key: 'models.dream.patterns',           tier: 'reasoning', description: 'Pattern discovery (cross-take themes)' },
+  { key: 'models.calibration_profile',      tier: 'reasoning', description: 'Calibration profile pattern statements' },
   { key: 'models.drift',                    tier: 'reasoning', description: 'Drift LLM judge (v0.29 scaffold)' },
   { key: 'models.auto_think',               tier: 'deep',      description: 'Auto-think question answering' },
   { key: 'models.think',                    tier: 'deep',      description: '`gbrain think` synthesis op' },

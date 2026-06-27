@@ -50,6 +50,9 @@ const DENY_PREFIXES = [
   'scripts/',
   'templates/',
   'openclaw/config/',
+  'extracts/',           // Extract receipts (Dream cycle 临时收据)
+  'atoms/',              // Knowledge atoms (从会议/文章提取的原子级 insight)
+  '06_system/governance-ledger/', // 治理账本（autopilot 运行记录）
 ];
 
 /** First slug segments where no inbound links is expected */

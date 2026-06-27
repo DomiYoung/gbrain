@@ -681,10 +681,55 @@ function makeErrorFromException(e: unknown, fallbackClass = 'InternalError'): Ph
   };
 }
 
-async function timePhase<T>(fn: () => Promise<T>): Promise<{ result: T; duration_ms: number }> {
+// Per-phase timeout. Caps a runaway phase so the cycle can't get stuck
+// indefinitely when one phase's underlying work hangs (network, LLM, lock).
+// Override at call site or via env GBRAIN_CYCLE_PHASE_TIMEOUT_MS.
+const PHASE_TIMEOUT_MS_DEFAULT = (() => {
+  const raw = process.env.GBRAIN_CYCLE_PHASE_TIMEOUT_MS;
+  const parsed = raw ? Number(raw) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 120_000;
+})();
+
+class PhaseTimeoutError extends Error {
+  constructor(public readonly timeout_ms: number) {
+    super(`phase exceeded per-phase timeout of ${timeout_ms}ms`);
+    this.name = 'PhaseTimeoutError';
+  }
+}
+
+async function timePhase<T>(
+  fn: () => Promise<T>,
+  opts?: { timeoutMs?: number; phaseName?: string },
+): Promise<{ result: T; duration_ms: number }> {
   const start = performance.now();
-  const result = await fn();
-  return { result, duration_ms: Math.round(performance.now() - start) };
+  const timeoutMs = opts?.timeoutMs ?? PHASE_TIMEOUT_MS_DEFAULT;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const work = fn();
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new PhaseTimeoutError(timeoutMs)), timeoutMs);
+    });
+    const result = await Promise.race([work, timeout]);
+    return { result, duration_ms: Math.round(performance.now() - start) };
+  } catch (e) {
+    if (e instanceof PhaseTimeoutError) {
+      const phase = (opts?.phaseName ?? 'unknown') as CyclePhase;
+      // Synthesize a skipped-with-timeout PhaseResult so the cycle continues to
+      // the next phase instead of aborting the whole run on one stuck phase.
+      const synthesized = {
+        phase,
+        status: 'skipped' as PhaseStatus,
+        duration_ms: Math.round(performance.now() - start),
+        summary: `phase timed out after ${e.timeout_ms}ms`,
+        details: { reason: 'phase_timeout', timeout_ms: e.timeout_ms },
+      } as unknown as T;
+      console.warn(`[cycle] phase ${phase} hit ${e.timeout_ms}ms timeout; skipping`);
+      return { result: synthesized, duration_ms: Math.round(performance.now() - start) };
+    }
+    throw e;
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 async function safeYield(hook?: () => Promise<void>) {
@@ -1546,7 +1591,7 @@ export async function runCycle(
         phaseResults.push(skipNoBrainDir('lint'));
       } else {
         progress.start('cycle.lint');
-        const { result, duration_ms } = await timePhase(() => runPhaseLint(brainDir, dryRun, engine, opts.signal));
+        const { result, duration_ms } = await timePhase(() => runPhaseLint(brainDir, dryRun, engine, opts.signal), { phaseName: 'lint' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         progress.finish();
@@ -1561,7 +1606,7 @@ export async function runCycle(
         phaseResults.push(skipNoBrainDir('backlinks'));
       } else {
         progress.start('cycle.backlinks');
-        const { result, duration_ms } = await timePhase(() => runPhaseBacklinks(brainDir, dryRun));
+        const { result, duration_ms } = await timePhase(() => runPhaseBacklinks(brainDir, dryRun), { phaseName: 'backlinks' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         progress.finish();
@@ -1589,7 +1634,7 @@ export async function runCycle(
         phaseResults.push(skipNoBrainDir('sync'));
       } else {
         progress.start('cycle.sync');
-        const { result, duration_ms } = await timePhase(() => runPhaseSync(engine, brainDir, dryRun, pull, phases.includes('extract')));
+        const { result, duration_ms } = await timePhase(() => runPhaseSync(engine, brainDir, dryRun, pull, phases.includes('extract')), { phaseName: 'sync' });
         result.duration_ms = duration_ms;
         // Capture changed slugs for incremental extract.
         syncPagesAffected = (result as SyncPhaseResult).pagesAffected;
@@ -1623,7 +1668,7 @@ export async function runCycle(
           from: opts.synthFrom,
           to: opts.synthTo,
           bypassDreamGuard: opts.synthBypassDreamGuard,
-        }));
+        }), { phaseName: 'synthesize' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         // v0.29: capture synthesize-written slugs so the recompute_emotional_weight
@@ -1654,7 +1699,7 @@ export async function runCycle(
         // If sync didn't run (phases exclude it) or failed, syncPagesAffected
         // is undefined → extract falls back to full walk (safe default).
         progress.start('cycle.extract');
-        const { result, duration_ms } = await timePhase(() => runPhaseExtract(engine, brainDir, dryRun, syncPagesAffected, opts.signal));
+        const { result, duration_ms } = await timePhase(() => runPhaseExtract(engine, brainDir, dryRun, syncPagesAffected, opts.signal), { phaseName: 'extract' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         progress.finish();
@@ -1689,7 +1734,7 @@ export async function runCycle(
         // source installs).
         const xfSourceId = cycleSourceId ?? 'default';
         const { result, duration_ms } = await timePhase(() =>
-          runPhaseExtractFacts(engine, brainDir, xfSourceId, dryRun, syncPagesAffected, opts.signal));
+          runPhaseExtractFacts(engine, brainDir, xfSourceId, dryRun, syncPagesAffected, opts.signal), { phaseName: 'extract_facts' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         progress.finish();
@@ -1756,7 +1801,7 @@ export async function runCycle(
           // v0.41.19.0 (T4): pass same reporter (not a child — cycle.ts
           // owns start/finish; phase only ticks).
           progress,
-        }));
+        }), { phaseName: 'extract_atoms' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         progress.finish();
@@ -1781,7 +1826,7 @@ export async function runCycle(
         });
       } else {
         progress.start('cycle.resolve_symbol_edges');
-        const { result, duration_ms } = await timePhase(() => runPhaseResolveSymbolEdges(engine, dryRun));
+        const { result, duration_ms } = await timePhase(() => runPhaseResolveSymbolEdges(engine, dryRun), { phaseName: 'resolve_symbol_edges' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         progress.finish();
@@ -1812,7 +1857,7 @@ export async function runCycle(
           brainDir,
           dryRun,
           yieldDuringPhase: opts.yieldDuringPhase,
-        }));
+        }), { phaseName: 'patterns' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         progress.finish();
@@ -1856,7 +1901,7 @@ export async function runCycle(
           yieldDuringPhase: buildYieldDuringPhase(lock, opts.yieldDuringPhase),
           // v0.41.19.0 (T4): pass same reporter (not a child).
           progress,
-        }));
+        }), { phaseName: 'synthesize_concepts' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         progress.finish();
@@ -1895,8 +1940,7 @@ export async function runCycle(
           runPhaseRecomputeEmotionalWeight(engine, {
             dryRun,
             affectedSlugs: incremental,
-          }),
-        );
+          }), { phaseName: 'recompute_emotional_weight' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         progress.finish();
@@ -1925,7 +1969,7 @@ export async function runCycle(
           dryRun,
           yieldDuringPhase: opts.yieldDuringPhase,
           signal: opts.signal,
-        }));
+        }), { phaseName: 'consolidate' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         progress.finish();
@@ -1958,6 +2002,24 @@ export async function runCycle(
             calibrationConfigAny.cycle.grade_takes = calibrationConfigAny.cycle.grade_takes || {};
             calibrationConfigAny.cycle.grade_takes.min_age_months = parseInt(dbMinAge, 10);
           }
+          const dbAutoResolveEnabled = await engine.getConfig('cycle.grade_takes.auto_resolve.enabled');
+          if (dbAutoResolveEnabled !== null && dbAutoResolveEnabled !== undefined) {
+            calibrationConfigAny.cycle = calibrationConfigAny.cycle || {};
+            calibrationConfigAny.cycle.grade_takes = calibrationConfigAny.cycle.grade_takes || {};
+            calibrationConfigAny.cycle.grade_takes.auto_resolve = calibrationConfigAny.cycle.grade_takes.auto_resolve || {};
+            calibrationConfigAny.cycle.grade_takes.auto_resolve.enabled =
+              dbAutoResolveEnabled === 'true' || dbAutoResolveEnabled === '1';
+          }
+          const dbAutoResolveMinConfidence = await engine.getConfig('cycle.grade_takes.auto_resolve.min_confidence');
+          if (dbAutoResolveMinConfidence) {
+            const parsed = parseFloat(dbAutoResolveMinConfidence);
+            if (Number.isFinite(parsed)) {
+              calibrationConfigAny.cycle = calibrationConfigAny.cycle || {};
+              calibrationConfigAny.cycle.grade_takes = calibrationConfigAny.cycle.grade_takes || {};
+              calibrationConfigAny.cycle.grade_takes.auto_resolve = calibrationConfigAny.cycle.grade_takes.auto_resolve || {};
+              calibrationConfigAny.cycle.grade_takes.auto_resolve.min_confidence = parsed;
+            }
+          }
         } catch { /* ignore if config table missing */ }
         const calibrationSourceId = cycleSourceId;
         const calibrationCtx = {
@@ -1973,7 +2035,28 @@ export async function runCycle(
           checkAborted(opts.signal);
           progress.start('cycle.propose_takes');
           const { runPhaseProposeTakes } = await import('./cycle/propose-takes.ts');
-          const { result, duration_ms } = await timePhase(() => runPhaseProposeTakes(calibrationCtx, { repoPath: brainDir ?? undefined }) as Promise<PhaseResult>);
+          const proposeOpts: Parameters<typeof runPhaseProposeTakes>[1] = { 
+            repoPath: brainDir ?? undefined 
+          };
+          // v0.42.41.0-domi-auto-accept: read cycle.propose_takes.auto_accept.* from config
+          const cfgAny = calibrationConfig as any;
+          if (cfgAny?.cycle?.propose_takes?.auto_accept?.enabled !== undefined) {
+            proposeOpts.autoAccept = {
+              enabled: Boolean(cfgAny.cycle.propose_takes.auto_accept.enabled),
+              min_weight: Number(cfgAny.cycle.propose_takes.auto_accept.min_weight ?? 0.7),
+              kind_filter: Array.isArray(cfgAny.cycle.propose_takes.auto_accept.kind_filter)
+                ? cfgAny.cycle.propose_takes.auto_accept.kind_filter
+                : ['bet'],
+            };
+          }
+          // CTO 2026-06-27: read cycle.propose_takes.pageLimit from config
+          if (cfgAny?.cycle?.propose_takes?.pageLimit !== undefined) {
+            const pageLimit = Number(cfgAny.cycle.propose_takes.pageLimit);
+            if (Number.isFinite(pageLimit) && pageLimit > 0) {
+              proposeOpts.pageLimit = pageLimit;
+            }
+          }
+          const { result, duration_ms } = await timePhase(() => runPhaseProposeTakes(calibrationCtx, proposeOpts) as Promise<PhaseResult>, { phaseName: 'propose_takes' });
           result.duration_ms = duration_ms;
           phaseResults.push(result);
           progress.finish();
@@ -1990,12 +2073,19 @@ export async function runCycle(
           if (cfgAny?.cycle?.grade_takes?.min_age_months !== undefined) {
             gradeOpts.minAgeMonths = cfgAny.cycle.grade_takes.min_age_months;
           }
+          if (cfgAny?.cycle?.grade_takes?.auto_resolve?.enabled !== undefined) {
+            gradeOpts.autoResolve = Boolean(cfgAny.cycle.grade_takes.auto_resolve.enabled);
+          }
+          if (cfgAny?.cycle?.grade_takes?.auto_resolve?.min_confidence !== undefined) {
+            const minConfidence = Number(cfgAny.cycle.grade_takes.auto_resolve.min_confidence);
+            if (Number.isFinite(minConfidence)) gradeOpts.autoResolveThreshold = minConfidence;
+          }
           // Domi custom: use models.grade from DB config (default custom:glm-5.1)
           try {
             const dbModel = await engine.getConfig('models.grade');
             if (dbModel) gradeOpts.model = dbModel;
           } catch { /* ignore */ }
-          const { result, duration_ms } = await timePhase(() => runPhaseGradeTakes(calibrationCtx, gradeOpts) as Promise<PhaseResult>);
+          const { result, duration_ms } = await timePhase(() => runPhaseGradeTakes(calibrationCtx, gradeOpts) as Promise<PhaseResult>, { phaseName: 'grade_takes' });
           result.duration_ms = duration_ms;
           phaseResults.push(result);
           progress.finish();
@@ -2006,7 +2096,7 @@ export async function runCycle(
           checkAborted(opts.signal);
           progress.start('cycle.calibration_profile');
           const { runPhaseCalibrationProfile } = await import('./cycle/calibration-profile.ts');
-          const { result, duration_ms } = await timePhase(() => runPhaseCalibrationProfile(calibrationCtx, {}) as Promise<PhaseResult>);
+          const { result, duration_ms } = await timePhase(() => runPhaseCalibrationProfile(calibrationCtx, {}) as Promise<PhaseResult>, { phaseName: 'calibration_profile' });
           result.duration_ms = duration_ms;
           phaseResults.push(result);
           progress.finish();
@@ -2048,8 +2138,7 @@ export async function runCycle(
         progress.start('cycle.conversation_facts_backfill');
         const { runPhaseConversationFactsBackfill } = await import('./cycle/conversation-facts-backfill.ts');
         const { result, duration_ms } = await timePhase(() =>
-          runPhaseConversationFactsBackfill(engine, { dryRun, signal: opts.signal }),
-        );
+          runPhaseConversationFactsBackfill(engine, { dryRun, signal: opts.signal }), { phaseName: 'conversation_facts_backfill' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         progress.finish();
@@ -2076,8 +2165,7 @@ export async function runCycle(
         progress.start('cycle.enrich_thin');
         const { runPhaseEnrichThin } = await import('./cycle/enrich-thin.ts');
         const { result, duration_ms } = await timePhase(() =>
-          runPhaseEnrichThin(engine, { dryRun, signal: opts.signal }),
-        );
+          runPhaseEnrichThin(engine, { dryRun, signal: opts.signal }), { phaseName: 'enrich_thin' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         progress.finish();
@@ -2108,8 +2196,7 @@ export async function runCycle(
             engine,
             dryRun,
             ...(opts.signal ? { signal: opts.signal } : {}),
-          }),
-        );
+          }), { phaseName: 'skillopt' });
         result.duration_ms = duration_ms;
         phaseResults.push(result as never);
         progress.finish();
@@ -2130,7 +2217,7 @@ export async function runCycle(
         });
       } else {
         progress.start('cycle.embed');
-        const { result, duration_ms } = await timePhase(() => runPhaseEmbed(engine, dryRun, opts.signal));
+        const { result, duration_ms } = await timePhase(() => runPhaseEmbed(engine, dryRun, opts.signal), { phaseName: 'embed' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         progress.finish();
@@ -2151,7 +2238,7 @@ export async function runCycle(
         });
       } else {
         progress.start('cycle.orphans');
-        const { result, duration_ms } = await timePhase(() => runPhaseOrphans(engine));
+        const { result, duration_ms } = await timePhase(() => runPhaseOrphans(engine), { phaseName: 'orphans' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         progress.finish();
@@ -2188,7 +2275,7 @@ export async function runCycle(
               summary: r.skipped ? `skipped: ${r.reason ?? 'unknown'}` : `${r.suggestions_emitted} suggestions emitted`,
               details: { ...r },
             };
-          });
+          }, { phaseName: 'schema_suggest' });
           result.duration_ms = duration_ms;
           phaseResults.push(result);
         } catch (e) {
@@ -2221,7 +2308,7 @@ export async function runCycle(
         });
       } else {
         progress.start('cycle.purge');
-        const { result, duration_ms } = await timePhase(() => runPhasePurge(engine, dryRun));
+        const { result, duration_ms } = await timePhase(() => runPhasePurge(engine, dryRun), { phaseName: 'purge' });
         result.duration_ms = duration_ms;
         phaseResults.push(result);
         progress.finish();

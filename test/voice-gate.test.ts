@@ -96,7 +96,7 @@ describe('parseJudgeOutput', () => {
 describe('defaultJudge routing', () => {
   test('uses configured chat_model instead of a bare Haiku id', async () => {
     configureGateway({
-      chat_model: 'custom:gpt-5.5',
+      chat_model: 'custom:deepseek-v4-pro',
       env: { NEWAPI_API_KEY: 'test-key' },
       base_urls: { custom: 'http://127.0.0.1:3100/v1' },
     } as any);
@@ -121,7 +121,7 @@ describe('defaultJudge routing', () => {
     });
 
     expect(out.verdict).toBe('conversational');
-    expect(seenModel).toBe('custom:gpt-5.5');
+    expect(seenModel).toBe('custom:deepseek-v4-pro');
   });
 });
 
