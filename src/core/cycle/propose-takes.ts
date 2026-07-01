@@ -370,8 +370,32 @@ class ProposeTakesPhase extends BaseCyclePhase {
     };
 
     // Load pages eligible for proposal. Source-scoped per BaseCyclePhase.
+    // Priority: pages WITHOUT any proposals yet (to avoid cache-hit loops),
+    // then fall back to recently updated pages.
+    // Filter: prioritize human-authored content over system-generated pages.
+    const sourceId = scope.sourceId ?? 'default';
+    const pagesWithoutProposals = await engine.executeRaw<{ slug: string }>(
+      `SELECT p.slug
+       FROM pages p
+       WHERE p.source_id = $1
+         AND p.compiled_truth IS NOT NULL
+         AND LENGTH(TRIM(p.compiled_truth)) > 100
+         AND p.type NOT IN ('atom', 'extract_receipt', 'provenance', 'governance-ledger', 'governance-report', 'system', 'person', 'person-profile', 'index', 'redirect', 'governance')
+         AND p.type NOT LIKE 'tita-%'
+         AND p.type NOT LIKE 'feishu-%'
+         AND NOT EXISTS (
+           SELECT 1 FROM take_proposals tp
+           WHERE tp.source_id = p.source_id AND tp.page_slug = p.slug
+         )
+       ORDER BY p.updated_at DESC
+       LIMIT $2`,
+      [sourceId, pageLimit],
+    );
+
+    const slugs = pagesWithoutProposals.map(r => r.slug);
     const pageFilters: PageFilters = {
       ...scope,
+      slugs: slugs.length > 0 ? slugs : undefined,
       limit: pageLimit,
       sort: 'updated_desc',
     };
@@ -504,14 +528,18 @@ class ProposeTakesPhase extends BaseCyclePhase {
       kind_filter: (opts as any).autoAccept?.kind_filter ?? ['bet'],
     };
 
+    // v0.42.41.0-domi-auto-accept: run auto-accept even when proposals_inserted=0
+    // to process historical pending proposals (not just this run's new ones).
     let autoAcceptSummary = '';
-    if (autoAcceptConfig.enabled && result.proposals_inserted > 0) {
+    if (autoAcceptConfig.enabled) {
       try {
-        const acceptResult = await autoAcceptProposals(this.ctx, autoAcceptConfig);
-        autoAcceptSummary = `, ${acceptResult.summary}`;
-        result.warnings.push(
-          `auto-accepted ${acceptResult.accepted_count}/${acceptResult.pending_before} pending proposals`,
-        );
+        const acceptResult = await autoAcceptProposals(_ctx, autoAcceptConfig);
+        if (acceptResult.accepted_count > 0) {
+          autoAcceptSummary = `, ${acceptResult.summary}`;
+          result.warnings.push(
+            `auto-accepted ${acceptResult.accepted_count}/${acceptResult.pending_before} pending proposals`,
+          );
+        }
       } catch (err) {
         result.warnings.push(`auto-accept failed: ${(err as Error).message}`);
       }

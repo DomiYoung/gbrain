@@ -354,61 +354,73 @@ async function _runContradictionProbeInner(opts: RunnerOpts): Promise<RunnerResu
     // Sort.
     const sorted = sortPairs(survivedDate, sampling);
 
-    // Judge each pair.
+    // Judge each pair in batches to avoid proxy timeout (v0.42 domi/502-fix).
+    // Batch size 5: 10 pairs / 5 = 2 batches × 2s = 4s/query × 7 = 28s total.
+    // Previous: 10 pairs × 2s = 20s/query × 7 = 140s → 502 at proxy layer.
+    const BATCH_SIZE = 5;
     const findings: ContradictionFinding[] = [];
     let cacheHits = 0;
     let judged = 0;
-    for (const pair of sorted) {
+    
+    for (let batchStart = 0; batchStart < sorted.length; batchStart += BATCH_SIZE) {
       if (opts.abortSignal?.aborted) break;
       if (tracker.exceededCap()) {
         capHitMidRun = true;
         break;
       }
-      // Cache lookup.
-      const cached = await cache.lookup(pair.a.text, pair.b.text);
-      if (cached) {
-        cacheHits++;
-        tallyVerdict(cached.verdict);
-        // v0.34 / Lane A2: emit findings for every non-no_contradiction verdict.
-        // Without this, the new verdicts (temporal_supersession etc.) would
-        // disappear from the report and the whole wave is invisible to users.
-        if (cached.verdict !== 'no_contradiction') {
-          findings.push(pairToFinding(pair, cached));
+      
+      const batch = sorted.slice(batchStart, batchStart + BATCH_SIZE);
+      const batchResults = await Promise.all(batch.map(async (pair) => {
+        // Cache lookup.
+        const cached = await cache.lookup(pair.a.text, pair.b.text);
+        if (cached) {
+          tallyVerdict(cached.verdict);
+          if (cached.verdict !== 'no_contradiction') {
+            return { finding: pairToFinding(pair, cached), fromCache: true };
+          }
+          return { finding: null, fromCache: true };
         }
-        continue;
-      }
-      // Judge call.
-      try {
-        const out = await judgeFn({
-          query,
-          a: {
-            slug: pair.a.slug,
-            text: pair.a.text,
-            source_tier: pair.a.source_tier,
-            holder: pair.a.holder,
-            effective_date: pair.a.effective_date,
-          },
-          b: {
-            slug: pair.b.slug,
-            text: pair.b.text,
-            source_tier: pair.b.source_tier,
-            holder: pair.b.holder,
-            effective_date: pair.b.effective_date,
-          },
-          model: judgeModel,
-          maxPairChars,
-          abortSignal: opts.abortSignal,
-        });
-        tracker.recordJudgeCall(judgeModel, out.usage);
-        await cache.store(pair.a.text, pair.b.text, out.verdict);
-        judged++;
-        tallyVerdict(out.verdict.verdict);
-        // v0.34 / Lane A2: same emit predicate as the cache-hit branch.
-        if (out.verdict.verdict !== 'no_contradiction') {
-          findings.push(pairToFinding(pair, out.verdict));
+        
+        // Judge call.
+        try {
+          const out = await judgeFn({
+            query,
+            a: {
+              slug: pair.a.slug,
+              text: pair.a.text,
+              source_tier: pair.a.source_tier,
+              holder: pair.a.holder,
+              effective_date: pair.a.effective_date,
+            },
+            b: {
+              slug: pair.b.slug,
+              text: pair.b.text,
+              source_tier: pair.b.source_tier,
+              holder: pair.b.holder,
+              effective_date: pair.b.effective_date,
+            },
+            model: judgeModel,
+            maxPairChars,
+            abortSignal: opts.abortSignal,
+          });
+          tracker.recordJudgeCall(judgeModel, out.usage);
+          await cache.store(pair.a.text, pair.b.text, out.verdict);
+          tallyVerdict(out.verdict.verdict);
+          if (out.verdict.verdict !== 'no_contradiction') {
+            return { finding: pairToFinding(pair, out.verdict), fromCache: false };
+          }
+          return { finding: null, fromCache: false };
+        } catch (err) {
+          errs.record(pairId(pair), err);
+          return { finding: null, fromCache: false };
         }
-      } catch (err) {
-        errs.record(pairId(pair), err);
+      }));
+      
+      // Aggregate batch results.
+      for (const result of batchResults) {
+        if (result.fromCache) cacheHits++;
+        else judged++;
+        if (result.finding) findings.push(result.finding);
       }
     }
 

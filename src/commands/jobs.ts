@@ -1919,6 +1919,9 @@ export async function registerBuiltinHandlers(
   worker.register('extract_facts', makePhaseHandler('extract_facts'));
   worker.register('resolve_symbol_edges', makePhaseHandler('resolve_symbol_edges'));
   worker.register('recompute_emotional_weight', makePhaseHandler('recompute_emotional_weight'));
+  worker.register('propose_takes', makePhaseHandler('propose_takes'));
+  worker.register('grade_takes', makePhaseHandler('grade_takes'));
+  worker.register('calibration_profile', makePhaseHandler('calibration_profile'));
 
   // v0.42.x (#1685 GAP D) — PROTECTED bounded extract_atoms backlog drain.
   // Thin wrapper over the shared helper (DECISION 5A) so the CLI `--drain`

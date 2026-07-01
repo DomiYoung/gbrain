@@ -418,7 +418,7 @@ export async function runAutopilot(engine: BrainEngine, args: string[]) {
     const autopilotMaxRssMb = resolveDefaultMaxRssMb();
     childSupervisor = new ChildWorkerSupervisor({
       cliPath,
-      args: ['jobs', 'work', '--max-rss', String(autopilotMaxRssMb)],
+      args: ['jobs', 'work', '--max-rss', String(autopilotMaxRssMb), '--concurrency', '4'],
       // process.env clone; autopilot doesn't gate shell jobs the way the
       // standalone supervisor does (autopilot is the operator-trust path).
       env: { ...process.env },

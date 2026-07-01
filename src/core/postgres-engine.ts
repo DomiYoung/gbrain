@@ -1316,7 +1316,7 @@ export class PostgresEngine implements BrainEngine {
              WHEN jsonb_typeof(config) = 'object' THEN config
              WHEN jsonb_typeof(config) = 'string'
                THEN CASE
-                 WHEN (config #>> '{}') IS JSON
+                 WHEN (config #>> '{}') ~ '^\\s*[\\{\\[]'
                    THEN COALESCE(NULLIF((config #>> '{}'), '')::jsonb, '{}'::jsonb)
                  ELSE '{}'::jsonb
                END
