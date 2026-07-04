@@ -37,6 +37,12 @@ export const EMBEDDING_PRICING: Record<string, EmbeddingPricing> = {
   'voyage:voyage-4-large':         { pricePerMTok: 0.18 },
   // ZeroEntropy (https://zeroentropy.dev/pricing — zembed-1)
   'zeroentropyai:zembed-1':        { pricePerMTok: 0.05 },
+  // DashScope / Aliyun Bailian (aliyun.com — text-embedding-v3/v4)
+  'dashscope:text-embedding-v4':    { pricePerMTok: 0.0007 },
+  'dashscope:text-embedding-v3':    { pricePerMTok: 0.0007 },
+  // NewAPI proxy (self-hosted, routes to upstream providers)
+  'newapi:text-embedding-3-small':  { pricePerMTok: 0.02 },
+  'newapi:text-embedding-3-large':  { pricePerMTok: 0.13 },
 };
 
 export type PriceLookupResult =

@@ -34,6 +34,10 @@ export function buildGatewayConfig(c: GBrainConfig): AIGatewayConfig {
   // plane field now exists (GBrainConfig type) and gets mapped here, so
   // setting it via `~/.gbrain/config.json` propagates into the gateway.
   if (c.zeroentropy_api_key) envFromConfig.ZEROENTROPY_API_KEY = c.zeroentropy_api_key;
+  // Domi fork: custom provider API key mappings
+  if (c.newapi_api_key) envFromConfig.NEWAPI_API_KEY = c.newapi_api_key;
+  if (c.dashscope_api_key) envFromConfig.DASHSCOPE_API_KEY = c.dashscope_api_key;
+  if (c.cc_vibe_api_key) envFromConfig.CC_VIBE_API_KEY = c.cc_vibe_api_key;
 
   // v0.32 codex finding #4+#5 fix: thread local-server _BASE_URL env vars
   // into base_urls so the gateway hits the user's configured port. Without

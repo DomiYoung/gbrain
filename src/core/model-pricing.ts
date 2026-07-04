@@ -56,6 +56,8 @@ export const CANONICAL_PRICING: Record<string, ModelPricing> = {
   // per-token rate — closes gbrain#1819.
   'anthropic:claude-opus-4-8':            { input:  5.00, output: 25.00 },
   'anthropic:claude-opus-4-7':            { input:  5.00, output: 25.00 },
+  // Domi fork: x5m5x_claude provider pricing (same rates as anthropic)
+  'x5m5x_claude:claude-opus-4-7':         { input:  5.00, output: 25.00 },
   'anthropic:claude-opus-4-6':            { input:  5.00, output: 25.00 },
   'anthropic:claude-sonnet-4-6':          { input:  3.00, output: 15.00 },
   // Haiku 4.5 — both the dateless canonical id and the dated snapshot.

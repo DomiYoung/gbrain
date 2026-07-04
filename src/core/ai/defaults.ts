@@ -12,10 +12,8 @@
  * install AND every doctor consistency check.
  */
 
-// v0.36.0 chose ZeroEntropy as the system default after evals showed
-// 11/20 wins vs OpenAI (6) and Voyage (4) on real-corpus benchmarks.
-// 1280 is the closest analog to legacy OpenAI 1536d while staying on
-// the high-recall section of ZE's Matryoshka curve. Valid ZE Matryoshka
-// steps: {2560, 1280, 640, 320, 160, 80, 40} — see ai/dims.ts.
-export const DEFAULT_EMBEDDING_MODEL = 'zeroentropyai:zembed-1';
-export const DEFAULT_EMBEDDING_DIMENSIONS = 1280;
+// Domi fork default: production standardized on DashScope text-embedding-v4
+// at 1536 dimensions. Keep defaults aligned with runtime config so chunk
+// upserts do not rewrite content_chunks.model back to zeroentropyai:zembed-1.
+export const DEFAULT_EMBEDDING_MODEL = 'dashscope:text-embedding-v4';
+export const DEFAULT_EMBEDDING_DIMENSIONS = 1536;

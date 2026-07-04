@@ -1492,7 +1492,10 @@ export function isTokenLimitError(err: unknown): boolean {
     /token.*limit.*exceeded/i.test(msg) ||
     // OpenAI embeddings: "Invalid 'input': maximum request size is 300000 tokens per request."
     /maximum request size.*tokens/i.test(msg) ||
-    /max.*tokens.*per.*request/i.test(msg)
+    /max.*tokens.*per.*request/i.test(msg) ||
+    // DashScope embeddings: "Value error, batch size is invalid, it should not be larger than 10."
+    /batch size is invalid/i.test(msg) ||
+    /batch size.*larger than/i.test(msg)
   );
 }
 
