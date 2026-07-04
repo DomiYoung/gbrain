@@ -38,6 +38,7 @@ export function buildGatewayConfig(c: GBrainConfig): AIGatewayConfig {
   if (c.newapi_api_key) envFromConfig.NEWAPI_API_KEY = c.newapi_api_key;
   if (c.dashscope_api_key) envFromConfig.DASHSCOPE_API_KEY = c.dashscope_api_key;
   if (c.cc_vibe_api_key) envFromConfig.CC_VIBE_API_KEY = c.cc_vibe_api_key;
+  if (c.x5m5x_claude_api_key) envFromConfig.X5M5X_CLAUDE_API_KEY = c.x5m5x_claude_api_key;
 
   // v0.32 codex finding #4+#5 fix: thread local-server _BASE_URL env vars
   // into base_urls so the gateway hits the user's configured port. Without
