@@ -25,6 +25,7 @@ import { zeroentropyai } from './zeroentropyai.ts';
 import { llamaServerReranker } from './llama-server-reranker.ts';
 import { custom } from './custom.ts';
 import { cc_vibe } from './cc-vibe.ts';
+import { ziggie } from './ziggie.ts';
 
 const ALL: Recipe[] = [
   openai,
@@ -46,6 +47,7 @@ const ALL: Recipe[] = [
   zeroentropyai,
   custom,
   cc_vibe,
+  ziggie,
 ];
 
 /** Map from `provider:id` key to recipe. */
