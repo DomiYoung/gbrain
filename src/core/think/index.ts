@@ -679,6 +679,9 @@ async function tryBuildGatewayClient(
         // path, surface a sentinel "no LLM available"-shaped Message so the
         // existing JSON-parse path produces the graceful degradation answer.
         if (e instanceof AIConfigError) {
+          if (process.env.GBRAIN_DEBUG) {
+            process.stderr.write(`[tryBuildGatewayClient] AIConfigError: ${e.message}\n`);
+          }
           if (opts.explicitModel) throw e;
           return buildGracefulMessage(modelStr) as unknown as Anthropic.Message;
         }

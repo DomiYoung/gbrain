@@ -2434,13 +2434,23 @@ export function validateModelId(modelStr: string): ModelIdValidity {
   try {
     ({ parsed, recipe } = resolveRecipe(modelStr));
   } catch (e) {
-    if (e instanceof AIConfigError) return { ok: false, reason: 'unknown_provider', detail: e.message, fix: e.fix };
+    if (e instanceof AIConfigError) {
+      if (process.env.GBRAIN_DEBUG) {
+        process.stderr.write(`[validateModelId] resolveRecipe failed: ${e.message}\n`);
+      }
+      return { ok: false, reason: 'unknown_provider', detail: e.message, fix: e.fix };
+    }
     throw e;
   }
   try {
     assertTouchpoint(recipe, 'chat', parsed.modelId, getExtendedModelsForProvider(parsed.providerId));
   } catch (e) {
-    if (e instanceof AIConfigError) return { ok: false, reason: 'unknown_model', detail: e.message, fix: e.fix };
+    if (e instanceof AIConfigError) {
+      if (process.env.GBRAIN_DEBUG) {
+        process.stderr.write(`[validateModelId] assertTouchpoint failed: ${e.message}\n`);
+      }
+      return { ok: false, reason: 'unknown_model', detail: e.message, fix: e.fix };
+    }
     throw e;
   }
   return { ok: true, parsed, recipe };
@@ -2468,6 +2478,10 @@ export type ChatModelProbe =
 
 export function probeChatModel(modelStr: string): ChatModelProbe {
   const v = validateModelId(modelStr);
+  if (process.env.GBRAIN_DEBUG) {
+    process.stderr.write(`[probeChatModel] modelStr=${modelStr} validateModelId.ok=${v.ok}\n`);
+    if (v.ok) process.stderr.write(`[probeChatModel] providerId=${v.parsed.providerId}\n`);
+  }
   if (!v.ok) return { ok: false, reason: v.reason, detail: v.detail, fix: v.fix };
   if (v.parsed.providerId === 'anthropic' && !hasAnthropicKey()) {
     return {
@@ -2475,6 +2489,9 @@ export function probeChatModel(modelStr: string): ChatModelProbe {
       reason: 'unavailable',
       detail: 'no Anthropic API key configured (set ANTHROPIC_API_KEY or run: gbrain config set anthropic_api_key ...)',
     };
+  }
+  if (process.env.GBRAIN_DEBUG) {
+    process.stderr.write(`[probeChatModel] returning ok=true\n`);
   }
   return { ok: true };
 }

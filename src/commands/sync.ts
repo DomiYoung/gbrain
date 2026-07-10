@@ -64,6 +64,7 @@ import {
   slog,
   serr,
 } from '../core/console-prefix.ts';
+import { logCliOperation } from '../cli-logger.ts';
 import { loadStorageConfig } from '../core/storage-config.ts';
 import { getDefaultSourcePath } from '../core/source-resolver.ts';
 // v0.41.32.0: stamp the durable newest-COMMIT timestamp at sync time so the
@@ -4143,6 +4144,7 @@ export async function syncOneSource(
     noExtract?: boolean;
   },
 ): Promise<{ result: SyncResult; log: string }> {
+  const startTime = Date.now();
   const cfg = (src.config || {}) as { strategy?: 'markdown' | 'code' | 'auto' };
   const log = `\n--- Syncing source: ${src.name} ---\n`;
   const repoOpts: SyncOpts = {
@@ -4161,8 +4163,42 @@ export async function syncOneSource(
     // lockId defaults to `gbrain-sync:${src.id}` via the invariant in
     // performSync (no explicit override needed — sourceId triggers it).
   };
-  const result = await withSourcePrefix(src.id, () => performSync(engine, repoOpts));
-  return { result, log };
+  
+  try {
+    const result = await withSourcePrefix(src.id, () => performSync(engine, repoOpts));
+    
+    // 记录成功的操作
+    await logCliOperation('sync', {
+      sourceId: src.id,
+      sourceName: src.name,
+      ...shared,
+    }, {
+      success: true,
+      duration: Date.now() - startTime,
+      rowsAffected: result.created + result.updated + result.deleted,
+      metadata: {
+        created: result.created,
+        updated: result.updated,
+        deleted: result.deleted,
+        skipped: result.skipped,
+      },
+    });
+    
+    return { result, log };
+  } catch (error: any) {
+    // 记录失败的操作
+    await logCliOperation('sync', {
+      sourceId: src.id,
+      sourceName: src.name,
+      ...shared,
+    }, {
+      success: false,
+      duration: Date.now() - startTime,
+      error: error.message,
+    });
+    
+    throw error;
+  }
 }
 
 /**

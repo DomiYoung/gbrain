@@ -30,7 +30,18 @@ export const openai: Recipe = {
       price_last_verified: '2026-04-20',
     },
     chat: {
-      models: ['gpt-5.2', 'gpt-4o-mini'],
+      models: [
+        'gpt-5.2',
+        'gpt-4o-mini',
+        // DashScope qwen models (when openai provider is remapped to dashscope)
+        'qwen3.7-max-2026-06-08',
+        'qwen3.7-max-2026-05-26',
+        'qwen3.7-plus-2026-05-26',
+        'qwen3.7-plus',
+        'qwen3.7-max-preview',
+        'qwen3.7-max-2026-05-17',
+        'qwen3.7-max-2026-05-20',
+      ],
       supports_tools: true,
       supports_subagent_loop: true,
       supports_prompt_cache: false,
