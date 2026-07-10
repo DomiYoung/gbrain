@@ -1,7 +1,7 @@
 /**
  * v0.41.16.0 — Built-in conversation parser pattern registry.
  *
- * Fourteen hand-vetted patterns covering the chat-export formats this
+ * Fifteen hand-vetted patterns covering the chat-export formats this
  * codebase is most likely to encounter. Each pattern's regex was
  * derived from a public format reference (source_doc field) so future
  * maintainers can verify against the wild shape.
@@ -50,7 +50,7 @@ export function cleanSpeaker(raw: string, override?: RegExp): string {
   return stripped || raw.trim();
 }
 
-/** The 14 hand-vetted built-in patterns. */
+/** The 15 hand-vetted built-in patterns. */
 export const BUILTIN_PATTERNS: readonly PatternEntry[] = [
   // -------------------------------------------------------------------
   // INLINE-DATE patterns (date in every line; less ambiguous; tried first).
@@ -496,6 +496,39 @@ export const BUILTIN_PATTERNS: readonly PatternEntry[] = [
       '**[18:37] G T:** telegram bracket',
     ],
     source_doc: 'Element/matrix-archive script shape',
+  },
+
+  {
+    id: 'feishu-minute',
+    origin: 'builtin',
+    // Feishu meeting minute: `蔡晓东 00:00:00.178 ` (speaker + HH:MM:SS.mmm, content on next lines)
+    // Header line has date: `2026-05-21 10:09:23 CST|51分钟 38秒`
+    // Each speaker line ends with just timestamp; multi-line content follows.
+    regex: /^([\p{L}\p{N}][\p{L}\p{N}\s.'-]*?)\s+(\d{2}):(\d{2}):(\d{2})\.(\d{3})\s*$/u,
+    captures: {
+      speaker_group: 1,
+      hour_group: 2,
+      minute_group: 3,
+      // Groups 4 (seconds) and 5 (milliseconds) captured but not used (parser precision is minute-level)
+    },
+    date_source: 'frontmatter',
+    time_format: '24h',
+    timezone_policy: 'utc_assumed_with_warn',
+    multi_line: true,
+    quick_reject: /\s+\d{2}:\d{2}:\d{2}\.\d{3}\s*$/,
+    test_positive: [
+      '蔡晓东 00:00:00.178 ',
+      '杨涛 00:00:00.517 ',
+      '说话人 1 00:06:29.738 ',
+      'Alice Example 12:34:56.789 ',
+    ],
+    test_negative: [
+      '**Alice** (2024-03-15 9:00 AM): hello',
+      '[18:37] @alice:matrix.org: hello',
+      '<alice> hello',
+      '蔡晓东 00:00:00 ',  // No milliseconds
+    ],
+    source_doc: 'Feishu (飞书) meeting minute transcript export',
   },
 
   {
