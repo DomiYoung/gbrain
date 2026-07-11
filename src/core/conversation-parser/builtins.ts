@@ -509,6 +509,7 @@ export const BUILTIN_PATTERNS: readonly PatternEntry[] = [
       speaker_group: 1,
       hour_group: 2,
       minute_group: 3,
+      text_group: 0,
       // Groups 4 (seconds) and 5 (milliseconds) captured but not used (parser precision is minute-level)
     },
     date_source: 'frontmatter',

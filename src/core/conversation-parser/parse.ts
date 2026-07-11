@@ -554,3 +554,40 @@ export function parseConversation(
       : undefined,
   };
 }
+
+export async function parseConversationAsync(
+  body: string,
+  opts: ParseConversationOpts = {},
+): Promise<ParseResult> {
+  const result = parseConversation(body, opts);
+  if (result.phase === 'no_match' && !opts.noFallback && opts.engine && opts.chatTransport) {
+    try {
+      const config = await opts.engine.getConfig();
+      const fallbackEnabled = config.conversation_parser?.llm_fallback_enabled === true;
+      
+      if (fallbackEnabled) {
+        const { runLlmFallback } = await import('./llm-fallback.ts');
+        const fallbackMessages = await runLlmFallback({
+          modelStr: 'claude-3-5-haiku-20241022',
+          body,
+          engine: opts.engine,
+          chatTransport: opts.chatTransport,
+          signal: opts.signal,
+        });
+        
+        if (fallbackMessages && fallbackMessages.length > 0) {
+          return {
+            messages: fallbackMessages,
+            phase: 'llm_fallback',
+            patterns_scored: result.patterns_scored,
+          };
+        }
+      }
+    } catch (err) {
+      if (opts.diagnostic) {
+        console.warn('[conversation-parser] LLM fallback error:', err);
+      }
+    }
+  }
+  return result;
+}

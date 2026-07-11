@@ -31,6 +31,8 @@ export interface GBrainConfig {
   database_path?: string;
   openai_api_key?: string;
   anthropic_api_key?: string;
+  /** Custom environment variables block. */
+  env?: Record<string, string>;
   /**
    * ZeroEntropy API key. v0.37 fix wave (CDX2-5+6): ZE became the default
    * embedding + reranker provider in v0.36 but lacked a file-plane config
@@ -46,6 +48,10 @@ export interface GBrainConfig {
   cc_vibe_api_key?: string;
   x5m5x_claude_api_key?: string;
   ziggie_api_key?: string;
+  /**
+   * v0.42 (2026-07-10): DASHSCOPE_API_KEY support for Alibaba DashScope.
+   */
+  dashscope_api_key?: string;
   /** AI gateway config (v0.14+). v0.36+ default: "zeroentropyai:zembed-1" / 1280 / "anthropic:claude-haiku-4-5-20251001". */
   embedding_model?: string;
   embedding_dimensions?: number;
@@ -536,6 +542,7 @@ export function loadConfig(): GBrainConfig | null {
     ...(process.env.CC_VIBE_API_KEY ? { cc_vibe_api_key: process.env.CC_VIBE_API_KEY } : {}),
     ...(process.env.X5M5X_CLAUDE_API_KEY ? { x5m5x_claude_api_key: process.env.X5M5X_CLAUDE_API_KEY } : {}),
     ...(process.env.ZIGGIE_API_KEY ? { ziggie_api_key: process.env.ZIGGIE_API_KEY } : {}),
+    ...(process.env.DASHSCOPE_API_KEY ? { dashscope_api_key: process.env.DASHSCOPE_API_KEY } : {}),
     ...(process.env.GBRAIN_EMBEDDING_MODEL ? { embedding_model: process.env.GBRAIN_EMBEDDING_MODEL } : {}),
     ...(process.env.GBRAIN_EMBEDDING_DIMENSIONS ? { embedding_dimensions: parseInt(process.env.GBRAIN_EMBEDDING_DIMENSIONS, 10) } : {}),
     ...(process.env.GBRAIN_EXPANSION_MODEL ? { expansion_model: process.env.GBRAIN_EXPANSION_MODEL } : {}),

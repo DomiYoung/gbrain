@@ -4175,12 +4175,12 @@ export async function syncOneSource(
     }, {
       success: true,
       duration: Date.now() - startTime,
-      rowsAffected: result.created + result.updated + result.deleted,
+      rowsAffected: result.added + result.modified + result.deleted,
       metadata: {
-        created: result.created,
-        updated: result.updated,
+        added: result.added,
+        modified: result.modified,
         deleted: result.deleted,
-        skipped: result.skipped,
+        renamed: result.renamed,
       },
     });
     

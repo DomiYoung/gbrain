@@ -2136,7 +2136,11 @@ function instantiateExpansion(recipe: Recipe, modelId: string, cfg: AIGatewayCon
     case 'native-anthropic': {
       const apiKey = cfg.env.ANTHROPIC_API_KEY;
       if (!apiKey) throw new AIConfigError(`Anthropic expansion requires ANTHROPIC_API_KEY.`, recipe.setup_hint);
-      return createAnthropic({ apiKey }).languageModel(modelId);
+      const baseURL = cfg.base_urls?.anthropic ?? cfg.env.ANTHROPIC_BASE_URL;
+      return createAnthropic({
+        apiKey,
+        ...(baseURL ? { baseURL } : {}),
+      }).languageModel(modelId);
     }
     case 'openai-compatible': {
       // D12=A: unified auth via Recipe.resolveAuth (or default).
@@ -2525,7 +2529,11 @@ function instantiateChat(recipe: Recipe, modelId: string, cfg: AIGatewayConfig):
     case 'native-anthropic': {
       const apiKey = cfg.env.ANTHROPIC_API_KEY;
       if (!apiKey) throw new AIConfigError(`Anthropic chat requires ANTHROPIC_API_KEY.`, recipe.setup_hint);
-      return createAnthropic({ apiKey }).languageModel(modelId);
+      const baseURL = cfg.base_urls?.anthropic ?? cfg.env.ANTHROPIC_BASE_URL;
+      return createAnthropic({
+        apiKey,
+        ...(baseURL ? { baseURL } : {}),
+      }).languageModel(modelId);
     }
     case 'openai-compatible': {
       // D12=A: unified auth via Recipe.resolveAuth (or default).

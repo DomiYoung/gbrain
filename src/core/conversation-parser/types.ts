@@ -216,6 +216,9 @@ export interface ParseConversationOpts {
   userPatterns?: readonly PatternEntry[];
   /** Caller-supplied disabled-builtin id list (config or per-call). */
   disabledBuiltinIds?: readonly string[];
+  engine?: any;
+  chatTransport?: any;
+  signal?: AbortSignal;
 }
 
 /** Resolved date + timezone for a Page, per D8 derivation chain. */

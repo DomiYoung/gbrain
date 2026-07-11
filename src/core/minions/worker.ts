@@ -18,6 +18,8 @@ import type {
 } from './types.ts';
 import { UnrecoverableError } from './types.ts';
 import { MinionQueue } from './queue.ts';
+import { BudgetTracker } from '../budget/budget-tracker.ts';
+import { withBudgetTracker } from '../ai/gateway.ts';
 import { calculateBackoff } from './backoff.ts';
 import { RateLeaseUnavailableError } from './handlers/subagent.ts';
 import { logLeasePressure } from './lease-pressure-audit.ts';
@@ -291,6 +293,57 @@ export class MinionWorker extends EventEmitter {
     process.on('SIGTERM', shutdown);
     process.on('SIGINT', shutdown);
 
+    // v0.42+: Auto-fail stale unknown jobs on a separate 60s timer.
+    // Runs independently of the idle-state health check so wedges are cleared
+    // even when the worker is busy processing known jobs.
+    const staleJobTimer = setInterval(async () => {
+      if (!this.running) return;
+      try {
+        const handlerNames = this.registeredNames;
+        if (handlerNames.length === 0) return;
+
+        const staleUnknown = await this.engine.executeRaw<{ id: number; name: string }>(
+          `SELECT id, name FROM minion_jobs
+           WHERE status = 'waiting'
+             AND queue = $1
+             AND name != ALL($2::text[])
+             AND created_at < now() - interval '1 hour'
+           LIMIT 50`,
+          [this.opts.queue, handlerNames]
+        );
+
+        for (const job of staleUnknown) {
+          try {
+            await this.engine.executeRaw(
+              `UPDATE minion_jobs
+               SET status = 'dead',
+                   error_text = $1,
+                   stacktrace = COALESCE(stacktrace, '[]'::jsonb) || to_jsonb($1::text),
+                   finished_at = now(),
+                   updated_at = now()
+               WHERE id = $2 AND status = 'waiting'`,
+              [
+                `Unknown job type '${job.name}' (not in registered handlers: ${handlerNames.join(', ')}). ` +
+                `Job waited 1h+ and will never be claimed. Auto-failed to unblock queue.`,
+                job.id
+              ]
+            );
+            console.warn(
+              `[stale-job-cleaner] Auto-failed stale unknown job #${job.id} (${job.name}) ` +
+              `after 1h+ waiting — handler not registered`
+            );
+          } catch (err) {
+            console.error(
+              `[stale-job-cleaner] Failed to auto-fail unknown job #${job.id} (${job.name}):`,
+              err instanceof Error ? err.message : String(err)
+            );
+          }
+        }
+      } catch (err) {
+        console.error('[stale-job-cleaner] Error in stale job cleanup:', err instanceof Error ? err.message : String(err));
+      }
+    }, 60_000); // Every 60 seconds
+
     // Stall + timeout detection on interval. Order matters: handleStalled FIRST
     // so a stalled job (lock_until expired) gets requeued before handleTimeouts'
     // `lock_until > now()` guard would skip it. Stall → retry, timeout → dead.
@@ -450,9 +503,55 @@ export class MinionWorker extends EventEmitter {
                      WHERE status = 'waiting'
                        AND queue = $1
                        AND name = ANY($2::text[])`,
-                    [this.opts.queue, handlerNames],
+                    [this.opts.queue, handlerNames]
                   );
               const waiting = parseInt(rows[0]?.cnt ?? '0', 10);
+
+              // v0.42+: Auto-fail stale unknown jobs. If a job has been waiting
+              // for 1+ hours and its handler name is not registered, fail it
+              // immediately. This prevents queue wedges from typos, old job types,
+              // or external API callers that submit invalid job names.
+              // Issue: #2XXX (Domi queue wedge from `dream` job with no handler)
+              if (handlerNames.length > 0) {
+                const staleUnknown = await this.engine.executeRaw<{ id: number; name: string }>(
+                  `SELECT id, name FROM minion_jobs
+                   WHERE status = 'waiting'
+                     AND queue = $1
+                     AND name != ALL($2::text[])
+                     AND created_at < now() - interval '1 hour'
+                   LIMIT 50`,
+                  [this.opts.queue, handlerNames]
+                );
+                for (const job of staleUnknown) {
+                  try {
+                    // No lock_token needed for waiting → dead transition
+                    await this.engine.executeRaw(
+                      `UPDATE minion_jobs
+                       SET status = 'dead',
+                           error_text = $1,
+                           stacktrace = COALESCE(stacktrace, '[]'::jsonb) || to_jsonb($1::text),
+                           finished_at = now(),
+                           updated_at = now()
+                       WHERE id = $2 AND status = 'waiting'`,
+                      [
+                        `Unknown job type '${job.name}' (not in registered handlers: ${handlerNames.join(', ')}). ` +
+                        `Job waited 1h+ and will never be claimed. Auto-failed to unblock queue.`,
+                        job.id
+                      ]
+                    );
+                    console.warn(
+                      `[health] Auto-failed stale unknown job #${job.id} (${job.name}) ` +
+                      `after 1h+ waiting — handler not registered`
+                    );
+                  } catch (err) {
+                    // Best-effort; DB error here shouldn't crash the health loop
+                    console.error(
+                      `[health] Failed to auto-fail unknown job #${job.id} (${job.name}):`,
+                      err instanceof Error ? err.message : String(err)
+                    );
+                  }
+                }
+              }
               const idleMinutes = Math.round(idleMs / 60_000);
               if (waiting > 0) {
                 // Two thresholds, both measured from `lastCompletionTime` (NOT
@@ -973,7 +1072,25 @@ export class MinionWorker extends EventEmitter {
     };
 
     try {
-      const result = await handler(context);
+      // 创建 BudgetTracker 追踪这个 job 的 LLM 调用
+      const tracker = new BudgetTracker({
+        label: `job:${job.name}:${job.id}`,
+        maxCostUsd: undefined,  // 不限制成本，只记录
+        auditPath: undefined,   // 使用默认路径
+      });
+      
+      // 在 tracker 上下文中执行 handler
+      const result = await withBudgetTracker(tracker, () => handler(context));
+      
+      // 获取 token 使用情况
+      const snapshot = tracker.snapshot();
+      const tokenUpdate: TokenUpdate = {
+        input: snapshot.inputTokens,
+        output: snapshot.outputTokens,
+        cache_read: snapshot.cacheReadTokens,
+      };
+
+      await this.queue.updateTokens(job.id, lockToken, tokenUpdate);
 
       clearInterval(lockTimer);
 

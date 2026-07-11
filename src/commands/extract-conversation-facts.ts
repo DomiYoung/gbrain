@@ -65,6 +65,7 @@
  */
 
 import type { BrainEngine, NewFact } from '../core/engine.ts';
+import type { ChatTransport } from '../core/conversation-parser/llm-base.ts';
 import type { Page } from '../core/types.ts';
 import {
   extractFactsFromTurn,
@@ -625,6 +626,7 @@ interface ExtractCoreState {
   segmentLimit: number;
   types: AllowedType[];
   signal: AbortSignal | undefined;
+  chatTransport?: ChatTransport;
   /**
    * v0.41.15.0 (D11): shared per-(sourceId, slug) checkpoint map mutated
    * in place from processPage callers. Map.set is atomic in JS's single-
@@ -689,7 +691,11 @@ async function processPage(
   // `parseConversationMessages(body)` shape only saw the body, which
   // meant Telegram-bracket pages with frontmatter dates landed at
   // 1970-01-01. Now they pick up the correct date.
-  const parseResult = parseConversation(body, { page });
+  const parseResult = await parseConversation(body, { 
+    page,
+    engine: state.engine,
+    chatTransport: state.chatTransport,
+  });
   const messages = parseResult.messages;
   if (parseResult.timezone_warning) {
     process.stderr.write(parseResult.timezone_warning + '\n');
@@ -929,6 +935,7 @@ export async function runExtractConversationFactsCore(
     segmentLimit,
     types,
     signal,
+    chatTransport: opts.chatTransport,
     cpMap: new Map(),
   };
 
