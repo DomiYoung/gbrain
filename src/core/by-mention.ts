@@ -115,7 +115,7 @@ export interface FindMentionsOpts {
  * run) — single-word "Acme" lookup succeeds at offset 0; the trailing 's'
  * is harmless noise.
  */
-const TOKEN_RE = /[a-zA-Z0-9]+/g;
+const TOKEN_RE = /[a-zA-Z0-9]+|[\p{L}\p{N}]/gu;
 
 interface ScannedToken {
   text: string;       // lowercase
@@ -175,12 +175,15 @@ export async function buildGazetteer(
 
   const gazetteer: Gazetteer = new Map();
   for (const row of rows) {
-    if (!row.title || row.title.length < MIN_NAME_LENGTH) continue;
+    if (!row.title) continue;
+    const isCJK = /[\u4e00-\u9fa5]/.test(row.title);
+    const minLen = isCJK ? 2 : MIN_NAME_LENGTH;
+    if (row.title.length < minLen) continue;
     if (ignoreSet.has(row.title) && !existingTitles.has(row.title)) continue;
 
     const tokens = tokenizeTitle(row.title);
     if (tokens.length === 0) continue;
-    if (tokens[0]!.length < MIN_NAME_LENGTH && tokens.length === 1) continue;
+    if (tokens[0]!.length < minLen && tokens.length === 1) continue;
 
     const entry: GazetteerEntry = {
       slug: row.slug,
