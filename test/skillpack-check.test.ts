@@ -68,6 +68,28 @@ describe('gbrain skillpack-check', () => {
     expect(report.ts).toBeTruthy();
   });
 
+  test('compiled binary can spawn doctor and migrations subcommands', () => {
+    const binary = join(tmp, 'gbrain');
+    execFileSync('bun', ['build', '--compile', '--outfile', binary, CLI], {
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    const env = { ...process.env, HOME: tmp } as Record<string, string | undefined>;
+    delete env.DATABASE_URL;
+    delete env.GBRAIN_DATABASE_URL;
+
+    const stdout = execFileSync(binary, ['skillpack', 'check', '--strict'], {
+      env: env as Record<string, string>,
+      encoding: 'utf-8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    const report = JSON.parse(stdout);
+    expect(report.healthy).toBe(true);
+    expect(report.doctor.error).toBeUndefined();
+    expect(report.migrations.error).toBeUndefined();
+  });
+
   test('half-migrated (partial completed.jsonl) → exit 1, apply-migrations in actions', () => {
     const migrationsDir = join(tmp, '.gbrain', 'migrations');
     mkdirSync(migrationsDir, { recursive: true });

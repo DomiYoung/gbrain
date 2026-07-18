@@ -29,7 +29,8 @@ import { getCliOptions } from '../core/cli-options.ts';
  */
 function gbrainSpawn(): { cmd: string; prefix: string[] } {
   const arg1 = process.argv[1] ?? '';
-  if (arg1.endsWith('/gbrain') || arg1.endsWith('\\gbrain.exe')) {
+  const isBunVirtualPath = arg1.startsWith('/$bunfs/');
+  if (!isBunVirtualPath && (arg1.endsWith('/gbrain') || arg1.endsWith('\\gbrain.exe'))) {
     return { cmd: arg1, prefix: [] };
   }
   if (arg1.endsWith('.ts') || arg1.endsWith('.mjs') || arg1.endsWith('.js')) {
