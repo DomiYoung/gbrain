@@ -49,6 +49,12 @@ describe('CLI structure', () => {
   test('has formatResult function for CLI output', () => {
     expect(cliSource).toContain('function formatResult');
   });
+
+  test('smoke-test dispatch resolves the script and passes argv safely', () => {
+    expect(cliSource).toContain('resolveSmokeTestScriptPath');
+    expect(cliSource).toContain("execFileSync('bash', [scriptPath]");
+    expect(cliSource).not.toContain('execSync(`bash');
+  });
 });
 
 describe('CLI version', () => {

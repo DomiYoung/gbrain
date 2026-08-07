@@ -2,7 +2,7 @@
  * buildGatewayConfig env-baseURL passthrough sweep (v0.37.2.0).
  *
  * Mops up pre-existing untested drift: every `_BASE_URL` env var the CLI
- * reads (LLAMA_SERVER, OLLAMA, LMSTUDIO, LITELLM, OPENROUTER) was previously
+ * reads (LLAMA_SERVER, OLLAMA, LMSTUDIO, LITELLM, OPENROUTER, ZIGGIE) was previously
  * uncovered by unit tests. The helper was file-local so the test surface
  * didn't exist; v0.37.2.0 exports it for the OR passthrough plus the four
  * legacy passthroughs by parameterized sweep.
@@ -29,6 +29,7 @@ const PASSTHROUGHS: Array<{ envVar: string; recipeId: string }> = [
   { envVar: 'LMSTUDIO_BASE_URL', recipeId: 'lmstudio' },
   { envVar: 'LITELLM_BASE_URL', recipeId: 'litellm' },
   { envVar: 'OPENROUTER_BASE_URL', recipeId: 'openrouter' },
+  { envVar: 'ZIGGIE_BASE_URL', recipeId: 'ziggie' },
 ];
 
 const TEST_VALUE = 'http://proxy.example.test/v1';
@@ -116,6 +117,40 @@ describe('buildGatewayConfig config-plane API-key folding', () => {
       } as unknown as GBrainConfig);
       expect(cfg.env.OPENROUTER_API_KEY).toBe('sk-or-env-plane');
     });
+  });
+
+  test('ziggie_api_key folds into gateway env as ZIGGIE_API_KEY', async () => {
+    await withEnv(
+      { ZIGGIE_API_KEY: undefined, HERMES_PROVIDER_ZIGGIE_AIROUTER_API_KEY: undefined },
+      async () => {
+        const cfg = buildGatewayConfig({
+          ziggie_api_key: 'sk-zig...lane',
+        } as unknown as GBrainConfig);
+        expect(cfg.env.ZIGGIE_API_KEY).toBe('sk-zig...lane');
+      },
+    );
+  });
+
+  test('Hermes Ziggie env aliases to ZIGGIE_API_KEY when no canonical key is set', async () => {
+    await withEnv(
+      { ZIGGIE_API_KEY: undefined, HERMES_PROVIDER_ZIGGIE_AIROUTER_API_KEY: '***' },
+      async () => {
+        const cfg = buildGatewayConfig(baseConfig);
+        expect(cfg.env.ZIGGIE_API_KEY).toBe('***');
+      },
+    );
+  });
+
+  test('canonical ZIGGIE_API_KEY wins over Hermes alias', async () => {
+    await withEnv(
+      { ZIGGIE_API_KEY: '***', HERMES_PROVIDER_ZIGGIE_AIROUTER_API_KEY: '***' },
+      async () => {
+        const cfg = buildGatewayConfig({
+          ziggie_api_key: 'sk-zig...lane',
+        } as unknown as GBrainConfig);
+        expect(cfg.env.ZIGGIE_API_KEY).toBe('***');
+      },
+    );
   });
 
   // #2662: voyage_api_key was accepted at the file plane (config.json) but

@@ -66,18 +66,27 @@ export interface ExtractTakesResult {
 }
 
 /**
- * Resolve a slug to its DB page_id. Returns null when no row exists for
- * that slug (e.g. file on disk that hasn't been imported yet).
+ * Resolve a slug to its DB page_id + effective_date. Returns null when no
+ * row exists for that slug (e.g. file on disk that hasn't been imported
+ * yet). effective_date powers the since_date fallback for fence rows that
+ * omit the since column (v0.42.73.1-repair).
  */
-async function getPageIdForSlug(engine: BrainEngine, slug: string): Promise<number | null> {
-  const rows = await engine.executeRaw<{ id: number }>(
-    `SELECT id FROM pages WHERE slug = $1 LIMIT 1`,
+async function getPageIdForSlug(
+  engine: BrainEngine,
+  slug: string,
+): Promise<{ id: number; effective_date: Date | null } | null> {
+  const rows = await engine.executeRaw<{ id: number; effective_date: Date | null }>(
+    `SELECT id, effective_date FROM pages WHERE slug = $1 LIMIT 1`,
     [slug],
   );
-  return rows[0]?.id ?? null;
+  return rows[0] ? { id: rows[0].id, effective_date: rows[0].effective_date ?? null } : null;
 }
 
-function parsedTakeToBatchInput(pageId: number, t: ParsedTake): TakeBatchInput {
+function parsedTakeToBatchInput(
+  pageId: number,
+  t: ParsedTake,
+  fallbackSinceDate?: string,
+): TakeBatchInput {
   return {
     page_id: pageId,
     row_num: t.rowNum,
@@ -85,12 +94,25 @@ function parsedTakeToBatchInput(pageId: number, t: ParsedTake): TakeBatchInput {
     kind: t.kind,
     holder: t.holder,
     weight: t.weight,
-    since_date: t.sinceDate,
+    since_date: t.sinceDate ?? fallbackSinceDate,
     until_date: t.untilDate,
     source: t.source,
     active: t.active,
     superseded_by: null,
   };
+}
+
+/**
+ * v0.42.73.1-repair: normalize a Date or null to 'YYYY-MM' so it can serve
+ * as a since_date fallback. grade_takes.takeIsOldEnough accepts both
+ * 'YYYY-MM-DD' and 'YYYY-MM' — month precision is sufficient for the age
+ * gate and keeps the DB row non-NULL.
+ */
+function monthFromDate(d: Date | null | undefined): string | undefined {
+  if (!d) return undefined;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  return `${y}-${m}`;
 }
 
 const BATCH_SIZE = 100;
@@ -152,19 +174,24 @@ export async function extractTakesFromFs(
     }
     if (takes.length === 0) continue;
 
-    const pageId = await getPageIdForSlug(engine, slug);
-    if (pageId === null) {
+    const pageRef = await getPageIdForSlug(engine, slug);
+    if (pageRef === null) {
       result.warnings.push(`TAKES_PAGE_NOT_IN_DB: slug=${slug} has takes fence but no page row; run 'gbrain sync' first`);
       continue;
     }
+    const pageId = pageRef.id;
 
     if (opts.rebuild && !dryRun) {
       await engine.executeRaw(`DELETE FROM takes WHERE page_id = $1`, [pageId]);
     }
 
     result.pagesWithTakes++;
+    // v0.42.73.1-repair: fall back to the page's effective_date when the
+    // fence row omits since (defense-in-depth on top of parseSinceCell's
+    // current-month default).
+    const fallbackSince = monthFromDate(pageRef.effective_date);
     for (const t of takes) {
-      buffer.push(parsedTakeToBatchInput(pageId, t));
+      buffer.push(parsedTakeToBatchInput(pageId, t, fallbackSince));
       if (buffer.length >= BATCH_SIZE) await flushBatch(engine, buffer, result, dryRun);
     }
   }
@@ -223,8 +250,12 @@ export async function extractTakesFromDb(
     }
 
     result.pagesWithTakes++;
+    // v0.42.73.1-repair: fall back to the page's effective_date when the
+    // fence row omits since (defense-in-depth on top of parseSinceCell's
+    // current-month default).
+    const fallbackSince = monthFromDate(page.effective_date ?? null);
     for (const t of takes) {
-      buffer.push(parsedTakeToBatchInput(page.id, t));
+      buffer.push(parsedTakeToBatchInput(page.id, t, fallbackSince));
       if (buffer.length >= BATCH_SIZE) await flushBatch(engine, buffer, result, dryRun);
     }
   }

@@ -3,7 +3,7 @@
  * collectors with a stub engine, and finding-history deltas.
  */
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
-import { mkdtempSync, rmSync } from 'fs';
+import { mkdtempSync, rmSync, utimesSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 
@@ -13,7 +13,11 @@ import { collectStalledJobs } from '../src/core/advisor/collect-stalled-jobs.ts'
 import { collectSetupSmells } from '../src/core/advisor/collect-setup-smells.ts';
 import { appendAdvisorRun, summarizeDeltas } from '../src/core/advisor/history.ts';
 import { renderAdvisorReport } from '../src/core/advisor/render.ts';
+import { collectVersion } from '../src/core/advisor/collect-version.ts';
+import { clearUpdateCache, writeUpdateCache } from '../src/core/self-upgrade.ts';
+import { gbrainPath } from '../src/core/config.ts';
 import type { AdvisorContext, AdvisorFinding, AdvisorReport } from '../src/core/advisor/types.ts';
+import { withEnv } from './helpers/with-env.ts';
 
 function finding(over: Partial<AdvisorFinding>): AdvisorFinding {
   return {
@@ -131,6 +135,24 @@ describe('collect-setup-smells', () => {
     const c = ctx(engine as never, { config: { embedding_disabled: true } as AdvisorContext['config'] });
     const out = await collectSetupSmells.collect(c);
     expect(out.find((f) => f.id === 'embeddings_disabled')).toBeDefined();
+  });
+});
+
+describe('collect-version cache freshness', () => {
+  test('ignores a stale same-version upgrade marker', async () => {
+    const home = mkdtempSync(join(tmpdir(), 'gbrain-advisor-version-'));
+    try {
+      await withEnv({ GBRAIN_HOME: home }, async () => {
+        writeUpdateCache({ kind: 'upgrade_available', current: '0.42.73.1', latest: '0.42.73.1' });
+        const stale = new Date(Date.now() - 13 * 60 * 60 * 1000);
+        utimesSync(gbrainPath('last-update-check'), stale, stale);
+
+        expect(await collectVersion.collect(ctx({} as never, { version: '0.42.73.1' }))).toEqual([]);
+        clearUpdateCache();
+      });
+    } finally {
+      rmSync(home, { recursive: true, force: true });
+    }
   });
 });
 

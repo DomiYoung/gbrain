@@ -5384,12 +5384,22 @@ export class PostgresEngine implements BrainEngine {
   async createVersion(slug: string, opts?: { sourceId?: string }): Promise<PageVersion> {
     const sql = this.sql;
     const sourceId = opts?.sourceId ?? 'default';
-    const rows = await sql`
+    let rows = await sql`
       INSERT INTO page_versions (page_id, compiled_truth, frontmatter)
       SELECT id, compiled_truth, frontmatter
       FROM pages WHERE slug = ${slug} AND source_id = ${sourceId}
       RETURNING *
     `;
+    // Fallback: when no explicit sourceId was given and the default source
+    // has no matching page, try without source filter (single-source brain).
+    if (rows.length === 0 && !opts?.sourceId) {
+      rows = await sql`
+        INSERT INTO page_versions (page_id, compiled_truth, frontmatter)
+        SELECT id, compiled_truth, frontmatter
+        FROM pages WHERE slug = ${slug}
+        RETURNING *
+      `;
+    }
     if (rows.length === 0) throw new Error(`createVersion failed: page "${slug}" (source=${sourceId}) not found`);
     return rows[0] as unknown as PageVersion;
   }

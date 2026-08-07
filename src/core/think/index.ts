@@ -167,14 +167,17 @@ const DEFAULT_MAX_OUTPUT_TOKENS = 4000;
 // Thinking-by-default Claude 5 models (`anthropic:claude-*-5`) spend a large
 // share of the output budget on internal reasoning before emitting any answer,
 // so the 4000 default leaves `think` with empty or truncated text. Give those
-// models headroom; providers bill actual tokens, not the cap. Everything else
-// keeps 4000.
+// models headroom; providers bill actual tokens, not the cap. DeepSeek V4
+// thinking models also need more than 4000, but their providers cap output at
+// 8192, so keep them at that safe ceiling. Everything else keeps 4000.
 const THINKING_DEFAULT_MAX_OUTPUT_TOKENS = 16000;
 const THINKING_BY_DEFAULT_MODEL_RE = /^anthropic[:/]claude-[a-z0-9]+-5(?:[.-]|$)/i;
+const DEEPSEEK_V4_MAX_OUTPUT_TOKENS = 8192;
+const DEEPSEEK_V4_MODEL_RE = /^(?:deepseek|ziggie)[:/]deepseek-v4-(?:flash|pro)(?:[.-]|$)/i;
 export function maxOutputTokensFor(modelStr: string): number {
-  return THINKING_BY_DEFAULT_MODEL_RE.test(modelStr)
-    ? THINKING_DEFAULT_MAX_OUTPUT_TOKENS
-    : DEFAULT_MAX_OUTPUT_TOKENS;
+  if (THINKING_BY_DEFAULT_MODEL_RE.test(modelStr)) return THINKING_DEFAULT_MAX_OUTPUT_TOKENS;
+  if (DEEPSEEK_V4_MODEL_RE.test(modelStr)) return DEEPSEEK_V4_MAX_OUTPUT_TOKENS;
+  return DEFAULT_MAX_OUTPUT_TOKENS;
 }
 
 function inferIntent(question: string, anchor?: string): string {

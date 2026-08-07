@@ -223,7 +223,17 @@ import {
 
 function parseSinceCell(raw: string): { since?: string; until?: string } {
   const trimmed = raw.trim();
-  if (!trimmed) return {};
+  if (!trimmed) {
+    // v0.42.73.1-repair: a take without a since date is ungradeable
+    // (grade_takes.takeIsOldEnough requires since_date) and pollutes the
+    // takes table with NULL rows. Fall back to the current month so every
+    // parsed take carries a gradeable since_date. Markdown round-trip stays
+    // intact: renderTakesFence writes the resolved value back, which is a
+    // strict improvement over an empty cell.
+    const now = new Date();
+    const month = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    return { since: month };
+  }
   // Range syntax: `2022-01 → 2026-06` or `2022-01 -> 2026-06`
   const rangeMatch = trimmed.match(/^(.+?)\s*(?:→|->)\s*(.+)$/);
   if (rangeMatch) {

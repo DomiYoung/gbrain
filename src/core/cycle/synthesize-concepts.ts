@@ -39,6 +39,8 @@ const TIER_T3_MIN = 2;
 export interface SynthesizeConceptsOpts {
   brainDir?: string;
   dryRun?: boolean;
+  /** Source ID for writing concept pages, receipts, and rollups. */
+  sourceId?: string;
   yieldDuringPhase?: (() => Promise<void>) | undefined;
   /**
    * v0.41.19.0 (T4): progress reporter for in-phase ticks. Cycle.ts
@@ -72,6 +74,7 @@ export async function runPhaseSynthesizeConcepts(
   opts: SynthesizeConceptsOpts = {},
 ): Promise<PhaseResult> {
   const chat = opts._chat ?? gatewayChat;
+  const sourceId = opts.sourceId ?? 'default';
 
   // 1. Get atom pages (test seam OR DB query)
   let atoms = opts._atoms ?? [];
@@ -239,6 +242,7 @@ export async function runPhaseSynthesizeConcepts(
       );
       await importFromContent(engine, `concepts/${title}`, md, {
         noEmbed: !isAvailable('embedding'),
+        sourceId,
       });
     }
     conceptsWritten++;
@@ -260,7 +264,7 @@ export async function runPhaseSynthesizeConcepts(
     try {
       await writeReceipt(engine, {
         kind: 'concepts',
-        source_id: 'default',
+        source_id: sourceId,
         run_id: runId,
         round: 'single',
         extracted_at: new Date().toISOString(),
@@ -278,7 +282,7 @@ export async function runPhaseSynthesizeConcepts(
   if (!opts.dryRun) {
     await upsertExtractRollup(engine, {
       kind: 'concepts',
-      source_id: 'default',
+      source_id: sourceId,
       cost_delta: estimatedSpendUsd,
       round_completed_delta: failures.length === 0 ? 1 : 0,
       halt_delta: failures.length > 0 ? 1 : 0,

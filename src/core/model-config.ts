@@ -8,9 +8,11 @@
  *   2. New-key config (e.g. models.dream.synthesize)
  *   3. Old-key config (deprecated dream.synthesize.model, dream.patterns.model)
  *      — read with stderr deprecation warning, one-per-process
- *   4. Global default (models.default)
- *   5. Env var (process.env[envVar] or GBRAIN_MODEL)
- *   6. Hardcoded fallback (caller-supplied)
+ *   4. Tier override (models.tier.<tier>)
+ *   5. Global default (models.default)
+ *   6. Env var (process.env[envVar] or GBRAIN_MODEL)
+ *   7. Tier default (TIER_DEFAULTS.<tier>)
+ *   8. Hardcoded fallback (caller-supplied)
  *
  * Aliases (`opus`, `sonnet`, `haiku`, `gemini`, `gpt`) resolve at the end so any
  * tier can use a short name. Unknown alias passes through unchanged so users can
@@ -35,7 +37,7 @@ export interface ResolveModelOpts {
   /** Env var to consult after global default. Defaults to `GBRAIN_MODEL`. */
   envVar?: string;
   /**
-   * Tier classification (v0.31.12). Looked up after `models.default` and
+   * Tier classification (v0.31.12). Looked up before `models.default` and
    * before the env var. Routing groups: `utility` (haiku-class, classification
    * + expansion + verdict), `reasoning` (sonnet-class, default chat +
    * synthesis + fact extraction), `deep` (opus-class, expensive reasoning),
@@ -166,20 +168,23 @@ export async function resolveModel(
       }
     }
 
-    // 4. Global default
-    const def = await engine.getConfig('models.default');
-    if (def && def.trim()) {
-      const resolved = await resolveAlias(engine, def.trim());
-      return enforceSubagentCapable(resolved, opts.tier, 'models.default');
-    }
-
-    // 5. Tier override (v0.31.12)
+    // 4. Tier override (v0.31.12).  This is more specific than the global
+    // default; if both are present, the tier wins.  In particular,
+    // `models.tier.subagent` must not silently inherit a cheap/non-cached
+    // `models.default` route.
     if (opts.tier) {
       const tierVal = await engine.getConfig(`models.tier.${opts.tier}`);
       if (tierVal && tierVal.trim()) {
         const resolved = await resolveAlias(engine, tierVal.trim());
         return enforceSubagentCapable(resolved, opts.tier, `models.tier.${opts.tier}`);
       }
+    }
+
+    // 5. Global default
+    const def = await engine.getConfig('models.default');
+    if (def && def.trim()) {
+      const resolved = await resolveAlias(engine, def.trim());
+      return enforceSubagentCapable(resolved, opts.tier, 'models.default');
     }
   }
 

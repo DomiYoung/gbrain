@@ -3,7 +3,8 @@
  * passes to `client.create`. Thinking-by-default Claude 5 models
  * (`anthropic:claude-*-5`) spend a large share of the budget on internal
  * reasoning before emitting an answer, so the 4000 default left `think` with
- * empty/truncated text. They now get 16000; everything else stays 4000.
+ * empty/truncated text. They now get 16000. DeepSeek V4 thinking models get
+ * their provider-safe 8192 ceiling; everything else stays 4000.
  */
 import { describe, test, expect } from 'bun:test';
 import { maxOutputTokensFor } from '../src/core/think/index.ts';
@@ -17,7 +18,14 @@ describe('maxOutputTokensFor — thinking-default headroom', () => {
     expect(maxOutputTokensFor('anthropic/claude-sonnet-5')).toBe(16000); // slash form
   });
 
-  test('non-Claude-5 and non-Anthropic keep 4000', () => {
+  test('DeepSeek V4 thinking models get 8192 for native and Ziggie routes', () => {
+    expect(maxOutputTokensFor('deepseek:deepseek-v4-pro')).toBe(8192);
+    expect(maxOutputTokensFor('deepseek/deepseek-v4-flash')).toBe(8192);
+    expect(maxOutputTokensFor('ziggie:deepseek-v4-pro')).toBe(8192);
+    expect(maxOutputTokensFor('ziggie/deepseek-v4-flash')).toBe(8192);
+  });
+
+  test('other models keep 4000', () => {
     expect(maxOutputTokensFor('anthropic:claude-opus-4-8')).toBe(4000);
     expect(maxOutputTokensFor('anthropic:claude-haiku-4-5')).toBe(4000);
     expect(maxOutputTokensFor('anthropic:claude-sonnet-4-6')).toBe(4000);

@@ -56,6 +56,48 @@ export function bigintToStringReplacer(_key: string, value: unknown): unknown {
 
 // CLI-only commands that bypass the operation layer
 export const CLI_ONLY = new Set(['init', 'reinit-pglite', 'upgrade', 'post-upgrade', 'check-update', 'integrations', 'publish', 'check-backlinks', 'lint', 'report', 'import', 'export', 'files', 'embed', 'serve', 'call', 'config', 'doctor', 'migrate', 'eval', 'sync', 'extract', 'extract-conversation-facts', 'enrich', 'features', 'autopilot', 'graph-query', 'jobs', 'agent', 'apply-migrations', 'skillpack-check', 'skillpack', 'resolvers', 'integrity', 'repair-jsonb', 'orphans', 'maintain', 'sources', 'mounts', 'dream', 'check-resolvable', 'routing-eval', 'skillify', 'smoke-test', 'providers', 'storage', 'repos', 'code-def', 'code-refs', 'reindex', 'reindex-code', 'reindex-frontmatter', 'code-callers', 'code-callees', 'reconcile-links', 'frontmatter', 'auth', 'friction', 'claw-test', 'book-mirror', 'takes', 'think', 'salience', 'anomalies', 'calibration', 'transcripts', 'models', 'remote', 'recall', 'forget', 'edges-backfill', 'cache', 'ze-switch', 'retrieval-upgrade', 'founder', 'brainstorm', 'lsd', 'schema', 'capture', 'onboard', 'conversation-parser', 'status', 'connect', 'skillopt', 'quarantine', 'self-upgrade', 'advisor', 'watch', 'reindex-search-vector', 'pages', 'bench', 'backfill']);
+
+/**
+ * Resolve the smoke-test script for both source and compiled installs.
+ *
+ * Bun's `import.meta.url` in a compiled executable is not a reliable pointer
+ * to the installed runtime tree (it can resolve to `/cli.ts`). Prefer explicit
+ * install-time overrides, then the source module, the executable's real path,
+ * and finally the conventional active runtime symlink.
+ */
+export async function resolveSmokeTestScriptPath(): Promise<string> {
+  const { dirname, resolve } = await import('path');
+  const { fileURLToPath } = await import('url');
+  const { realpathSync } = await import('fs');
+  const scriptName = 'scripts/smoke-test.sh';
+  const sourceScript = resolve(dirname(fileURLToPath(import.meta.url)), '..', scriptName);
+  const runtimeDir = process.env.GBRAIN_RUNTIME_DIR;
+  const home = process.env.HOME;
+  const safeRealpath = (path: string): string => {
+    try {
+      return realpathSync(path);
+    } catch {
+      return path;
+    }
+  };
+  const executableScripts = [process.execPath, process.argv[0]]
+    .filter((path): path is string => Boolean(path))
+    .map(safeRealpath)
+    .map((path) => resolve(dirname(path), '..', scriptName));
+  const candidates = [
+    process.env.GBRAIN_SMOKE_TEST_SCRIPT,
+    runtimeDir ? resolve(runtimeDir, scriptName) : undefined,
+    sourceScript,
+    ...executableScripts,
+    home ? resolve(home, '.gbrain', 'runtime', 'current', scriptName) : undefined,
+    resolve(process.cwd(), scriptName),
+  ].filter((path): path is string => Boolean(path));
+  const scriptPath = candidates.find((path) => existsSync(path));
+  if (!scriptPath) {
+    throw new Error(`Could not locate ${scriptName}; checked: ${candidates.join(', ')}`);
+  }
+  return scriptPath;
+}
 // CLI-only commands whose handlers print their own --help text. These are
 // excluded from the generic short-circuit so detailed per-command and
 // per-subcommand usage stays reachable.
@@ -1545,13 +1587,10 @@ async function handleCliOnly(command: string, args: string[]) {
 
   if (command === 'smoke-test') {
     // Run smoke tests — no DB connection needed, the script handles its own checks
-    const { execSync } = await import('child_process');
-    const { resolve, dirname } = await import('path');
-    const { fileURLToPath } = await import('url');
-    const scriptDir = dirname(fileURLToPath(import.meta.url));
-    const scriptPath = resolve(scriptDir, '..', 'scripts', 'smoke-test.sh');
     try {
-      execSync(`bash "${scriptPath}"`, { stdio: 'inherit', env: { ...process.env } });
+      const { execFileSync } = await import('child_process');
+      const scriptPath = await resolveSmokeTestScriptPath();
+      execFileSync('bash', [scriptPath], { stdio: 'inherit', env: { ...process.env } });
     } catch (e: any) {
       // Non-zero exit = some tests failed (exit code = failure count)
       setCliExitVerdict(e.status ?? 1);

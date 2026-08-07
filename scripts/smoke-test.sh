@@ -27,6 +27,46 @@ fail()    { TOTAL=$((TOTAL + 1)); FAILURES=$((FAILURES + 1)); echo "❌ $1"; ech
 fixed()   { FIXES=$((FIXES + 1)); echo "🔧 Fixed: $1"; echo "$(timestamp) FIXED: $1" >> "$LOG"; }
 skip()    { SKIPPED=$((SKIPPED + 1)); echo "⏭️  $1"; echo "$(timestamp) SKIP: $1" >> "$LOG"; }
 
+# GNU coreutils provides timeout on Linux; macOS commonly has neither
+# timeout nor gtimeout. Prefer an installed implementation, then fall back to
+# a small bash wait/kill wrapper so the checks keep the same deadline contract.
+TIMEOUT_BIN=""
+for timeout_candidate in "${GBRAIN_TIMEOUT_BIN:-}" gtimeout timeout; do
+  if [ -n "$timeout_candidate" ] && command -v "$timeout_candidate" >/dev/null 2>&1; then
+    TIMEOUT_BIN="$(command -v "$timeout_candidate")"
+    break
+  fi
+done
+
+run_with_timeout() {
+  local duration="$1"
+  shift
+  if [ -n "$TIMEOUT_BIN" ]; then
+    "$TIMEOUT_BIN" "$duration" "$@"
+    return $?
+  fi
+
+  "$@" &
+  local command_pid=$!
+  local elapsed=0
+  while kill -0 "$command_pid" 2>/dev/null; do
+    if [ "$elapsed" -ge "$duration" ]; then
+      kill "$command_pid" 2>/dev/null || true
+      wait "$command_pid" 2>/dev/null || true
+      return 124
+    fi
+    sleep 1
+    elapsed=$((elapsed + 1))
+  done
+  wait "$command_pid"
+}
+
+if [ -n "$TIMEOUT_BIN" ]; then
+  echo "⏱️  Using timeout command: $TIMEOUT_BIN"
+else
+  echo "⏱️  GNU timeout unavailable; using portable bash timeout fallback"
+fi
+
 echo "$(timestamp) === GBrain Smoke Tests ===" >> "$LOG"
 echo "🧪 Running gbrain smoke tests..."
 echo ""
@@ -74,12 +114,12 @@ fi
 
 # ── 2. GBrain CLI loads ────────────────────────────────────
 if [ -n "$GBRAIN_DIR" ] && [ -n "$BUN_PATH" ]; then
-  if timeout 15 "$BUN_PATH" run "$GBRAIN_DIR/src/cli.ts" --help >/dev/null 2>&1; then
+  if run_with_timeout 15 "$BUN_PATH" run "$GBRAIN_DIR/src/cli.ts" --help >/dev/null 2>&1; then
     pass "GBrain CLI ($GBRAIN_DIR)"
   else
     # Auto-fix: reinstall deps
     cd "$GBRAIN_DIR" && "$BUN_PATH" install --frozen-lockfile 2>/dev/null
-    if timeout 15 "$BUN_PATH" run "$GBRAIN_DIR/src/cli.ts" --help >/dev/null 2>&1; then
+    if run_with_timeout 15 "$BUN_PATH" run "$GBRAIN_DIR/src/cli.ts" --help >/dev/null 2>&1; then
       fixed "GBrain deps reinstalled"
       pass "GBrain CLI (after dep fix)"
     else
@@ -93,9 +133,10 @@ fi
 
 # ── 3. GBrain database ────────────────────────────────────
 if [ -n "$DB_URL" ] && [ -n "$GBRAIN_DIR" ] && [ -n "$BUN_PATH" ]; then
-  DOCTOR_OUT=$(DATABASE_URL="$DB_URL" GBRAIN_DATABASE_URL="$DB_URL" timeout 20 "$BUN_PATH" run "$GBRAIN_DIR/src/cli.ts" doctor 2>&1)
-  if echo "$DOCTOR_OUT" | grep -q "Health score\|brain_score\|Health Check"; then
-    SCORE=$(echo "$DOCTOR_OUT" | grep -oP 'Health score: \K[0-9]+' || echo '?')
+  DOCTOR_OUT=$(DATABASE_URL="$DB_URL" GBRAIN_DATABASE_URL="$DB_URL" run_with_timeout 20 "$BUN_PATH" run "$GBRAIN_DIR/src/cli.ts" doctor 2>&1)
+  if printf '%s\n' "$DOCTOR_OUT" | grep -Eq 'Health score|brain_score|Health Check'; then
+    SCORE=$(printf '%s\n' "$DOCTOR_OUT" | sed -n 's/.*Health score: \([0-9][0-9]*\).*/\1/p' | head -1)
+    [ -n "$SCORE" ] || SCORE='?'
     pass "GBrain database (health score: $SCORE/100)"
   else
     fail "GBrain database — doctor returned no health data"

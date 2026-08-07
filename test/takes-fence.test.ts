@@ -60,6 +60,22 @@ describe('parseTakesFence', () => {
     expect(row3.untilDate).toBe('2026-06');
   });
 
+  test('empty since cell falls back to current month (gradeable)', () => {
+    const body = `${TAKES_FENCE_BEGIN}
+| # | claim | kind | who | weight | since | source |
+|---|-------|------|-----|--------|-------|--------|
+| 1 | Timeless claim | take | world | 0.8 |  | x |
+${TAKES_FENCE_END}`;
+    const { takes } = parseTakesFence(body);
+    expect(takes).toHaveLength(1);
+    const now = new Date();
+    const expected = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    expect(takes[0].sinceDate).toBe(expected);
+    // Round-trip: rendered fence preserves the resolved month.
+    const rendered = renderTakesFence(takes);
+    expect(rendered).toContain(`| 1 | Timeless claim | take | world | 0.8 | ${expected} |`);
+  });
+
   test('returns empty + no warnings when no fence present', () => {
     const { takes, warnings } = parseTakesFence('# Just prose\n\nNo takes here.');
     expect(takes).toEqual([]);

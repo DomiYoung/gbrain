@@ -5286,13 +5286,25 @@ export class PGLiteEngine implements BrainEngine {
   // Versions
   async createVersion(slug: string, opts?: { sourceId?: string }): Promise<PageVersion> {
     const sourceId = opts?.sourceId ?? 'default';
-    const { rows } = await this.db.query(
+    let { rows } = await this.db.query(
       `INSERT INTO page_versions (page_id, compiled_truth, frontmatter)
        SELECT id, compiled_truth, frontmatter
        FROM pages WHERE slug = $1 AND source_id = $2
        RETURNING *`,
       [slug, sourceId]
     );
+    // Fallback: when no explicit sourceId was given and the default source
+    // has no matching page, try without source filter (single-source brain).
+    if (rows.length === 0 && !opts?.sourceId) {
+      const result = await this.db.query(
+        `INSERT INTO page_versions (page_id, compiled_truth, frontmatter)
+         SELECT id, compiled_truth, frontmatter
+         FROM pages WHERE slug = $1
+         RETURNING *`,
+        [slug]
+      );
+      rows = result.rows;
+    }
     if (rows.length === 0) throw new Error(`createVersion failed: page "${slug}" (source=${sourceId}) not found`);
     return rows[0] as unknown as PageVersion;
   }

@@ -102,6 +102,11 @@ export const CANONICAL_PRICING: Record<string, ModelPricing> = {
   // DeepSeek v4 (verified 2026-07-27 at api-docs.deepseek.com): cache-miss rates.
   'deepseek:deepseek-v4-flash':           { input:  0.14, output:  0.28 },
   'deepseek:deepseek-v4-pro':             { input:  0.435, output: 0.87 },
+  // Ziggie Airouter DeepSeek v4 route. Keep separate provider-prefixed keys so
+  // budgets and audit logs preserve real routing provenance instead of relying
+  // on a DeepSeek provider id plus a custom base URL override.
+  'ziggie:deepseek-v4-flash':             { input:  0.14, output:  0.28 },
+  'ziggie:deepseek-v4-pro':               { input:  0.435, output: 0.87 },
 };
 
 /**

@@ -147,14 +147,25 @@ describe('resolveModel — 6-tier precedence', () => {
 });
 
 describe('resolveModel — v0.31.12 tier system', () => {
-  test('models.default beats tier override', async () => {
+  test('models.tier.<tier> beats global default', async () => {
     stub.set('models.default', 'opus');
     stub.set('models.tier.reasoning', 'haiku');
     const m = await resolveModel(stub as never, {
       tier: 'reasoning',
       fallback: 'sonnet',
     });
-    expect(m).toBe(DEFAULT_ALIASES.opus);
+    expect(m).toBe(DEFAULT_ALIASES.haiku);
+  });
+
+  test('models.tier.subagent prevents inheriting non-cached models.default', async () => {
+    stub.set('models.default', 'ziggie:deepseek-v4-pro');
+    stub.set('models.tier.subagent', 'anthropic:claude-sonnet-4-6');
+    const m = await resolveModel(stub as never, {
+      tier: 'subagent',
+      fallback: 'sonnet',
+    });
+    expect(m).toBe('anthropic:claude-sonnet-4-6');
+    expect(stderrCapture).toBe('');
   });
 
   test('models.tier.<tier> beats env + fallback', async () => {
