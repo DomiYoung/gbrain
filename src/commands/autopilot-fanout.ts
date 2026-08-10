@@ -550,9 +550,28 @@ export async function dispatchGlobalMaintenance(
     return { dispatched: false, reason: 'fresh' };
   }
 
+  // Global phases still have source-aware implementations (notably
+  // synthesize_concepts and the calibration phases). When there is exactly one
+  // active local source, carry it explicitly so those phases do not silently
+  // fall back to the empty legacy `default` source. A multi-source brain stays
+  // on the existing global path until global-phase fan-out is implemented;
+  // choosing one source arbitrarily would be worse than leaving that behavior
+  // visible.
+  let sourceId: string | undefined;
+  try {
+    const localSources = await engine.listAllSources({ localPathOnly: true });
+    if (localSources.length === 1) sourceId = localSources[0].id;
+  } catch {
+    // Keep dispatch backward-compatible on pre-source schemas.
+  }
+
   const job = await queue.add(
     'autopilot-global-maintenance',
-    { repoPath: opts.repoPath, phases: GLOBAL_PHASES },
+    {
+      repoPath: opts.repoPath,
+      ...(sourceId ? { source_id: sourceId } : {}),
+      phases: GLOBAL_PHASES,
+    },
     {
       queue: 'default',
       // Structural single-flight: one global job per slot; maxWaiting:1 coalesces

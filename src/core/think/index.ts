@@ -140,13 +140,6 @@ export interface ThinkResult {
    * pre-existing/test `ThinkResult` literals → treated as persistable (back-compat).
    */
   synthesisOk?: boolean;
-  /**
-   * MEMORY_VERBS v1 [E2] — gateway token usage for the synthesis call(s),
-   * summed across rounds. Best-effort: null when no LLM ran (graceful stub),
-   * when a test client returns no usage, or when a provider omits accounting.
-   * The synthesize verb maps this to its frozen `cost` block.
-   */
-  usage?: { input_tokens: number; output_tokens: number } | null;
   /** Only set when --save was true and the caller persisted a synthesis page. */
   savedSlug?: string;
   /** Diagnostics for `--explain` callers (CLI surface for v0.29). */
@@ -156,6 +149,8 @@ export interface ThinkResult {
     takesFromVector: number;
     graphHits: number;
   };
+  /** Best-effort token usage; null when no LLM ran or provider omitted accounting. */
+  usage?: { input_tokens: number; output_tokens: number } | null;
   /** USD cost computed from `usage` + `canonicalLookup(modelUsed)`, when both are available. */
   cost_usd?: number;
 }
@@ -165,25 +160,17 @@ const DEFAULT_MAX_OUTPUT_TOKENS = 4000;
 // Thinking-by-default Claude 5 models (`anthropic:claude-*-5`) spend a large
 // share of the output budget on internal reasoning before emitting any answer,
 // so the 4000 default leaves `think` with empty or truncated text. Give those
-// models headroom; providers bill actual tokens, not the cap. Everything else
-// keeps 4000.
+// models headroom; providers bill actual tokens, not the cap. DeepSeek V4
+// thinking models also need more than 4000, but their providers cap output at
+// 8192, so keep them at that safe ceiling. Everything else keeps 4000.
 const THINKING_DEFAULT_MAX_OUTPUT_TOKENS = 16000;
 const THINKING_BY_DEFAULT_MODEL_RE = /^anthropic[:/]claude-[a-z0-9]+-5(?:[.-]|$)/i;
-// OpenAI reasoning models spend output budget on internal reasoning tokens
-// the same way — reasoning tokens are billed as output and count against
-// `max_tokens` — so they get the same headroom. Deliberately scoped to the
-// gpt-5 family and the numbered o-series only; anything else (gpt-4o, the
-// non-reasoning `*-chat` snapshots like gpt-5-chat-latest, other providers'
-// reasoning models routed through their own recipes) keeps the conservative
-// 4000 default.
-const OPENAI_REASONING_MODEL_RE = /^openai[:/](?:gpt-5|o[0-9]+)(?:[.-]|$)/i;
-const OPENAI_CHAT_SNAPSHOT_RE = /-chat(?:-|$)/i; // gpt-5-chat-latest, gpt-5.2-chat-latest
+const DEEPSEEK_V4_MAX_OUTPUT_TOKENS = 8192;
+const DEEPSEEK_V4_MODEL_RE = /^(?:deepseek|ziggie)[:/]deepseek-v4-(?:flash|pro)(?:[.-]|$)/i;
 export function maxOutputTokensFor(modelStr: string): number {
-  const openaiReasoning =
-    OPENAI_REASONING_MODEL_RE.test(modelStr) && !OPENAI_CHAT_SNAPSHOT_RE.test(modelStr);
-  return THINKING_BY_DEFAULT_MODEL_RE.test(modelStr) || openaiReasoning
-    ? THINKING_DEFAULT_MAX_OUTPUT_TOKENS
-    : DEFAULT_MAX_OUTPUT_TOKENS;
+  if (THINKING_BY_DEFAULT_MODEL_RE.test(modelStr)) return THINKING_DEFAULT_MAX_OUTPUT_TOKENS;
+  if (DEEPSEEK_V4_MODEL_RE.test(modelStr)) return DEEPSEEK_V4_MAX_OUTPUT_TOKENS;
+  return DEFAULT_MAX_OUTPUT_TOKENS;
 }
 
 function inferIntent(question: string, anchor?: string): string {
@@ -194,19 +181,61 @@ function inferIntent(question: string, anchor?: string): string {
   return 'general';
 }
 
-function tryParseJSON(text: string): unknown {
-  // The model may wrap JSON in code fences. Strip if present.
-  const stripped = text.trim().replace(/^```(?:json)?\s*\n?/, '').replace(/```\s*$/, '');
-  try {
-    return JSON.parse(stripped);
-  } catch {
-    // Fallback: extract the first {...} block. Useful when the model emits prose alongside JSON.
-    const m = stripped.match(/\{[\s\S]*\}/);
-    if (m) {
-      try { return JSON.parse(m[0]); } catch { /* ignore */ }
+function balancedJsonObjectCandidates(text: string): string[] {
+  const candidates: string[] = [];
+  for (let start = 0; start < text.length; start++) {
+    if (text[start] !== '{') continue;
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let i = start; i < text.length; i++) {
+      const ch = text[i];
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\') {
+          escaped = true;
+        } else if (ch === '"') {
+          inString = false;
+        }
+        continue;
+      }
+      if (ch === '"') {
+        inString = true;
+      } else if (ch === '{') {
+        depth++;
+      } else if (ch === '}' && --depth === 0) {
+        candidates.push(text.slice(start, i + 1));
+        break;
+      }
     }
-    return null;
   }
+  return candidates;
+}
+
+export function tryParseJSON(text: string): unknown {
+  const trimmed = text.trim();
+  const candidates = [trimmed];
+  // Models commonly emit fenced JSON with a prose preamble or uppercase
+  // language tag. Try the fence body before scanning prose for a balanced
+  // object so nested braces inside JSON strings cannot break extraction.
+  const fence = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/i);
+  if (fence?.[1]) candidates.unshift(fence[1].trim());
+
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      for (const objectText of balancedJsonObjectCandidates(candidate)) {
+        try {
+          return JSON.parse(objectText);
+        } catch {
+          // Try the next balanced object; prose may contain unrelated braces.
+        }
+      }
+    }
+  }
+  return null;
 }
 
 /**
@@ -460,10 +489,8 @@ export async function runThink(
   // sentinel, which is non-JSON) and on the no-client early return below; the final
   // return ANDs it with a non-empty-answer check (catches valid-but-empty JSON).
   let synthesisOk = true;
-  // [E2] best-effort usage aggregation across synthesis calls (single-pass in
-  // v0.28+, but summed so the round loop inherits it when gap-fill lands).
-  let usage: { input_tokens: number; output_tokens: number } | null = null;
   let response: ThinkResponse;
+  let usage: { input_tokens: number; output_tokens: number } | null = null;
   if (opts.stubResponse) {
     response = opts.stubResponse;
   } else {
@@ -513,7 +540,6 @@ export async function runThink(
         rounds: 0,
         warnings,
         synthesisOk: false,  // #1698: no LLM ran — never persist this
-        usage: null,         // [E2] no LLM ran — no accounting
         diagnostics: {
           pagesFromHybrid: gather.diagnostics.pagesFromHybrid,
           takesFromKeyword: gather.diagnostics.takesFromKeyword,
@@ -528,16 +554,9 @@ export async function runThink(
       system: systemPrompt,
       messages: [{ role: 'user', content: userMessage }],
     });
-    // [E2] capture usage when the message carries it (test-injected clients
-    // and providers without accounting leave it null).
     const u = (result as { usage?: { input_tokens?: number; output_tokens?: number } }).usage;
     if (u && typeof u.input_tokens === 'number' && typeof u.output_tokens === 'number') {
-      // Single synthesis call in v0.28+; when gap-driven rounds land, sum here.
-      const prev = usage as { input_tokens: number; output_tokens: number } | null;
-      usage = {
-        input_tokens: (prev?.input_tokens ?? 0) + u.input_tokens,
-        output_tokens: (prev?.output_tokens ?? 0) + u.output_tokens,
-      };
+      usage = { input_tokens: u.input_tokens, output_tokens: u.output_tokens };
     }
     const block = result.content.find(b => b.type === 'text');
     const text = block && 'text' in block ? block.text : '';
@@ -583,13 +602,13 @@ export async function runThink(
     // #1698: persistable only when a real synthesis produced a non-empty answer.
     // ANDs the not-JSON/sentinel flag with a content check (catches valid-but-empty JSON).
     synthesisOk: synthesisOk && response.answer.trim().length > 0,
-    usage,
     diagnostics: {
       pagesFromHybrid: gather.diagnostics.pagesFromHybrid,
       takesFromKeyword: gather.diagnostics.takesFromKeyword,
       takesFromVector: gather.diagnostics.takesFromVector,
       graphHits: gather.diagnostics.graphHits,
     },
+    usage,
   };
 }
 

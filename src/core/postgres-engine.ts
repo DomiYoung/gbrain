@@ -4427,6 +4427,23 @@ export class PostgresEngine implements BrainEngine {
     return { id, status: 'inserted' };
   }
 
+  async updateFactEmbedding(id: number, embedding: Float32Array): Promise<boolean> {
+    if (embedding.length === 0) return false;
+    const sql = this.sql;
+    const castSuffix = await this.resolveFactsEmbeddingCast();
+    const literal = toPgVectorLiteral(embedding);
+    const rows = await sql<Array<{ id: number }>>`
+      UPDATE facts
+         SET embedding = ${sql.unsafe(`'${literal}'${castSuffix}`)},
+             embedded_at = now()
+       WHERE id = ${id}
+         AND expired_at IS NULL
+         AND embedding IS NULL
+       RETURNING id
+    `;
+    return rows.length > 0;
+  }
+
   async expireFact(id: number, opts?: { supersededBy?: number; at?: Date }): Promise<boolean> {
     const sql = this.sql;
     const at = opts?.at ?? new Date();

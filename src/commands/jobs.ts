@@ -1906,13 +1906,36 @@ export async function registerBuiltinHandlers(
   // cycle phases (embed, orphans, purge, resolve_symbol_edges, grade_takes,
   // calibration_profile, synthesize_concepts, skillopt) ONCE per window instead
   // of N times concurrently across per-source cycles (the 4→10GB RSS blowout).
-  // No source_id → uses the legacy global cycle lock; stamps autopilot.last_global_at
-  // on success so the dispatch gate backs off.
+  // source_id is resolved from the job when present. For historical jobs that
+  // predate the source-routing fix, a single active local source is inferred;
+  // this prevents source-aware global phases from silently using the empty
+  // legacy `default` source. The handler still uses the global orphan scope and
+  // does not stamp per-source freshness.
   worker.register('autopilot-global-maintenance', async (job) => {
     const { runCycle, GLOBAL_PHASES, LAST_GLOBAL_AT_KEY, ALL_PHASES } = await import('../core/cycle.ts');
     const repoPath: string | null = typeof job.data.repoPath === 'string'
       ? job.data.repoPath
       : (await engine.getConfig('sync.repo_path')) ?? null;
+
+    let sourceId: string | undefined;
+    const rawSourceId = job.data.source_id;
+    if (rawSourceId !== undefined && rawSourceId !== null) {
+      if (typeof rawSourceId !== 'string') {
+        throw new Error(`autopilot-global-maintenance: invalid source_id (not a string): ${JSON.stringify(rawSourceId)}`);
+      }
+      const { isValidSourceId } = await import('../core/source-id.ts');
+      if (!isValidSourceId(rawSourceId)) {
+        throw new Error(`autopilot-global-maintenance: invalid source_id (regex): ${JSON.stringify(rawSourceId)}`);
+      }
+      sourceId = rawSourceId;
+    } else {
+      try {
+        const localSources = await engine.listAllSources({ localPathOnly: true });
+        if (localSources.length === 1) sourceId = localSources[0].id;
+      } catch {
+        // Pre-source schemas retain the legacy global behavior.
+      }
+    }
 
     const validPhases = new Set(ALL_PHASES);
     const requested = Array.isArray(job.data.phases)
@@ -1926,6 +1949,7 @@ export async function registerBuiltinHandlers(
       signal: job.signal,
       deadlineAtMs: job.deadlineAtMs, // #2781: phases budget sub-work from remaining time
       phases,
+      ...(sourceId ? { sourceId } : {}),
       forceGlobalOrphans: true,
       yieldBetweenPhases: async () => { await new Promise<void>((r) => setImmediate(r)); },
     });

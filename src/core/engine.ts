@@ -1849,6 +1849,12 @@ export interface BrainEngine {
     opts?: FactListOpts,
   ): Promise<FactRow[]>;
 
+  /**
+   * Fill one missing fact embedding through the engine's canonical write path.
+   * Returns false when the row is already embedded, expired, or not found.
+   */
+  updateFactEmbedding(id: number, embedding: Float32Array): Promise<boolean>;
+
   /** List facts created since a given timestamp within a source. */
   listFactsSince(
     source_id: string,

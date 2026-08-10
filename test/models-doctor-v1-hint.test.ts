@@ -1,5 +1,9 @@
 import { describe, test, expect } from 'bun:test';
-import { openAiCompatV1Hint } from '../src/commands/models.ts';
+import {
+  DEFAULT_MODEL_PROBE_TIMEOUT_MS,
+  openAiCompatV1Hint,
+  resolveModelProbeTimeoutMs,
+} from '../src/commands/models.ts';
 
 /**
  * `gbrain models doctor` — the openai-compatible-proxy `/v1`-suffix hint.
@@ -36,5 +40,22 @@ describe('openAiCompatV1Hint', () => {
     expect(openAiCompatV1Hint('litellm:gpt-4o', undefined)).toBeUndefined();
     expect(openAiCompatV1Hint('litellm:gpt-4o', null)).toBeUndefined();
     expect(openAiCompatV1Hint('litellm:gpt-4o', '')).toBeUndefined();
+  });
+});
+
+describe('resolveModelProbeTimeoutMs', () => {
+  test('defaults to a bounded 30-second remote-provider window', () => {
+    expect(DEFAULT_MODEL_PROBE_TIMEOUT_MS).toBe(30_000);
+    expect(resolveModelProbeTimeoutMs({})).toBe(30_000);
+  });
+
+  test('accepts a positive environment override', () => {
+    expect(resolveModelProbeTimeoutMs({ GBRAIN_MODEL_PROBE_TIMEOUT_MS: '20000' })).toBe(20_000);
+  });
+
+  test('ignores invalid and non-positive overrides', () => {
+    expect(resolveModelProbeTimeoutMs({ GBRAIN_MODEL_PROBE_TIMEOUT_MS: 'nope' })).toBe(30_000);
+    expect(resolveModelProbeTimeoutMs({ GBRAIN_MODEL_PROBE_TIMEOUT_MS: '0' })).toBe(30_000);
+    expect(resolveModelProbeTimeoutMs({ GBRAIN_MODEL_PROBE_TIMEOUT_MS: '-1' })).toBe(30_000);
   });
 });

@@ -4483,6 +4483,21 @@ export class PGLiteEngine implements BrainEngine {
     return { id: ins.rows[0].id, status: 'inserted' };
   }
 
+  async updateFactEmbedding(id: number, embedding: Float32Array): Promise<boolean> {
+    if (embedding.length === 0) return false;
+    const literal = toPgVectorLiteral(embedding);
+    const result = await this.db.query(
+      `UPDATE facts
+          SET embedding = $1::vector,
+              embedded_at = now()
+        WHERE id = $2
+          AND expired_at IS NULL
+          AND embedding IS NULL`,
+      [literal, id],
+    );
+    return (result.affectedRows ?? 0) > 0;
+  }
+
   async expireFact(id: number, opts?: { supersededBy?: number; at?: Date }): Promise<boolean> {
     const at = opts?.at ?? new Date();
     const result = await this.db.query(

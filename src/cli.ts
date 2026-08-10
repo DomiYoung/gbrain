@@ -56,10 +56,7 @@ export function bigintToStringReplacer(_key: string, value: unknown): unknown {
   return typeof value === 'bigint' ? value.toString() : value;
 }
 
-// ENG-2 renderer parity: round-trip a local-engine op's return value so
-// renderers see the same shape the routed path produces. Bigint-safe via
-// bigintToStringReplacer. Exported for tests (same import-safety contract as
-// cliAliases/formatResult). (#2450)
+// ENG-2 renderer parity: normalize local-engine results to the routed shape.
 export function normalizeLocalResult(rawResult: unknown): unknown {
   return JSON.parse(JSON.stringify(rawResult, bigintToStringReplacer));
 }
@@ -68,7 +65,7 @@ export function normalizeLocalResult(rawResult: unknown): unknown {
 export const CLI_ONLY = new Set(['init', 'reinit-pglite', 'pglite-repair', 'upgrade', 'post-upgrade', 'check-update', 'integrations', 'publish', 'check-backlinks', 'lint', 'report', 'import', 'export', 'files', 'embed', 'serve', 'call', 'config', 'doctor', 'migrate', 'eval', 'sync', 'extract', 'extract-conversation-facts', 'enrich', 'features', 'autopilot', 'graph-query', 'jobs', 'agent', 'apply-migrations', 'skillpack-check', 'skillpack', 'resolvers', 'integrity', 'repair-jsonb', 'orphans', 'maintain', 'sources', 'mounts', 'dream', 'check-resolvable', 'routing-eval', 'skillify', 'smoke-test', 'providers', 'storage', 'repos', 'code-def', 'code-refs', 'reindex', 'reindex-code', 'reindex-frontmatter', 'code-callers', 'code-callees', 'reconcile-links', 'frontmatter', 'auth', 'friction', 'claw-test', 'book-mirror', 'takes', 'think', 'salience', 'anomalies', 'calibration', 'transcripts', 'models', 'remote', 'recall', 'forget', 'edges-backfill', 'cache', 'ze-switch', 'retrieval-upgrade', 'founder', 'brainstorm', 'lsd', 'schema', 'capture', 'onboard', 'conversation-parser', 'status', 'connect', 'skillopt', 'quarantine', 'self-upgrade', 'protocol', 'advisor', 'watch', 'reindex-search-vector', 'pages', 'bench', 'backfill',
   // v0.42.58 (#2035 class, caught by the handleCliOnly reachability sweep):
   // full handler at `case 'notability-eval'` but never dispatchable.
-  'notability-eval']);
+  'notability-eval', 'facts']);
 // CLI-only commands whose handlers print their own --help text. These are
 // excluded from the generic short-circuit so detailed per-command and
 // per-subcommand usage stays reachable.
@@ -1448,7 +1445,7 @@ const THIN_CLIENT_REFUSED_COMMANDS = new Set([
   // the volunteer_context MCP op instead.
   'watch',
   // v0.31.1 (CDX-2 op coverage matrix): more local-only commands
-  'dream', 'transcripts', 'storage',
+  'dream', 'transcripts', 'storage', 'facts',
   // v0.31.1 CDX-2 audit: takes/sources have multiple subcommands; some
   // (takes_list/takes_search, sources_list/sources_status) have MCP
   // equivalents and others are file-system bound (takes mutate commands
@@ -1511,6 +1508,7 @@ const THIN_CLIENT_REFUSE_HINTS: Record<string, string> = {
   // scratch-DB audit additions
   config: "config reads/writes the host brain's config plane. Edit the host's .gbrain/config.json (file-plane keys) or run on the host with GBRAIN_HOME set.",
   jobs: '`jobs list` and `jobs get <id>` are thin-client routable; this subcommand runs against the host queue. Use the submit_job / list_jobs / get_job MCP tools from your agent, or run on the host with GBRAIN_HOME set.',
+  facts: 'facts audit reads the canonical host database. Run it on the host machine.',
 };
 
 /**
@@ -2483,6 +2481,17 @@ async function handleCliOnly(command: string, args: string[]) {
         // `--supersessions`, `--include-expired`, `--as-context`, `--json`.
         const { runRecall } = await import('./commands/recall.ts');
         await runRecall(engine, args);
+        break;
+      }
+      case 'facts': {
+        const { runFactsAudit, runFactsConsolidate, runFactsEmbed } = await import('./commands/facts-audit.ts');
+        if (args[0] === 'consolidate') {
+          await runFactsConsolidate(engine, args);
+        } else if (args[0] === 'embed') {
+          await runFactsEmbed(engine, args);
+        } else {
+          await runFactsAudit(engine, args);
+        }
         break;
       }
       case 'forget': {
