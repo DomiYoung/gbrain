@@ -60,6 +60,7 @@ import { AIConfigError, AITransientError, normalizeAIError } from './errors.ts';
 import { runGuardrails, hasGuardrails, type GuardrailHook } from '../guardrails.ts';
 import { loadConfig } from '../config.ts';
 import { buildGatewayConfig } from './build-gateway-config.ts';
+import { paceChatStart } from './chat-pacer.ts';
 
 // ---- Gateway-wide AI-HTTP timeout (v0.42.20.0, #1762/#1775) ----
 //
@@ -2942,6 +2943,8 @@ export interface ChatOpts {
    * ignored on providers without `supports_prompt_cache`.
    */
   cacheSystem?: boolean;
+  /** Health probes bypass background chat pacing; their timeout is independently bounded. */
+  skipPacer?: boolean;
 }
 
 /**
@@ -3472,6 +3475,9 @@ export async function chat(opts: ChatOpts): Promise<ChatResult> {
     : opts.system;
 
   try {
+    if (!opts.skipPacer) {
+      await paceChatStart({ providerId: recipe.id, modelId, abortSignal: opts.abortSignal });
+    }
     const result = await _generateTextTransport({
       model,
       system: systemParam,

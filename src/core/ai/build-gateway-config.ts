@@ -38,6 +38,10 @@ export function buildGatewayConfig(c: GBrainConfig): AIGatewayConfig {
   // config.json) must reach the openrouter recipe's OPENROUTER_API_KEY.
   // process.env still wins via the later spread.
   if (c.openrouter_api_key) envFromConfig.OPENROUTER_API_KEY = c.openrouter_api_key;
+  // Same seam for Ziggie Airouter. This lets `ziggie:*` remain first-class
+  // provenance in model ids instead of masquerading as another provider via a
+  // base URL override.
+  if (c.ziggie_api_key) envFromConfig.ZIGGIE_API_KEY = c.ziggie_api_key;
   // #2662: same seam for Voyage. Before this, config.json's voyage_api_key
   // was accepted at the file plane but never threaded into the gateway env,
   // so launchd/daemon/MCP contexts (no process-env export) silently failed
@@ -81,6 +85,7 @@ export function buildGatewayConfig(c: GBrainConfig): AIGatewayConfig {
   if (process.env.LMSTUDIO_BASE_URL) envBaseUrls['lmstudio'] = process.env.LMSTUDIO_BASE_URL;
   if (process.env.LITELLM_BASE_URL) envBaseUrls['litellm'] = process.env.LITELLM_BASE_URL;
   if (process.env.OPENROUTER_BASE_URL) envBaseUrls['openrouter'] = process.env.OPENROUTER_BASE_URL;
+  if (process.env.ZIGGIE_BASE_URL) envBaseUrls['ziggie'] = process.env.ZIGGIE_BASE_URL;
 
   return {
     embedding_model: c.embedding_model,
@@ -118,6 +123,9 @@ function buildEnv(envFromConfig: Record<string, string>): Record<string, string>
   const merged = { ...envFromConfig, ...envReal };
   if (!envReal.GOOGLE_GENERATIVE_AI_API_KEY && envReal.GEMINI_API_KEY) {
     merged.GOOGLE_GENERATIVE_AI_API_KEY = envReal.GEMINI_API_KEY;
+  }
+  if (!merged.ZIGGIE_API_KEY && envReal.HERMES_PROVIDER_ZIGGIE_AIROUTER_API_KEY) {
+    merged.ZIGGIE_API_KEY = envReal.HERMES_PROVIDER_ZIGGIE_AIROUTER_API_KEY;
   }
   return merged;
 }

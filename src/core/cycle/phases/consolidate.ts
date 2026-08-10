@@ -43,6 +43,10 @@ export interface ConsolidatePhaseOpts {
   minFactsPerBucket?: number;
   /** Minimum age (ms) of the OLDEST fact in a bucket before consolidation. Default 24h. */
   minOldestAgeMs?: number;
+  /** Restrict the phase to one source. Omitted preserves all-source cycle behavior. */
+  sourceId?: string;
+  /** Optional upper bound on buckets processed, ordered largest-first. */
+  maxBuckets?: number;
 }
 
 export async function runPhaseConsolidate(
@@ -58,11 +62,19 @@ export async function runPhaseConsolidate(
   let takesWritten = 0;
   let bucketsProcessed = 0;
   let bucketsSkipped = 0;
+  let bucketsMissingPage = 0;
+  let bucketsWithoutMultiFactCluster = 0;
+  let bucketsWithoutAnyEmbedding = 0;
 
   // Pull every (source_id, entity_slug) bucket of unconsolidated facts.
   // Uses the partial idx_facts_unconsolidated index.
   let buckets: Array<{ source_id: string; entity_slug: string; count: number }>;
   try {
+    const sourceClause = opts.sourceId ? 'AND source_id = $1' : '';
+    const params = opts.sourceId ? [opts.sourceId] : [];
+    const limitClause = opts.maxBuckets && opts.maxBuckets > 0
+      ? `LIMIT ${Math.floor(opts.maxBuckets)}`
+      : '';
     buckets = await engine.executeRaw<{
       source_id: string; entity_slug: string; count: number;
     }>(`
@@ -71,9 +83,12 @@ export async function runPhaseConsolidate(
       WHERE consolidated_at IS NULL
         AND expired_at IS NULL
         AND entity_slug IS NOT NULL
+        ${sourceClause}
       GROUP BY source_id, entity_slug
       HAVING COUNT(*) >= ${minPerBucket}
-    `);
+      ORDER BY COUNT(*) DESC, entity_slug ASC
+      ${limitClause}
+    `, params);
   } catch (err) {
     return {
       phase: 'consolidate',
@@ -121,13 +136,18 @@ export async function runPhaseConsolidate(
 
     bucketsProcessed += 1;
     const clusters = clusterFacts(unconsolidated, threshold);
+    if (unconsolidated.every((fact) => fact.embedding == null)) bucketsWithoutAnyEmbedding += 1;
+    if (!clusters.some((cluster) => cluster.length >= 2)) bucketsWithoutMultiFactCluster += 1;
 
     // Resolve entity_slug → page_id. If page missing in this source, skip.
     const pageRows = await engine.executeRaw<{ id: number }>(
       `SELECT id FROM pages WHERE source_id = $1 AND slug = $2 AND deleted_at IS NULL LIMIT 1`,
       [b.source_id, b.entity_slug],
     );
-    if (pageRows.length === 0) continue;
+    if (pageRows.length === 0) {
+      bucketsMissingPage += 1;
+      continue;
+    }
     const pageId = pageRows[0].id;
 
     // Existing row_num max for this page → start appending after it.
@@ -264,6 +284,9 @@ export async function runPhaseConsolidate(
       takes_written: takesWritten,
       buckets_processed: bucketsProcessed,
       buckets_skipped: bucketsSkipped,
+      buckets_missing_page: bucketsMissingPage,
+      buckets_without_multi_fact_cluster: bucketsWithoutMultiFactCluster,
+      buckets_without_any_embedding: bucketsWithoutAnyEmbedding,
     },
   };
 }

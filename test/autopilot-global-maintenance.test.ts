@@ -70,6 +70,7 @@ describe('dispatchGlobalMaintenance — single-flight gate', () => {
     const engine = {
       kind: 'postgres' as const,
       getConfig: async (k: string) => (k === LAST_GLOBAL_AT_KEY ? lastGlobalAt : null),
+      listAllSources: async () => [{ id: 'obsidian', name: 'Obsidian', config: {}, local_path: '/tmp/obsidian' }],
     } as unknown as BrainEngine;
     const queue = {
       add: async (name: string, data: unknown, opts: Record<string, unknown>) => {
@@ -87,6 +88,7 @@ describe('dispatchGlobalMaintenance — single-flight gate', () => {
     expect(added[0].name).toBe('autopilot-global-maintenance');
     expect(added[0].opts.idempotency_key).toBe('autopilot-global:s1');
     expect(added[0].opts.maxWaiting).toBe(1); // structural single-flight
+    expect(added[0].data.source_id).toBe('obsidian');
     expect(added[0].data.phases).toEqual(GLOBAL_PHASES);
   });
 
@@ -131,7 +133,7 @@ describe('autopilot-global-maintenance handler stamps last_global_at (PGLite)', 
     return handlers;
   }
 
-  test('runs global phases (no source_id) and stamps autopilot.last_global_at on success', async () => {
+  test('historical job without source_id infers sole local source and stamps last_global_at on success', async () => {
     expect(await engine.getConfig(LAST_GLOBAL_AT_KEY)).toBeNull();
     const repoPath = mkdtempSync(join(tmpdir(), 'gbrain-global-maintenance-'));
     await engine.executeRaw(
