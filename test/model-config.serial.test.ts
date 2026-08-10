@@ -212,6 +212,17 @@ describe('resolveModel — v0.31.12 tier system', () => {
     expect(stderrCapture).toBe('');
   });
 
+  test('tier.subagent override beats non-Anthropic global default', async () => {
+    stub.set('models.default', 'ziggie:deepseek-v4-flash');
+    stub.set('models.tier.subagent', 'anthropic:claude-sonnet-4-6');
+    const m = await resolveModel(stub as never, {
+      tier: 'subagent',
+      fallback: 'sonnet',
+    });
+    expect(m).toBe('anthropic:claude-sonnet-4-6');
+    expect(stderrCapture).toBe('');
+  });
+
   test('isAnthropicProvider matches provider-prefixed and bare claude-* ids', () => {
     expect(isAnthropicProvider('anthropic:claude-sonnet-4-6')).toBe(true);
     expect(isAnthropicProvider('claude-opus-4-7')).toBe(true);

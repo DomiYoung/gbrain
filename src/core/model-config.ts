@@ -8,7 +8,8 @@
  *   2. New-key config (e.g. models.dream.synthesize)
  *   3. Old-key config (deprecated dream.synthesize.model, dream.patterns.model)
  *      — read with stderr deprecation warning, one-per-process
- *   4. Global default (models.default)
+ *   4. Global default (models.default), except an explicit subagent tier
+ *      override is checked first so it can opt out of a non-Anthropic default
  *   5. Env var (process.env[envVar] or GBRAIN_MODEL)
  *   6. Hardcoded fallback (caller-supplied)
  *
@@ -35,13 +36,13 @@ export interface ResolveModelOpts {
   /** Env var to consult after global default. Defaults to `GBRAIN_MODEL`. */
   envVar?: string;
   /**
-   * Tier classification (v0.31.12). Looked up after `models.default` and
-   * before the env var. Routing groups: `utility` (haiku-class, classification
-   * + expansion + verdict), `reasoning` (sonnet-class, default chat +
-   * synthesis + fact extraction), `deep` (opus-class, expensive reasoning),
-   * `subagent` (Anthropic-only multi-turn tool loop — never inherits a
-   * non-Anthropic `models.default`; falls back to TIER_DEFAULTS.subagent
-   * with a one-shot stderr warn instead).
+   * Tier classification (v0.31.12). For normal tiers, looked up after
+   * `models.default` and before the env var. For `subagent`, an explicit
+   * `models.tier.subagent` override is checked before `models.default` so the
+   * tool-loop can opt out of a non-Anthropic global default. Routing groups:
+   * `utility` (haiku-class, classification + expansion + verdict), `reasoning`
+   * (sonnet-class, default chat + synthesis + fact extraction), `deep`
+   * (opus-class, expensive reasoning), `subagent` (multi-turn tool loop).
    */
   tier?: ModelTier;
   /** Hardcoded last-resort fallback. */
@@ -166,15 +167,27 @@ export async function resolveModel(
       }
     }
 
-    // 4. Global default
+    // 4a. The subagent tier is an explicit opt-out from a possibly
+    // non-Anthropic global default. Check it before models.default so a
+    // configured Anthropic tool-loop model is actually honored.
+    if (opts.tier === 'subagent') {
+      const tierVal = await engine.getConfig('models.tier.subagent');
+      if (tierVal && tierVal.trim()) {
+        const resolved = await resolveAlias(engine, tierVal.trim());
+        return enforceSubagentCapable(resolved, opts.tier, 'models.tier.subagent');
+      }
+    }
+
+    // 4b. Global default
     const def = await engine.getConfig('models.default');
     if (def && def.trim()) {
       const resolved = await resolveAlias(engine, def.trim());
       return enforceSubagentCapable(resolved, opts.tier, 'models.default');
     }
 
-    // 5. Tier override (v0.31.12)
-    if (opts.tier) {
+    // 5. Tier override (v0.31.12), preserving default-first precedence for
+    // utility/reasoning/deep callers.
+    if (opts.tier && opts.tier !== 'subagent') {
       const tierVal = await engine.getConfig(`models.tier.${opts.tier}`);
       if (tierVal && tierVal.trim()) {
         const resolved = await resolveAlias(engine, tierVal.trim());
