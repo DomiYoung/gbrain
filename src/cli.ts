@@ -140,6 +140,7 @@ const CLI_ONLY_SELF_HELP = new Set([
   // --help` print the migration flags from runMigrateEmbeddings. `migrate`
   // (engine transfer) keeps its own dispatch too.
   'migrate', 'retrieval-upgrade',
+  'facts',
 ]);
 
 /**
@@ -158,6 +159,12 @@ const SELF_HELP_WITHOUT_ENGINE: Record<string, () => Promise<(engine: never, arg
   maintain: async () => (await import('./commands/maintain.ts')).runMaintain as never,
   'extract-conversation-facts': async () =>
     (await import('./commands/extract-conversation-facts.ts')).runExtractConversationFacts as never,
+  facts: async () => (async (engine: never, args: string[]) => {
+    const { runFactsAudit } = await import('./commands/facts-audit.ts');
+    const { runFactsResolveEntities } = await import('./commands/facts-resolve.ts');
+    if (args[0] === 'resolve-entities') return runFactsResolveEntities(engine as never, args);
+    return runFactsAudit(engine as never, args);
+  }) as never,
 };
 
 /** Returns true when the command's own help was printed. */
