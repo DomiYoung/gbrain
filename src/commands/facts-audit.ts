@@ -621,6 +621,8 @@ Usage:
   gbrain facts consolidate --source-id <id> --max-buckets <n> --apply --yes [--json]
   gbrain facts embed --source-id <id> --limit <n> [--json]
   gbrain facts embed --source-id <id> --limit <n> --apply --yes [--json]
+  gbrain facts resolve-entities --source-id <id> --limit <n> [--json]
+  gbrain facts resolve-entities --source-id <id> --apply --yes --apply-report <path>
 
 The audit never writes facts, takes, pages, or embeddings. The missing-entity
 report is read-only and never creates pages. Consolidate defaults
