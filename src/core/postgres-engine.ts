@@ -4444,6 +4444,34 @@ export class PostgresEngine implements BrainEngine {
     return rows.length > 0;
   }
 
+  async updateFactEntitySlug(
+    id: number,
+    source_id: string,
+    expectedEntitySlug: string | null,
+    entitySlug: string,
+  ): Promise<boolean> {
+    if (!entitySlug.includes('/')) return false;
+    const sql = this.sql;
+    const rows = await sql<Array<{ id: number }>>`
+      UPDATE facts AS f
+         SET entity_slug = ${entitySlug}
+       WHERE f.id = ${id}
+         AND f.source_id = ${source_id}
+         AND f.consolidated_at IS NULL
+         AND f.expired_at IS NULL
+         AND ((f.entity_slug IS NULL AND CAST(${expectedEntitySlug} AS text) IS NULL)
+              OR f.entity_slug = CAST(${expectedEntitySlug} AS text))
+         AND EXISTS (
+           SELECT 1 FROM pages p
+            WHERE p.source_id = f.source_id
+              AND p.slug = ${entitySlug}
+              AND p.deleted_at IS NULL
+         )
+       RETURNING f.id
+    `;
+    return rows.length > 0;
+  }
+
   async expireFact(id: number, opts?: { supersededBy?: number; at?: Date }): Promise<boolean> {
     const sql = this.sql;
     const at = opts?.at ?? new Date();

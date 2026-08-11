@@ -1855,6 +1855,18 @@ export interface BrainEngine {
    */
   updateFactEmbedding(id: number, embedding: Float32Array): Promise<boolean>;
 
+  /**
+   * CAS-safe entity resolution for an active fact. The target page must
+   * already exist in the same source; this method never creates pages and
+   * returns false when the fact changed since classification.
+   */
+  updateFactEntitySlug(
+    id: number,
+    source_id: string,
+    expectedEntitySlug: string | null,
+    entitySlug: string,
+  ): Promise<boolean>;
+
   /** List facts created since a given timestamp within a source. */
   listFactsSince(
     source_id: string,

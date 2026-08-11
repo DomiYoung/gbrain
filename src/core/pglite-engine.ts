@@ -4498,6 +4498,33 @@ export class PGLiteEngine implements BrainEngine {
     return (result.affectedRows ?? 0) > 0;
   }
 
+  async updateFactEntitySlug(
+    id: number,
+    source_id: string,
+    expectedEntitySlug: string | null,
+    entitySlug: string,
+  ): Promise<boolean> {
+    if (!entitySlug.includes('/')) return false;
+    const result = await this.db.query(
+      `UPDATE facts AS f
+          SET entity_slug = $4
+        WHERE f.id = $1
+          AND f.source_id = $2
+          AND f.consolidated_at IS NULL
+          AND f.expired_at IS NULL
+          AND ((f.entity_slug IS NULL AND $3 IS NULL) OR f.entity_slug = $3)
+          AND EXISTS (
+            SELECT 1 FROM pages p
+             WHERE p.source_id = f.source_id
+               AND p.slug = $4
+               AND p.deleted_at IS NULL
+          )
+        RETURNING f.id`,
+      [id, source_id, expectedEntitySlug, entitySlug],
+    );
+    return (result.affectedRows ?? 0) > 0;
+  }
+
   async expireFact(id: number, opts?: { supersededBy?: number; at?: Date }): Promise<boolean> {
     const at = opts?.at ?? new Date();
     const result = await this.db.query(

@@ -2561,10 +2561,13 @@ async function handleCliOnly(command: string, args: string[]) {
       }
       case 'facts': {
         const { runFactsAudit, runFactsConsolidate, runFactsEmbed } = await import('./commands/facts-audit.ts');
+        const { runFactsResolveEntities } = await import('./commands/facts-resolve.ts');
         if (args[0] === 'consolidate') {
           await runFactsConsolidate(engine, args);
         } else if (args[0] === 'embed') {
           await runFactsEmbed(engine, args);
+        } else if (args[0] === 'resolve-entities') {
+          await runFactsResolveEntities(engine, args);
         } else {
           await runFactsAudit(engine, args);
         }
