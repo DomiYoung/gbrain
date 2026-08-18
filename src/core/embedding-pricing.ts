@@ -57,6 +57,15 @@ export const EMBEDDING_PRICING: Record<string, EmbeddingPricing> = {
   // Reused here (not a separate rerank table) because budget-tracker.ts's
   // rerank-kind lookup falls back to this same table for paid providers.
   'zeroentropyai:zerank-2':        { pricePerMTok: 0.025 },
+  // Alibaba DashScope (https://help.aliyun.com/zh/model-studio/user-guide/embedding,
+  // verified 2026-08-17). Beijing text-embedding-v4/v3 is CNY 0.0005 per
+  // 1K input tokens for the standard API. This table is USD, so the rounded
+  // $0.07/1M estimate keeps capped runs enforceable without pretending the
+  // provider's CNY rate is USD. Re-verify the conversion with the pricing
+  // refresh rather than treating it as a billing guarantee.
+  'dashscope:text-embedding-v4':  { pricePerMTok: 0.07 },
+  'dashscope:text-embedding-v3':  { pricePerMTok: 0.07 },
+  'dashscope:text-embedding-v2':  { pricePerMTok: 0.10 },
   // Mistral (https://mistral.ai/pricing/api/, verified 2026-07-28)
   'mistral:mistral-embed':         { pricePerMTok: 0.10 },
   'mistral:mistral-embed-2312':    { pricePerMTok: 0.10 },

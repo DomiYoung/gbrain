@@ -78,6 +78,7 @@ import { listSources } from '../core/sources-ops.ts';
 import {
   loadOpCheckpoint,
   recordCompleted,
+  fingerprint,
   type OpCheckpointKey,
 } from '../core/op-checkpoint.ts';
 import { createProgress } from '../core/progress.ts';
@@ -1781,6 +1782,17 @@ function buildJobParams(args: string[]): Record<string, unknown> {
   };
 }
 
+/**
+ * Background submissions are strict per-source jobs. A source-less CLI
+ * invocation must fan out before it reaches the Minion queue; the worker
+ * handler intentionally rejects a missing data.sourceId rather than guessing
+ * a namespace. Include the complete run parameters in the key so a changed
+ * limit/force/model does not return an old completed job.
+ */
+export function backgroundIdempotencyKey(sourceId: string, args: string[]): string {
+  return `extract-conversation-facts:${sourceId}:${fingerprint({ ...buildJobParams(args), sourceId })}`;
+}
+
 export async function runExtractConversationFacts(
   engine: BrainEngine,
   args: string[],
@@ -1791,14 +1803,55 @@ export async function runExtractConversationFacts(
     return;
   }
 
-  // --background path.
-  const backgrounded = await maybeBackground({
-    engine,
-    args,
-    jobName: 'extract-conversation-facts',
-    paramBuilder: buildJobParams,
-  });
-  if (backgrounded) return;
+  // --background path. The Minion handler has a strict per-source contract,
+  // so resolve sources first and enqueue one job per source when --source-id
+  // is omitted. PGLite has no worker daemon and falls through to inline work.
+  if (args.includes('--background') && engine.kind !== 'pglite') {
+    const parsedForBackground = parseArgs(args);
+    if (parsedForBackground.error) {
+      console.error(parsedForBackground.error);
+      process.exit(1);
+    }
+    const sourceIds = parsedForBackground.sourceId
+      ? [parsedForBackground.sourceId]
+      : (await listSources(engine)).map((source) => source.id);
+    if (sourceIds.length <= 1) {
+      const backgrounded = await maybeBackground({
+        engine,
+        args: parsedForBackground.sourceId
+          ? args
+          : [...args, '--source-id', sourceIds[0] ?? 'default'],
+        jobName: 'extract-conversation-facts',
+        paramBuilder: buildJobParams,
+      });
+      if (backgrounded) return;
+    } else {
+      const { MinionQueue } = await import('../core/minions/queue.ts');
+      const queue = new MinionQueue(engine);
+      const ids: number[] = [];
+      const cleanArgs = args.filter((arg) => arg !== '--background' && arg !== '--follow');
+      for (const sourceId of sourceIds) {
+        const job = await queue.add(
+          'extract-conversation-facts',
+          { ...buildJobParams(cleanArgs), sourceId },
+          {
+            queue: 'default',
+            idempotency_key: backgroundIdempotencyKey(sourceId, cleanArgs),
+            max_attempts: 2,
+          },
+        );
+        ids.push(job.id);
+      }
+      console.log(
+        `Submitted ${ids.length} extract-conversation-facts job(s) (one per source): ` +
+        `${ids.map((id) => `job_id=${id}`).join(' ')}`,
+      );
+      console.log('Follow with: gbrain jobs follow <id>');
+      return;
+    }
+  } else if (args.includes('--background')) {
+    process.stderr.write('[--background] PGLite has no worker daemon; running inline.\n');
+  }
 
   const parsed = parseArgs(args);
   if (parsed.error) {

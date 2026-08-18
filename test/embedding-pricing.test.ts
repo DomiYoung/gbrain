@@ -14,6 +14,12 @@ import {
 } from '../src/core/embedding-pricing.ts';
 
 describe('lookupEmbeddingPrice — first-class providers', () => {
+  test('DashScope text-embedding-v4 is priced for capped runs', () => {
+    const r = lookupEmbeddingPrice('dashscope:text-embedding-v4');
+    expect(r.kind).toBe('known');
+    if (r.kind === 'known') expect(r.pricePerMTok).toBe(0.07);
+  });
+
   test('OpenAI text-embedding-3-large at $0.13/MTok', () => {
     const r = lookupEmbeddingPrice('openai:text-embedding-3-large');
     expect(r.kind).toBe('known');

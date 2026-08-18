@@ -30,6 +30,7 @@ import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import {
   extractConversationFactsLockId,
+  backgroundIdempotencyKey,
   PER_PAGE_LOCK_TTL_MINUTES,
   _resetLockBusyLogCacheForTest,
 } from '../src/commands/extract-conversation-facts.ts';
@@ -59,6 +60,15 @@ describe('extract-conversation-facts — exported helpers (T5)', () => {
     const a = extractConversationFactsLockId('dept-a', 'chat/team');
     const b = extractConversationFactsLockId('dept-b', 'chat/team');
     expect(a).not.toBe(b);
+  });
+
+  test('background idempotency key is source-scoped and parameter-sensitive', () => {
+    const sourceA = backgroundIdempotencyKey('default', ['--limit', '3']);
+    const sourceB = backgroundIdempotencyKey('other', ['--limit', '3']);
+    const changed = backgroundIdempotencyKey('default', ['--limit', '4']);
+    expect(sourceA).not.toBe(sourceB);
+    expect(sourceA).not.toBe(changed);
+    expect(sourceA).toMatch(/^extract-conversation-facts:default:/);
   });
 
   test('PER_PAGE_LOCK_TTL_MINUTES is short enough that holder-death recovers within ~2min', () => {
@@ -150,6 +160,12 @@ describe('extract-conversation-facts — structural contracts (T5)', () => {
     // returned object literal.
     const bjpRegion = SRC.slice(SRC.indexOf('function buildJobParams'));
     expect(bjpRegion).toMatch(/workers:\s*parsed\.workers/);
+  });
+
+  test('background path fans out source-less submissions before queueing', () => {
+    expect(SRC).toMatch(/listSources\(engine\)/);
+    expect(SRC).toMatch(/one job per source/);
+    expect(SRC).toMatch(/sourceId\s*\}/);
   });
 });
 
