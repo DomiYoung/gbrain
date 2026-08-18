@@ -518,6 +518,7 @@ async function officialCodexFetch(input: RequestInfo | URL, init?: RequestInit):
   delete body.max_tokens;
   delete body.temperature;
   body.stream = true;
+  body.store = false;
 
   const response = await globalThis.fetch(input, {
     ...init,
