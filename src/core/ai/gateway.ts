@@ -24,6 +24,7 @@
 import { embed as aiEmbed, embedMany, generateObject, generateText, jsonSchema } from 'ai';
 import { AsyncLocalStorage } from 'node:async_hooks';
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { listRecipes } from './recipes/index.ts';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
@@ -438,6 +439,61 @@ export function resolveNativeBaseUrl(
   if (!raw || !raw.trim()) return undefined;
   const trimmed = raw.trim().replace(/\/+$/, '');
   return /\/v1$/.test(trimmed) ? trimmed : `${trimmed}/v1`;
+}
+
+type OfficialCodexAuth = {
+  apiKey: string;
+  headers: Record<string, string>;
+};
+
+/**
+ * Resolve the official Hermes-managed Codex OAuth credential without copying
+ * the token into GBrain config or a relay-specific environment variable.
+ */
+function resolveOfficialCodexAuth(cfg: AIGatewayConfig): OfficialCodexAuth {
+  const oauthFile = cfg.env.HERMES_OAUTH_FILE?.trim() || '/Users/light/.hermes/auth.json';
+  let parsed: any;
+  try {
+    parsed = JSON.parse(readFileSync(oauthFile, 'utf8'));
+  } catch (error) {
+    throw new AIConfigError(
+      `OpenAI Codex OAuth file could not be read: ${oauthFile}`,
+      `Authenticate with \`hermes auth add openai-codex\` and ensure ${oauthFile} is readable.`,
+      error,
+    );
+  }
+
+  const providerTokens = parsed?.providers?.['openai-codex']?.tokens;
+  const poolToken = parsed?.credential_pool?.['openai-codex']?.[0];
+  const token = providerTokens?.access_token || providerTokens?.token || poolToken?.access_token;
+  if (typeof token !== 'string' || !token.trim()) {
+    throw new AIConfigError(
+      'OpenAI Codex OAuth access token is missing.',
+      `Authenticate with \`hermes auth add openai-codex\` and verify ${oauthFile}.`,
+    );
+  }
+
+  let accountId = providerTokens?.account_id || poolToken?.account_id;
+  if (!accountId) {
+    try {
+      const payload = token.split('.')[1];
+      if (payload) {
+        const claims = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+        accountId = claims?.['https://api.openai.com/auth']?.chatgpt_account_id;
+      }
+    } catch {
+      // A malformed token reaches the provider and produces a normal auth error.
+    }
+  }
+
+  const headers: Record<string, string> = {
+    'User-Agent': 'codex_cli_rs/0.0.0 (Hermes Agent)',
+    originator: 'codex_cli_rs',
+  };
+  if (typeof accountId === 'string' && accountId.trim()) {
+    headers['ChatGPT-Account-ID'] = accountId.trim();
+  }
+  return { apiKey: token.trim(), headers };
 }
 
 /**
@@ -2541,10 +2597,17 @@ async function resolveExpansionProvider(modelStr: string): Promise<{ model: any;
 function instantiateExpansion(recipe: Recipe, modelId: string, cfg: AIGatewayConfig): any {
   switch (recipe.implementation) {
     case 'native-openai': {
-      const apiKey = cfg.env.OPENAI_API_KEY;
+      const codexAuth = recipe.id === 'openai-codex' ? resolveOfficialCodexAuth(cfg) : undefined;
+      const apiKey = codexAuth?.apiKey ?? cfg.env.OPENAI_API_KEY;
       if (!apiKey) throw new AIConfigError(`OpenAI expansion requires OPENAI_API_KEY.`, recipe.setup_hint);
-      const baseURL = resolveNativeBaseUrl('openai', cfg);
-      return createOpenAI({ apiKey, ...(baseURL ? { baseURL } : {}) }).languageModel(modelId);
+      const baseURL = codexAuth
+        ? (cfg.base_urls?.[recipe.id] ?? recipe.base_url_default)
+        : resolveNativeBaseUrl('openai', cfg);
+      return createOpenAI({
+        apiKey,
+        ...(baseURL ? { baseURL } : {}),
+        ...(codexAuth ? { headers: codexAuth.headers } : {}),
+      }).languageModel(modelId);
     }
     case 'native-google': {
       const apiKey = cfg.env.GOOGLE_GENERATIVE_AI_API_KEY;
@@ -3279,10 +3342,17 @@ async function resolveChatProvider(modelStr: string): Promise<{ model: any; reci
 function instantiateChat(recipe: Recipe, modelId: string, cfg: AIGatewayConfig): any {
   switch (recipe.implementation) {
     case 'native-openai': {
-      const apiKey = cfg.env.OPENAI_API_KEY;
+      const codexAuth = recipe.id === 'openai-codex' ? resolveOfficialCodexAuth(cfg) : undefined;
+      const apiKey = codexAuth?.apiKey ?? cfg.env.OPENAI_API_KEY;
       if (!apiKey) throw new AIConfigError(`OpenAI chat requires OPENAI_API_KEY.`, recipe.setup_hint);
-      const baseURL = resolveNativeBaseUrl('openai', cfg);
-      return createOpenAI({ apiKey, ...(baseURL ? { baseURL } : {}) }).languageModel(modelId);
+      const baseURL = codexAuth
+        ? (cfg.base_urls?.[recipe.id] ?? recipe.base_url_default)
+        : resolveNativeBaseUrl('openai', cfg);
+      return createOpenAI({
+        apiKey,
+        ...(baseURL ? { baseURL } : {}),
+        ...(codexAuth ? { headers: codexAuth.headers } : {}),
+      }).languageModel(modelId);
     }
     case 'native-google': {
       const apiKey = cfg.env.GOOGLE_GENERATIVE_AI_API_KEY;

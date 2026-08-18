@@ -1,14 +1,13 @@
 import type { Recipe } from '../types.ts';
-import { AIConfigError } from '../errors.ts';
 
 /**
- * Hermes OpenAI-Codex route through the Ziggie Airouter OpenAI-compatible API.
+ * Official OpenAI Codex route through the ChatGPT Codex Responses API.
  *
  * This is deliberately a first-class recipe rather than an alias to `openai`:
- * the endpoint and credential are different, and provider registration must be
- * visible to model resolution, doctor, and every gateway touchpoint.
+ * Codex uses ChatGPT OAuth credentials and the Codex Responses endpoint, not an
+ * OpenAI API key or a third-party OpenAI-compatible relay.
  */
-const API_KEY_ENV = 'HERMES_PROVIDER_ZIGGIE_AIROUTER_API_KEY';
+const OAUTH_FILE_ENV = 'HERMES_OAUTH_FILE';
 
 const CODEX_MODELS = [
   'gpt-5.6-luna',
@@ -18,24 +17,14 @@ const CODEX_MODELS = [
 
 export const openaiCodex: Recipe = {
   id: 'openai-codex',
-  name: 'OpenAI Codex (Ziggie Airouter)',
-  tier: 'openai-compat',
-  implementation: 'openai-compatible',
-  base_url_default: 'https://airouter.ziggie.cn/v1',
+  name: 'OpenAI Codex (Official OAuth)',
+  tier: 'native',
+  implementation: 'native-openai',
+  base_url_default: 'https://chatgpt.com/backend-api/codex',
   auth_env: {
-    required: [API_KEY_ENV],
-    optional: ['ZIGGIE_API_KEY'],
-    setup_url: 'https://hermes-agent.nousresearch.com/docs',
-  },
-  resolveAuth(env) {
-    const token = env[API_KEY_ENV] ?? env.ZIGGIE_API_KEY;
-    if (!token) {
-      throw new AIConfigError(
-        `${API_KEY_ENV} is required for the openai-codex provider.`,
-        'Load the canonical Hermes environment (`/Users/light/.hermes/scripts/gbrain_env.sh`) or configure the provider credential through the Hermes credential path.',
-      );
-    }
-    return { headerName: 'Authorization', token: `Bearer ${token}` };
+    required: [],
+    optional: [OAUTH_FILE_ENV],
+    setup_url: 'https://hermes-agent.nousresearch.com/docs/integrations/providers',
   },
   touchpoints: {
     expansion: {
@@ -53,5 +42,5 @@ export const openaiCodex: Recipe = {
     },
   },
   setup_hint:
-    'Use the Hermes credential path for HERMES_PROVIDER_ZIGGIE_AIROUTER_API_KEY and set `provider_base_urls.openai-codex` only when overriding the default Airouter endpoint.',
+    'Authenticate with `hermes auth add openai-codex`; GBrain reads the official OAuth token from HERMES_OAUTH_FILE (default: ~/.hermes/auth.json).',
 };
