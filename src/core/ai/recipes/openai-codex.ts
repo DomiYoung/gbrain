@@ -29,10 +29,12 @@ export const openaiCodex: Recipe = {
   touchpoints: {
     expansion: {
       models: CODEX_MODELS,
+      default_timeout_ms: 30_000,
       price_last_verified: '2026-08-18',
     },
     chat: {
       models: CODEX_MODELS,
+      default_timeout_ms: 30_000,
       supports_tools: true,
       supports_subagent_loop: true,
       supports_prompt_cache: true,
