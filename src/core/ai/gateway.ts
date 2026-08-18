@@ -497,6 +497,68 @@ function resolveOfficialCodexAuth(cfg: AIGatewayConfig): OfficialCodexAuth {
 }
 
 /**
+ * The ChatGPT Codex backend is streaming-only and rejects the generic
+ * max_output_tokens field emitted by the OpenAI AI SDK. GBrain's callers use
+ * generateText/generateObject, so aggregate the official SSE response back to
+ * the non-streaming Responses object expected by the SDK.
+ */
+async function officialCodexFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : input.url;
+  if (!url.endsWith('/responses')) return globalThis.fetch(input, init);
+
+  let body: Record<string, any> = {};
+  if (typeof init?.body === 'string') {
+    try {
+      body = JSON.parse(init.body);
+    } catch {
+      return globalThis.fetch(input, init);
+    }
+  }
+  delete body.max_output_tokens;
+  delete body.max_tokens;
+  delete body.temperature;
+  body.stream = true;
+
+  const response = await globalThis.fetch(input, {
+    ...init,
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) return response;
+
+  const streamText = await response.text();
+  let completed: unknown;
+  let streamError: unknown;
+  for (const line of streamText.split(/\\r?\\n/)) {
+    if (!line.startsWith('data: ')) continue;
+    const raw = line.slice('data: '.length).trim();
+    if (!raw || raw === '[DONE]') continue;
+    try {
+      const event = JSON.parse(raw);
+      if (event?.type === 'response.completed' && event.response) completed = event.response;
+      if (event?.type === 'error' || event?.type === 'response.failed') streamError = event;
+    } catch {
+      // Ignore non-JSON SSE comments/keepalives.
+    }
+  }
+  if (completed) {
+    return new Response(JSON.stringify(completed), {
+      status: 200,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+  if (streamError) {
+    return new Response(JSON.stringify(streamError), {
+      status: 502,
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+  return new Response(streamText, {
+    status: 502,
+    headers: { 'content-type': 'text/plain' },
+  });
+}
+
+/**
  * Whether an openai-compatible recipe's backend honors OpenAI structured
  * outputs. Threaded into `createOpenAICompatible`'s `supportsStructuredOutputs`
  * at the chat + expansion build sites, and consulted by `expand()` to pick the
@@ -2606,7 +2668,7 @@ function instantiateExpansion(recipe: Recipe, modelId: string, cfg: AIGatewayCon
       return createOpenAI({
         apiKey,
         ...(baseURL ? { baseURL } : {}),
-        ...(codexAuth ? { headers: codexAuth.headers } : {}),
+        ...(codexAuth ? { headers: codexAuth.headers, fetch: officialCodexFetch as typeof fetch } : {}),
       }).languageModel(modelId);
     }
     case 'native-google': {
@@ -3351,7 +3413,7 @@ function instantiateChat(recipe: Recipe, modelId: string, cfg: AIGatewayConfig):
       return createOpenAI({
         apiKey,
         ...(baseURL ? { baseURL } : {}),
-        ...(codexAuth ? { headers: codexAuth.headers } : {}),
+        ...(codexAuth ? { headers: codexAuth.headers, fetch: officialCodexFetch as typeof fetch } : {}),
       }).languageModel(modelId);
     }
     case 'native-google': {
