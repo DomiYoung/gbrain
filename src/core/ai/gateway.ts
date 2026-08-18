@@ -529,7 +529,7 @@ async function officialCodexFetch(input: RequestInfo | URL, init?: RequestInit):
   const streamText = await response.text();
   let completed: unknown;
   let streamError: unknown;
-  for (const line of streamText.split(/\\r?\\n/)) {
+  for (const line of streamText.split(/\r?\n/)) {
     if (!line.startsWith('data: ')) continue;
     const raw = line.slice('data: '.length).trim();
     if (!raw || raw === '[DONE]') continue;
