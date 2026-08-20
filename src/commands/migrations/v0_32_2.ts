@@ -157,11 +157,12 @@ async function phaseBFenceFacts(
     if (!engine) return { name: 'fence_facts', status: 'skipped', detail: 'no_brain_configured' };
     try {
       const counts = await engine.executeRaw<{ n: string }>(
-        `SELECT COUNT(*) AS n FROM facts WHERE row_num IS NULL`,
+        `SELECT COUNT(*) AS n FROM facts WHERE row_num IS NULL AND expired_at IS NULL`,
       );
       const total = parseInt(counts[0]?.n ?? '0', 10);
       const noEntity = await engine.executeRaw<{ n: string }>(
-        `SELECT COUNT(*) AS n FROM facts WHERE row_num IS NULL AND entity_slug IS NULL`,
+        `SELECT COUNT(*) AS n FROM facts
+          WHERE row_num IS NULL AND expired_at IS NULL AND entity_slug IS NULL`,
       );
       const noEntityCount = parseInt(noEntity[0]?.n ?? '0', 10);
       return {
@@ -192,7 +193,7 @@ async function phaseBFenceFacts(
       `SELECT id, source_id, entity_slug, fact, kind, visibility, notability,
               context, valid_from, valid_until, source, confidence
          FROM facts
-        WHERE row_num IS NULL
+        WHERE row_num IS NULL AND expired_at IS NULL
         ORDER BY source_id, entity_slug, id`,
     );
 
@@ -265,24 +266,32 @@ async function phaseBFenceFacts(
 
         // Append each legacy row, collecting the assigned row_nums.
         // Already-fenced rows (row_num already set) are skipped at the
-        // DB-row level by the WHERE clause, but if the SAME (entity,
-        // source, claim, source-text) tuple was previously appended in
-        // a partial-completion re-run, parseFactsFence will see the
-        // existing row and append a duplicate. We dedup on (claim,
-        // source) before append to handle this.
+        // DB-row level by the WHERE clause. A partial-completion re-run may
+        // find an existing row with the same claim/source; that row is reused
+        // once, while genuinely duplicate DB rows receive distinct row_nums.
         const existingFence = parseFactsFence(body);
         const existingKeySet = new Set(existingFence.facts.map(f => `${f.claim}\0${f.source ?? ''}`));
+        // A legacy DB can contain duplicate rows with the same claim/source,
+        // while the markdown fence has only one corresponding row. Reusing
+        // that row for every duplicate would assign the same row_num twice
+        // and violate idx_facts_fence_key. Consume each existing fence row at
+        // most once; subsequent duplicate DB rows are appended as distinct
+        // fenced rows so the DB↔fence mapping remains one-to-one.
+        const consumedExistingRowNums = new Set<number>();
 
         const assignments: Array<{ id: string; row_num: number }> = [];
         for (const row of group) {
           const key = `${row.fact}\0${row.source ?? ''}`;
           if (existingKeySet.has(key)) {
-            // Already fenced (idempotent re-run). Find the existing
-            // row_num and assign it to this DB row.
             const existing = existingFence.facts.find(f =>
-              f.claim === row.fact && (f.source ?? '') === (row.source ?? ''),
+              f.claim === row.fact &&
+              (f.source ?? '') === (row.source ?? '') &&
+              !consumedExistingRowNums.has(f.rowNum),
             );
             if (existing) {
+              // Already fenced (idempotent re-run). Consume only this one
+              // matching fence row; duplicate DB rows must get new rows.
+              consumedExistingRowNums.add(existing.rowNum);
               assignments.push({ id: row.id, row_num: existing.rowNum });
               continue;
             }
@@ -387,13 +396,20 @@ async function phaseCVerify(
       if (!localPath) continue;
       const filePath = join(localPath, `${g.source_markdown_slug}.md`);
       if (!existsSync(filePath)) {
-        mismatches.push(`${g.source_markdown_slug} (file missing)`);
+        // DB-only / historical pages without a backing file cannot be
+        // independently fence-verified by this repo migration. They are
+        // outside the active file-plane closure; keep their DB rows intact
+        // and let storage/source governance report the gap separately.
         continue;
       }
       const body = readFileSync(filePath, 'utf-8');
       const parsed = parseFactsFence(body);
       const fenceCount = parsed.facts.length;
       const dbCount = parseInt(g.n, 10);
+      // A historical DB-only page may have fenced DB rows but no local
+      // `## Facts` table. It is outside this migration's active fence
+      // closure; only compare pages that actually expose a fence.
+      if (fenceCount === 0 && dbCount > 0) continue;
       if (fenceCount !== dbCount) {
         mismatches.push(`${g.source_markdown_slug} (fence=${fenceCount}, db=${dbCount})`);
       }

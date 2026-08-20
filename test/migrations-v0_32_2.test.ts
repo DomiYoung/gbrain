@@ -175,6 +175,52 @@ describe('phaseBFenceFacts — happy path backfill', () => {
     expect(body).toContain('Founded Acme');
   });
 
+  test('allocates a new row_num for duplicate legacy claim when one fence row already exists', async () => {
+    mkdirSync(join(brainDir, 'people'), { recursive: true });
+    writeFileSync(
+      join(brainDir, 'people/alice.md'),
+      [
+        '---',
+        'type: person',
+        'title: Alice',
+        'slug: people/alice',
+        '---',
+        '',
+        '# Alice',
+        '',
+        '## Facts',
+        '',
+        '<!--- gbrain:facts:begin -->',
+        '| # | claim | kind | confidence | visibility | notability | valid_from | valid_until | source | context |',
+        '|---|-------|------|------------|------------|------------|------------|-------------|--------|---------|',
+        '| 1 | Duplicate claim | fact | 1.0 | private | medium | 2026-08-20 |  | mcp:put_page |  |',
+        '<!--- gbrain:facts:end -->',
+        '',
+      ].join('\\n'),
+      'utf-8',
+    );
+    const id1 = await seedLegacyFact({ entity_slug: 'people/alice', fact: 'Duplicate claim' });
+    const id2 = await seedLegacyFact({ entity_slug: 'people/alice', fact: 'Duplicate claim' });
+
+    const r = await __testing.phaseBFenceFacts(engine, OPTS);
+    expect(r.status).toBe('complete');
+    expect(r.detail).toContain('fenced=2');
+
+    const parsed = parseFactsFence(readFileSync(join(brainDir, 'people/alice.md'), 'utf-8'));
+    expect(parsed.facts).toHaveLength(2);
+    expect(parsed.facts.map(f => f.rowNum)).toEqual([1, 2]);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rows = await (engine as any).db.query(
+      'SELECT id, row_num FROM facts WHERE id IN ($1, $2) ORDER BY row_num',
+      [id1, id2],
+    );
+    expect(rows.rows).toEqual([
+      { id: id1, row_num: 1 },
+      { id: id2, row_num: 2 },
+    ]);
+  });
+
   test('idempotent: re-running after partial completion does NOT duplicate rows', async () => {
     await seedLegacyFact({ entity_slug: 'people/alice', fact: 'First' });
     await seedLegacyFact({ entity_slug: 'people/alice', fact: 'Second' });
