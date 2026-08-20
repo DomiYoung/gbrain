@@ -128,6 +128,11 @@ interface PhaseBOutcome {
   failed_pages: string[];
 }
 
+interface PhaseBFenceResult extends OrchestratorPhaseResult {
+  /** Pages successfully written by this invocation, keyed as source_id\0slug. */
+  touchedPages?: string[];
+}
+
 /**
  * Dirty-tree refusal: mirror src/core/dry-fix.ts behavior. Refuses to
  * write if any source's local_path has uncommitted changes. Dry-run
@@ -151,7 +156,7 @@ function isLocalPathDirty(localPath: string): boolean {
 async function phaseBFenceFacts(
   engine: BrainEngine | null,
   opts: OrchestratorOpts,
-): Promise<OrchestratorPhaseResult> {
+): Promise<PhaseBFenceResult> {
   if (opts.dryRun) {
     // Dry-run: report what WOULD happen without touching FS or DB.
     if (!engine) return { name: 'fence_facts', status: 'skipped', detail: 'no_brain_configured' };
@@ -205,6 +210,7 @@ async function phaseBFenceFacts(
       pages_touched: 0,
       failed_pages: [],
     };
+    const touchedPages: string[] = [];
 
     // Group by (source_id, entity_slug) so each page's fence is updated
     // atomically with all its legacy rows.
@@ -339,6 +345,7 @@ async function phaseBFenceFacts(
         }
         outcome.fenced += assignments.length;
         outcome.pages_touched += 1;
+        touchedPages.push(`${sourceId}\0${entitySlug}`);
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
         outcome.failed_pages.push(`${entitySlug} (${msg})`);
@@ -357,7 +364,7 @@ async function phaseBFenceFacts(
         detail: `${detail} :: ${outcome.failed_pages.slice(0, 3).join(' | ')}${outcome.failed_pages.length > 3 ? '...' : ''}`,
       };
     }
-    return { name: 'fence_facts', status: 'complete', detail };
+    return { name: 'fence_facts', status: 'complete', detail, touchedPages };
   } catch (e) {
     return { name: 'fence_facts', status: 'failed', detail: e instanceof Error ? e.message : String(e) };
   }
@@ -368,6 +375,7 @@ async function phaseBFenceFacts(
 async function phaseCVerify(
   engine: BrainEngine | null,
   opts: OrchestratorOpts,
+  scopePages?: string[],
 ): Promise<OrchestratorPhaseResult> {
   if (opts.dryRun) return { name: 'verify', status: 'skipped', detail: 'dry-run' };
   if (!engine) return { name: 'verify', status: 'skipped', detail: 'no_brain_configured' };
@@ -390,8 +398,10 @@ async function phaseCVerify(
 
     const mismatches: string[] = [];
     let pagesChecked = 0;
+    const scope = scopePages === undefined ? null : new Set(scopePages);
 
     for (const g of groups) {
+      if (scope && !scope.has(`${g.source_id}\0${g.source_markdown_slug}`)) continue;
       const localPath = localPathById.get(g.source_id);
       if (!localPath) continue;
       const filePath = join(localPath, `${g.source_markdown_slug}.md`);
@@ -448,7 +458,7 @@ async function orchestrator(opts: OrchestratorOpts): Promise<OrchestratorResult>
   phases.push(b);
   if (b.status === 'failed') return finalizeResult(phases, 'failed', engine);
 
-  const c = await phaseCVerify(engine, opts);
+  const c = await phaseCVerify(engine, opts, b.touchedPages);
   phases.push(c);
 
   const overallStatus: 'complete' | 'partial' | 'failed' =

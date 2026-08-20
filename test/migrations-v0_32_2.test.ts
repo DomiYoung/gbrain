@@ -385,6 +385,24 @@ describe('orchestrator end-to-end', () => {
     expect(rows.rows[0].row_num).toBeNull();
     expect(existsSync(join(brainDir, 'people/alice.md'))).toBe(false);
   });
+
+  test('verify is scoped to pages touched by this migration run', async () => {
+    await seedLegacyFact({ entity_slug: 'people/alice', fact: 'New legacy fact' });
+    const historicalId = await seedLegacyFact({ entity_slug: 'people/bob', fact: 'Historical fenced fact' });
+    // Simulate a pre-existing fenced DB row whose page has drifted. It must not
+    // block the unrelated alice legacy backfill.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (engine as any).db.query(
+      `UPDATE facts SET row_num = 1, source_markdown_slug = 'people/bob' WHERE id = $1`,
+      [historicalId],
+    );
+    mkdirSync(join(brainDir, 'people'), { recursive: true });
+    writeFileSync(join(brainDir, 'people/bob.md'), '---\\ntype: person\\n---\\n\\n# Bob\\n');
+
+    const result = await v0_32_2.orchestrator(OPTS);
+    expect(result.status).toBe('complete');
+    expect(result.phases.find(p => p.name === 'verify')?.detail).toBe('pages_checked=1');
+  });
 });
 
 afterAll(() => {
