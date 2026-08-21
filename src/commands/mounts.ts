@@ -228,6 +228,12 @@ function runList(args: string[]): void {
   const jsonMode = args.includes('--json');
   const file = readMountsFile();
 
+  // `mounts list` is the documented recovery path for a stale aggregated
+  // resolver. Re-publish from the current repo root so a deliberate host
+  // checkout move cannot leave ~/.gbrain/mounts-cache pointing at a retired
+  // source directory. The mounts registry itself remains read-only.
+  refreshMountsCache();
+
   if (jsonMode) {
     // Redact raw db_url in json output (mounts.json is per-user 0600, but
     // stdout can be piped into logs). database_path is fine (it's a local

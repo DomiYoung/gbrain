@@ -1,5 +1,5 @@
 import { describe, test, expect, afterEach, beforeEach } from 'bun:test';
-import { mkdtempSync, rmSync, mkdirSync, writeFileSync, existsSync } from 'fs';
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync, existsSync, readFileSync } from 'fs';
 import { join, isAbsolute } from 'path';
 import { tmpdir, homedir } from 'os';
 import { __testing } from '../src/commands/mounts.ts';
@@ -195,6 +195,12 @@ describe('readMountsFile / writeMountsFile', () => {
     // .tmp should be gone after atomic rename.
     expect(existsSync(path + '.tmp')).toBe(false);
   });
+});
+
+test('mounts list republishes the aggregated cache from the current host checkout', () => {
+  const source = readFileSync(join(import.meta.dir, '../src/commands/mounts.ts'), 'utf-8');
+  const listBody = source.slice(source.indexOf('function runList'), source.indexOf('// ── Subcommand: remove'));
+  expect(listBody).toContain('refreshMountsCache();');
 });
 
 describe('runMounts — end-to-end add/list/remove', () => {
