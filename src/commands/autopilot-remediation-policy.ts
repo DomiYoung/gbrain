@@ -20,18 +20,18 @@ export function autopilotRemediationIdempotencyKey(
 
 /**
  * A full cycle is a freshness invariant, independent of the current score or
- * targeted plan. Large/slow/severely degraded plans retain the existing
- * hammer behavior before the freshness floor is reached.
+ * targeted plan. Slow plans stay in the dependency-aware remediation lane;
+ * estimated duration must not route them into a cycle that cannot consume
+ * targeted handlers (for example extract-timeline-from-meetings).
  */
 export function shouldRunAutopilotFullCycle({
   score,
   planLength,
-  estimatedSeconds,
+  estimatedSeconds: _estimatedSeconds,
   minutesSinceLastFull,
 }: AutopilotRemediationPlanShape): boolean {
   return minutesSinceLastFull >= AUTOPILOT_FULL_CYCLE_FLOOR_MINUTES
     || planLength > 3
-    || estimatedSeconds >= 300
     || score < 70;
 }
 

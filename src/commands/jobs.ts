@@ -14,7 +14,11 @@ import {
   WORKER_EXIT_RSS_WATCHDOG,
   JOB_CHILD_EXIT_USAGE,
 } from '../core/minions/worker-exit-codes.ts';
-import { CHILD_ENV, resolveChildCliInvocation } from '../core/minions/job-isolation.ts';
+import {
+  CHILD_ENV,
+  resolveChildCliInvocation,
+  resolveSupervisorDetachInvocation,
+} from '../core/minions/job-isolation.ts';
 import { runChildJobEntry } from '../core/minions/run-child.ts';
 import type { MinionHandler, MinionJob, MinionJobStatus } from '../core/minions/types.ts';
 import type { PaceKeyOverrides } from '../core/pace-mode.ts';
@@ -88,6 +92,17 @@ export function factsAbsorbShouldRetry(
   classification: 'keyed' | 'keyless',
 ): boolean {
   return classification === 'keyed' && factsAbsorbUnavailable(result);
+}
+
+/**
+ * A malformed model response has already exhausted the extractor's bounded
+ * JSON-only retry. Do not return it as a successful zero-insert result and do
+ * not feed it into the generic worker retry curve: that creates an invisible
+ * LLM loop with no new input. Dead-lettering keeps the loss visible and lets an
+ * operator replay the job after the provider/parser contract is fixed.
+ */
+export function factsAbsorbShouldDeadLetter(result: FactsBackstopResult): boolean {
+  return result.mode === 'inline' && result.skipped_reason === 'malformed_output';
 }
 
 const GATEWAY_REFRESH_JOB_NAMES = new Set([
@@ -1916,7 +1931,8 @@ export async function runJobs(engineOrNull: BrainEngine | null, args: string[]):
       if (detach) {
         const { spawn } = await import('child_process');
         const childArgs = process.argv.slice(2).filter(a => a !== '--detach');
-        const child = spawn(process.execPath, [process.argv[1], ...childArgs], {
+        const invocation = resolveSupervisorDetachInvocation(process.execPath, process.argv[1], childArgs);
+        const child = spawn(invocation.cmd, invocation.args, {
           detached: true,
           stdio: ['ignore', 'ignore', 'inherit'],
           env: process.env,
@@ -2440,6 +2456,13 @@ export async function registerBuiltinHandlers(
         const { FactsExtractionError } = await import('../core/facts/extract.ts');
         throw new FactsExtractionError('chat_unavailable', jobModel);
       }
+    }
+    if (factsAbsorbShouldDeadLetter(result)) {
+      const { UnrecoverableError } = await import('../core/minions/types.ts');
+      const jobModel = typeof job.data.model === 'string' && job.data.model ? job.data.model : undefined;
+      throw new UnrecoverableError(
+        `[facts-extract] malformed_output${jobModel ? ` (model=${jobModel})` : ''}`,
+      );
     }
     return result;
   });

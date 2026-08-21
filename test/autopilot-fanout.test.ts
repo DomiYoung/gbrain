@@ -117,17 +117,20 @@ describe('Autopilot remediation policy (#4046)', () => {
     expect(shouldSleepHealthyAutopilot(95, 1, 10)).toBe(false);
   });
 
-  test('large, slow, or severely degraded plans still use the full cycle', () => {
-    expect(shouldRunAutopilotFullCycle({
-      score: 90,
-      planLength: 4,
-      estimatedSeconds: 30,
-      minutesSinceLastFull: 10,
-    })).toBe(true);
+  test('slow remediation plans stay in the dependency-aware targeted lane', () => {
     expect(shouldRunAutopilotFullCycle({
       score: 90,
       planLength: 2,
       estimatedSeconds: 300,
+      minutesSinceLastFull: 10,
+    })).toBe(false);
+  });
+
+  test('large or severely degraded plans still use the full cycle', () => {
+    expect(shouldRunAutopilotFullCycle({
+      score: 90,
+      planLength: 4,
+      estimatedSeconds: 30,
       minutesSinceLastFull: 10,
     })).toBe(true);
     expect(shouldRunAutopilotFullCycle({

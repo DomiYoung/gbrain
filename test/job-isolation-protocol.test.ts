@@ -26,6 +26,7 @@ import {
   killProcessGroup,
   reconstructHandlerError,
   resolveChildCliInvocation,
+  resolveSupervisorDetachInvocation,
   writeChildOutcomeFile,
   type ChildOutcome,
 } from '../src/core/minions/job-isolation.ts';
@@ -185,6 +186,41 @@ describe('child CLI invocation resolution', () => {
 
   test('child argv shape', () => {
     expect(buildChildArgs(42)).toEqual(['jobs', 'run-child', '--job-id', '42']);
+  });
+});
+
+describe('supervisor detach invocation resolution', () => {
+  test('compiled Bun omits virtual argv[1]', () => {
+    expect(resolveSupervisorDetachInvocation(
+      '/Users/light/.gbrain/runtime/current/bin/gbrain',
+      '/$bunfs/root/gbrain',
+      ['jobs', 'supervisor', 'start'],
+    )).toEqual({
+      cmd: '/Users/light/.gbrain/runtime/current/bin/gbrain',
+      args: ['jobs', 'supervisor', 'start'],
+    });
+  });
+
+  test('script-mode Bun retains cli.ts argv[1]', () => {
+    expect(resolveSupervisorDetachInvocation(
+      '/opt/homebrew/bin/bun',
+      '/repo/src/cli.ts',
+      ['jobs', 'supervisor', 'start'],
+    )).toEqual({
+      cmd: '/opt/homebrew/bin/bun',
+      args: ['/repo/src/cli.ts', 'jobs', 'supervisor', 'start'],
+    });
+  });
+
+  test('compiled executable detection also omits non-virtual argv[1]', () => {
+    expect(resolveSupervisorDetachInvocation(
+      '/usr/local/bin/gbrain',
+      '/some/argv1',
+      ['jobs', 'supervisor', 'start'],
+    )).toEqual({
+      cmd: '/usr/local/bin/gbrain',
+      args: ['jobs', 'supervisor', 'start'],
+    });
   });
 });
 

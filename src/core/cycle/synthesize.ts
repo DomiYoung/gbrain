@@ -516,7 +516,7 @@ export async function runPhaseSynthesize(
 
     // Fan-out: submit one subagent per worth-processing transcript (or one
     // per chunk for transcripts that exceed the model's per-prompt budget).
-    const allowedSlugPrefixes = await loadAllowedSlugPrefixes(config.outputRoot);
+    const allowedSlugPrefixes = await loadAllowedSlugPrefixes(config.outputRoot, opts.brainDir);
     if (allowedSlugPrefixes.length === 0) {
       return failed(makeError('InternalError', 'NO_ALLOWLIST',
         'skills/_brain-filing-rules.json missing dream_synthesize_paths.globs'));
@@ -1410,10 +1410,12 @@ async function checkCooldown(
  * returns the globs verbatim. Shared by the patterns phase (imported there —
  * the two phases must enforce the same allow-list).
  */
-export async function loadAllowedSlugPrefixes(outputRoot = 'wiki'): Promise<string[]> {
-  // Search a few known locations relative to the binary / repo. The first
-  // hit wins; if none found, return [].
+export async function loadAllowedSlugPrefixes(outputRoot = 'wiki', brainDir?: string): Promise<string[]> {
+  // Prefer the explicit brain checkout threaded through the phase. LaunchAgents
+  // commonly start with cwd='/', so process.cwd() is not a repository locator.
+  // Keep the bundled/runtime candidates as fallbacks for DB-only callers.
   const candidates = [
+    ...(brainDir ? [join(brainDir, 'skills', '_brain-filing-rules.json')] : []),
     join(process.cwd(), 'skills', '_brain-filing-rules.json'),
     join(__dirname, '..', '..', '..', 'skills', '_brain-filing-rules.json'),
   ];

@@ -69,6 +69,26 @@ export const CHILD_ENV = {
   childPoolSize: 'GBRAIN_JOB_CHILD_POOL_SIZE',
 } as const;
 
+/**
+ * Build the argv used by `jobs supervisor start --detach` to re-exec the
+ * current CLI. Bun-compiled binaries expose a virtual `process.argv[1]`
+ * such as `/$bunfs/root/gbrain`; passing that value as argv[1] to the binary
+ * makes the CLI parser treat it as the first command and report
+ * `Unknown command`. A compiled binary must be re-exec'd with only the real
+ * executable and the user arguments. Script-mode Bun still needs argv[1].
+ */
+export function resolveSupervisorDetachInvocation(
+  execPath: string,
+  argv1: string | undefined,
+  childArgs: string[],
+): { cmd: string; args: string[] } {
+  const compiled = argv1?.startsWith('/$bunfs/') === true ||
+    /(?:^|[\\/])gbrain(?:\.exe)?$/i.test(execPath);
+  return compiled || !argv1
+    ? { cmd: execPath, args: childArgs }
+    : { cmd: execPath, args: [argv1, ...childArgs] };
+}
+
 export type ChildErrorKind = 'unrecoverable' | 'rate_lease' | 'generic';
 
 export type ChildOutcome =

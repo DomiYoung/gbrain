@@ -526,11 +526,46 @@ function parseExtractorJsonDetailed(raw: string): ParsedExtractorShape | null {
   // Strict.
   const direct = tryArrayShapeDetailed(cleaned);
   if (direct) return direct;
-  // Substring scan for embedded {"facts":[...]} shape.
-  const m = cleaned.match(/\{[\s\S]*?"facts"[\s\S]*\}/);
-  if (m) {
-    const sub = tryArrayShapeDetailed(m[0]);
-    if (sub) return sub;
+
+  // Providers sometimes wrap an otherwise valid JSON response in a short
+  // preamble or trailing sentence despite the prompt's JSON-only contract.
+  // Do not use a non-greedy /{...}/ regex here: the first `}` inside the
+  // `facts` array closes a candidate row, not the outer object. Scan balanced
+  // braces while respecting JSON strings and escapes, then validate each
+  // complete object. This keeps salvage deterministic without accepting a
+  // regex-shaped fragment as a fact payload.
+  for (let start = 0; start < cleaned.length; start++) {
+    if (cleaned[start] !== '{') continue;
+    let depth = 0;
+    let inString = false;
+    let escaped = false;
+    for (let i = start; i < cleaned.length; i++) {
+      const ch = cleaned[i]!;
+      if (inString) {
+        if (escaped) {
+          escaped = false;
+        } else if (ch === '\\\\') {
+          escaped = true;
+        } else if (ch === '"') {
+          inString = false;
+        }
+        continue;
+      }
+      if (ch === '"') {
+        inString = true;
+        continue;
+      }
+      if (ch === '{') {
+        depth++;
+      } else if (ch === '}') {
+        depth--;
+        if (depth === 0) {
+          const candidate = tryArrayShapeDetailed(cleaned.slice(start, i + 1));
+          if (candidate) return candidate;
+          break;
+        }
+      }
+    }
   }
   return null;
 }

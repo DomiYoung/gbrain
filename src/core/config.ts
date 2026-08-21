@@ -187,6 +187,12 @@ export interface GBrainConfig {
       threshold?: number;
       /** Daily spend cap (USD); bounds drains/day = floor(cap / ~$0.30). Default 2.0. */
       max_usd_per_day?: number;
+      /**
+       * Also submit bounded drains when the active schema pack declares
+       * extract_atoms. Default false preserves routine-cycle ownership;
+       * enable when that phase is valid but too slow to clear a large backlog.
+       */
+      force_when_declared?: boolean;
     };
     /**
      * v0.42 — keep frontmatter links fresh on the incremental cycle. The cycle's

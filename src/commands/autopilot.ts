@@ -46,6 +46,7 @@ import { evaluateQuietHours } from '../core/minions/quiet-hours.ts';
 import { inspectLock } from '../core/db-lock.ts';
 import { registerCleanup } from '../core/process-cleanup.ts';
 import { resolveAutopilotDispatchTimeoutMs } from './autopilot-timeout.ts';
+import { runRemediation } from '../core/remediation/index.ts';
 import {
   autopilotRemediationIdempotencyKey,
   shouldRunAutopilotFullCycle,
@@ -994,7 +995,8 @@ export async function runAutopilot(engine: BrainEngine, args: string[]) {
               // per-source). If the pack declares extract_atoms the routine
               // cycle already drains it for every source — nothing to do.
               const declares = await packDeclaresPhase(engine, 'extract_atoms');
-              if (!declares) {
+              const forceWhenDeclared = (await engine.getConfig('autopilot.auto_drain.force_when_declared')) === 'true';
+              if (!declares || forceWhenDeclared) {
                 const parsePosInt = (v: string | null, d: number): number => {
                   if (v == null) return d;
                   const n = parseInt(v, 10);
@@ -1240,45 +1242,75 @@ export async function runAutopilot(engine: BrainEngine, args: string[]) {
             );
           }
         } else {
-          // Small targeted plan — submit individual handlers per step.
-          // Recommendation keys stay stable for doctor/remediate checkpoints;
-          // Autopilot adds the dispatch interval so completed rows cannot hold
-          // the remediation slot forever (#4046).
-          // maxWaiting:1 per submit per codex #17 bounds the cross-window
-          // backlog if a targeted handler runs longer than one interval.
-          for (const step of plan) {
-            try {
-              const isProtected = !!step.protected;
-              const submitOpts = {
-                queue: 'default',
-                idempotency_key: autopilotRemediationIdempotencyKey(step.idempotency_key, slot),
-                max_attempts: 2,
-                timeout_ms: timeoutMs,
-                maxWaiting: 1,
-              };
-              const job = await queue.add(
-                step.job,
-                step.params,
-                submitOpts,
-                isProtected ? { allowProtectedSubmit: true } : undefined,
-              );
-              // Honest-dispatch contract (same as the fanout paths): a
-              // coalesced submission never claims a dispatch that didn't
-              // insert a row.
-              if (job.coalesced) {
-                if (jsonMode) {
-                  process.stderr.write(JSON.stringify({ event: 'dispatch_coalesced', job_id: job.id, mode: 'targeted', step: step.id, score, plan_size: plan.length }) + '\n');
-                } else {
-                  console.log(`[dispatch] coalesced onto job #${job.id} ${step.job} (targeted: ${step.id}; already in flight)`);
-                }
-              } else if (jsonMode) {
-                process.stderr.write(JSON.stringify({ event: 'dispatched', job_id: job.id, mode: 'targeted', step: step.id, score, plan_size: plan.length }) + '\n');
-              } else {
-                console.log(`[dispatch] job #${job.id} ${step.job} (targeted: ${step.id}; score=${score})`);
-              }
-            } catch (e) {
-              logError('dispatch.step', e);
+          // Dependency-aware targeted plan. Do not enqueue steps directly here:
+          // the remediation orchestrator waits for each job, honors depends_on,
+          // cascades failures, and re-checks health between steps. The daemon
+          // lane is deliberately capped at $0 so unattended ticks cannot
+          // introduce LLM spend; paid/protected plans remain visible for the
+          // explicit onboard/doctor operator lane.
+          try {
+            const result = await runRemediation(
+              engine,
+              {
+                targetScore: 90,
+                maxUsd: 0,
+                extraRemediations,
+              },
+              {
+                onStepStart: (step, total, rec) => {
+                  if (jsonMode) {
+                    process.stderr.write(JSON.stringify({
+                      event: 'remediation_step_start',
+                      step,
+                      total,
+                      id: rec.id,
+                      job: rec.job,
+                      score,
+                      plan_size: plan.length,
+                    }) + '\\n');
+                  } else {
+                    console.log(`[remediation] [${step}/${total}] ${rec.job} (targeted; score=${score})`);
+                  }
+                },
+                onStepEnd: (stepResult) => {
+                  if (jsonMode) {
+                    process.stderr.write(JSON.stringify({
+                      event: 'remediation_step_end',
+                      ...stepResult,
+                    }) + '\\n');
+                  } else {
+                    console.log(`[remediation] ${stepResult.id}: ${stepResult.status}`);
+                  }
+                },
+                onBudgetRefused: (estUsd, cap) => {
+                  if (jsonMode) {
+                    process.stderr.write(JSON.stringify({
+                      event: 'remediation_budget_refused',
+                      estimated_usd: estUsd,
+                      cap_usd: cap,
+                    }) + '\\n');
+                  } else {
+                    console.log(`[remediation] budget refused: estimated=$${estUsd.toFixed(2)} cap=$${cap.toFixed(2)}`);
+                  }
+                },
+              },
+            );
+            if (result.aborted_count > 0 || result.submitted.some((s) => s.status.startsWith('error:'))) {
+              cycleOk = false;
             }
+            if (jsonMode) {
+              process.stderr.write(JSON.stringify({
+                event: 'remediation_result',
+                doctor_run_id: result.doctor_run_id,
+                submitted: result.submitted,
+                aborted_count: result.aborted_count,
+                brain_score_initial: result.brain_score_initial,
+                brain_score_final: result.brain_score_final,
+              }) + '\\n');
+            }
+          } catch (e) {
+            logError('dispatch.remediation', e);
+            cycleOk = false;
           }
         }
       } catch (e) { logError('dispatch', e); cycleOk = false; }
@@ -1953,14 +1985,43 @@ function installCrontab(wrapperPath: string, home: string) {
  * take down the very alarm meant to diagnose it. Everything it reads is
  * filesystem (lock mtime, markers, plist/unit/crontab, log tail).
  */
+/**
+ * Read the interval from an installed wrapper without opening the database.
+ * LaunchAgent/systemd wrappers are the runtime source of truth; the status
+ * command must not assume the foreground default (300s), otherwise an
+ * installed daemon running with --interval 1800 is falsely reported stale.
+ */
+export function resolveInstalledAutopilotIntervalSeconds(fallback = 300): number {
+  const candidates = [
+    join(gbrainHomePath(), 'autopilot-run.sh'),
+    join(process.env.HOME || '', '.gbrain', 'autopilot-run.sh'),
+  ];
+  for (const path of candidates) {
+    try {
+      const content = readFileSync(path, 'utf-8');
+      const match = content.match(/\bautopilot\b[\s\S]*?--interval\s+(\d+)/);
+      const value = Number(match?.[1]);
+      if (Number.isFinite(value) && value > 0) return value;
+    } catch { /* try the next wrapper */ }
+  }
+  try {
+    const cfg = loadConfigFileOnly() as { autopilot?: { interval_seconds?: unknown } } | null;
+    const value = Number(cfg?.autopilot?.interval_seconds);
+    if (Number.isFinite(value) && value > 0) return value;
+  } catch { /* status remains available when config is unreadable */ }
+  return fallback;
+}
+
 export function runAutopilotStatus(args: string[]): void {
-  // An INSTALLED daemon always runs the default interval — the generated
-  // wrapper execs `autopilot --repo <path>` with no --interval. The flag is
-  // honored here for the manual foreground case. Garbage input must not
+  // Installed daemons get their interval from the generated wrapper; the flag
+  // is honored here for the manual foreground case. Garbage input must not
   // become NaN: staleAfter = NaN makes every age comparison false, which
   // reads a 71-day-dead daemon as 'fresh' with exit 0 — a typo'd flag would
   // silently disable the very alarm this exit code exists to be.
-  const rawInterval = parseInt(parseArg(args, '--interval') || '300', 10);
+  const explicitInterval = parseArg(args, '--interval');
+  const rawInterval = explicitInterval == null
+    ? resolveInstalledAutopilotIntervalSeconds()
+    : parseInt(explicitInterval, 10);
   showStatus(args.includes('--json'), Number.isFinite(rawInterval) && rawInterval > 0 ? rawInterval : 300);
 }
 

@@ -529,12 +529,16 @@ async function officialCodexFetch(input: RequestInfo | URL, init?: RequestInit):
   const streamText = await response.text();
   let completed: unknown;
   let streamError: unknown;
+  let streamedText = '';
   for (const line of streamText.split(/\r?\n/)) {
     if (!line.startsWith('data: ')) continue;
     const raw = line.slice('data: '.length).trim();
     if (!raw || raw === '[DONE]') continue;
     try {
       const event = JSON.parse(raw);
+      if (event?.type === 'response.output_text.delta' && typeof event.delta === 'string') {
+        streamedText += event.delta;
+      }
       if (event?.type === 'response.completed' && event.response) completed = event.response;
       if (event?.type === 'error' || event?.type === 'response.failed') streamError = event;
     } catch {
@@ -542,7 +546,21 @@ async function officialCodexFetch(input: RequestInfo | URL, init?: RequestInit):
     }
   }
   if (completed) {
-    return new Response(JSON.stringify(completed), {
+    const response = completed as Record<string, any>;
+    // The Codex backend currently emits the answer in output_text.delta events,
+    // while response.completed may carry an empty `output` snapshot. The OpenAI
+    // AI SDK consumes the latter, so bridge the streamed text into the standard
+    // Responses message/output_text shape only when the snapshot has no output.
+    if ((!Array.isArray(response.output) || response.output.length === 0) && streamedText) {
+      response.output = [{
+        type: 'message',
+        id: `${response.id ?? 'codex'}-message`,
+        status: 'completed',
+        role: 'assistant',
+        content: [{ type: 'output_text', text: streamedText, annotations: [] }],
+      }];
+    }
+    return new Response(JSON.stringify(response), {
       status: 200,
       headers: { 'content-type': 'application/json' },
     });

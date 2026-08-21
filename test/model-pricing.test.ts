@@ -61,6 +61,12 @@ describe('CANONICAL_PRICING — table integrity', () => {
       CANONICAL_PRICING['google:gemini-2.0-flash'],
     );
   });
+
+  test('OpenAI Codex OAuth alias agrees with the Luna model rate', () => {
+    expect(CANONICAL_PRICING['openai-codex:gpt-5.6-luna']).toEqual(
+      CANONICAL_PRICING['openai:gpt-5.6-luna'],
+    );
+  });
 });
 
 describe('canonicalLookup — id normalization', () => {
@@ -70,6 +76,10 @@ describe('canonicalLookup — id normalization', () => {
 
   test('colon form → hit', () => {
     expect(canonicalLookup('anthropic:claude-opus-4-8')).toEqual({ input: 5.0, output: 25.0 });
+  });
+
+  test('official OpenAI Codex provider alias → hit', () => {
+    expect(canonicalLookup('openai-codex:gpt-5.6-luna')).toEqual({ input: 1.0, output: 6.0 });
   });
 
   test('slash form → hit', () => {

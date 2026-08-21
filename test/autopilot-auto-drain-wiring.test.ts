@@ -39,6 +39,11 @@ describe('autopilot auto-drain wiring', () => {
     expect(SRC).toContain('maxJobsToday');
   });
 
+  test('supports an explicit override when the declared phase is too slow for backlog recovery', () => {
+    expect(SRC).toContain('autopilot.auto_drain.force_when_declared');
+    expect(SRC).toContain('!declares || forceWhenDeclared');
+  });
+
   test('is Postgres-gated (PGLite has no worker surface)', () => {
     expect(SRC).toMatch(/engine\.kind === 'postgres'[\s\S]{0,400}auto_drain/);
   });

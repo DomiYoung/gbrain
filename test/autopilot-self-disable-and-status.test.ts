@@ -16,6 +16,7 @@ import {
   autopilotStatusExitCode,
   autopilotLaunchdLabel,
   autopilotEngineIdentity,
+  resolveInstalledAutopilotIntervalSeconds,
   AUTOPILOT_SYSTEMD_UNIT,
 } from '../src/commands/autopilot.ts';
 
@@ -199,6 +200,12 @@ describe('classifyAutopilotStatus', () => {
     });
     expect(stray.state).toBe('not_installed');
     expect(autopilotStatusExitCode(stray.state)).toBe(0);
+  });
+});
+
+describe('resolveInstalledAutopilotIntervalSeconds', () => {
+  test('reads a positive installed interval or returns a safe fallback', () => {
+    expect(resolveInstalledAutopilotIntervalSeconds(777)).toBeGreaterThan(0);
   });
 });
 

@@ -42,7 +42,7 @@ import {
   classifyFactsAbsorbError,
   _resetFactsAbsorbDisconnectedFlagForTests,
 } from '../src/core/facts/absorb-log.ts';
-import { factsAbsorbShouldRetry } from '../src/commands/jobs.ts';
+import { factsAbsorbShouldDeadLetter, factsAbsorbShouldRetry } from '../src/commands/jobs.ts';
 import { markShortLivedCliProcess, __resetShortLivedCliForTests } from '../src/core/facts/cli-process-mode.ts';
 import type { BrainEngine } from '../src/core/engine.ts';
 
@@ -218,9 +218,35 @@ describe('transport-class failures throw typed', () => {
     // failed-retry loop on every page write.
     expect(factsAbsorbShouldRetry(unavailable, 'keyless')).toBe(false);
     expect(factsAbsorbShouldRetry({ mode: 'inline', inserted: 2, duplicate: 0, superseded: 0, fact_ids: [1, 2] }, 'keyed')).toBe(false);
-    // refusal/malformed are NOT retryable drift — they logged and returned.
+    // refusal is not retryable drift.
     expect(factsAbsorbShouldRetry({ mode: 'inline', inserted: 0, duplicate: 0, superseded: 0, fact_ids: [], skipped_reason: 'malformed_output' }, 'keyed')).toBe(false);
     expect(factsAbsorbShouldRetry({ mode: 'queue', enqueued: true, queueDepth: 0 }, 'keyed')).toBe(false);
+  });
+
+  test('malformed output is a visible terminal job failure, not a successful zero-insert result', () => {
+    expect(factsAbsorbShouldDeadLetter({
+      mode: 'inline',
+      inserted: 0,
+      duplicate: 0,
+      superseded: 0,
+      fact_ids: [],
+      skipped_reason: 'malformed_output',
+    })).toBe(true);
+    expect(factsAbsorbShouldDeadLetter({
+      mode: 'inline',
+      inserted: 0,
+      duplicate: 0,
+      superseded: 0,
+      fact_ids: [],
+      skipped_reason: 'chat_unavailable',
+    })).toBe(false);
+    expect(factsAbsorbShouldDeadLetter({
+      mode: 'inline',
+      inserted: 2,
+      duplicate: 0,
+      superseded: 0,
+      fact_ids: [1, 2],
+    })).toBe(false);
   });
 
   test('classifyUnavailable: keyed when any chat key or servable model exists; keyless otherwise', async () => {

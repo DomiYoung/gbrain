@@ -115,4 +115,24 @@ describe('parseExtractorJson — B1 parser-pin (v0.31.2 ship-blocker fix)', () =
     expect(parsed).not.toBeNull();
     expect(parsed![0].notability).toBe('high');
   });
+
+  test('extracts nested facts JSON after leading prose', () => {
+    const payload = JSON.stringify({
+      facts: [{ fact: 'nested payload', kind: 'fact', entity: 'people/example' }],
+    });
+    const parsed = parseExtractorJson(`Here is the structured result:\n${payload}`);
+    expect(parsed).toEqual([
+      expect.objectContaining({ fact: 'nested payload', kind: 'fact', entity: 'people/example' }),
+    ]);
+  });
+
+  test('extracts JSON before trailing prose and ignores braces inside strings', () => {
+    const payload = JSON.stringify({
+      facts: [{ fact: 'The template uses {braces} literally', kind: 'fact' }],
+    });
+    const parsed = parseExtractorJson(`${payload}\nDone.`);
+    expect(parsed).toEqual([
+      expect.objectContaining({ fact: 'The template uses {braces} literally' }),
+    ]);
+  });
 });
