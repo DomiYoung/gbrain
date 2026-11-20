@@ -345,11 +345,25 @@ export async function submitDatabaseMaintenanceIntent(engine: BrainEngine, autho
 
 /** The dream provenance stamp of a maintenance output page's frontmatter (seat null drops a seat an earlier run stamped). */
 export function maintenanceStampFrontmatter(frontmatter: Record<string, unknown>, cycleDate: string, rawSource?: string, rawTraceExemptReason?: string,
-  seat?: string | null): Record<string, unknown> {
+  seat?: string | null, stamp?: { ingestedAt?: string; ownerMember?: string | null }): Record<string, unknown> {
   const firstDate = frontmatter.dream_created_cycle_date || frontmatter.dream_cycle_date || cycleDate;
   const { seat: _staleSeat, ...kept } = frontmatter;
+  // cal9: a caller finalizing a page through the managed maintenance path
+  // (which never runs the put_page provenance stamp) may pass `stamp` to
+  // backfill the ingest keys and the owner posture, absent-only: a value the
+  // page already carries is never overwritten. Callers that pass no stamp
+  // get exactly the upstream shape.
+  const ingest = stamp?.ingestedAt ? {
+    ...(frontmatter.ingested_at === undefined ? { ingested_at: stamp.ingestedAt } : {}),
+    ...(frontmatter.source_kind === undefined ? { source_kind: 'put_page' } : {}),
+    ...(frontmatter.ingested_via === undefined ? { ingested_via: 'put_page' } : {}),
+  } : {};
+  const posture = stamp?.ownerMember ? {
+    ...(frontmatter.visibility === undefined ? { visibility: 'private' } : {}),
+    ...(frontmatter.readable_by === undefined ? { readable_by: [`member:${stamp.ownerMember}`] } : {}),
+  } : {};
   return { ...(seat === null ? kept : frontmatter), dream_generated: true,
-    dream_cycle_date: firstDate, dream_created_cycle_date: firstDate, ...(rawSource ? { raw_source: rawSource } : {}),
+    dream_cycle_date: firstDate, dream_created_cycle_date: firstDate, ...ingest, ...posture, ...(rawSource ? { raw_source: rawSource } : {}),
     ...(rawTraceExemptReason ? { raw_trace_exempt: true, raw_trace_exempt_reason: rawTraceExemptReason } : {}),
     ...(seat ? { seat } : {}) };
 }

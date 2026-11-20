@@ -1,4 +1,5 @@
 import { maintenancePreflight, maintenanceStampFrontmatter, publishMaintenancePages, stampTarget, verifyMaintenanceOutputs, type MaintenanceAuthority } from '../persistence/prepared-maintenance.ts';
+import { ownerMemberId } from '../access/owner.ts';
 import { digest } from '../persistence/digest.ts';
 import { managedPersistenceEnabled } from '../persistence/ownership.ts';
 /**
@@ -818,12 +819,13 @@ async function stampProvenance(engine: BrainEngine, maintenance: MaintenanceAuth
   if (!due.length) return;
   throwIfAborted(signal, '[dream] patterns provenance');
   const pages: Array<{ slug: string; content: string; expectedRevision: string | null; derivation: DerivationDeclaration }> = [];
+  const ownerMember = await ownerMemberId(engine);
   for (const ref of due) {
     const staging = staged.get(ref.slug);
     const snapshot = staging !== undefined
       ? stagedSnapshot(staging, ref.slug, await engine.readPageSnapshot(ref.slug, { sourceId: maintenance.writer.sourceId }))
       : await stampTarget(engine, maintenance, ref.slug);
-    const page = { ...snapshot.page, frontmatter: maintenanceStampFrontmatter(snapshot.page.frontmatter, cycleDate, undefined, stamp.reason, stamp.seat) };
+    const page = { ...snapshot.page, frontmatter: maintenanceStampFrontmatter(snapshot.page.frontmatter, cycleDate, undefined, stamp.reason, stamp.seat, { ingestedAt: new Date().toISOString(), ownerMember }) };
     pages.push({ slug: ref.slug, content: serializePageToMarkdown(page, snapshot.tags), expectedRevision: snapshot.revision, derivation: derivation.declaration });
   }
   // G6: the run's stamps are one maintenance batch (one publication group on Postgres).
@@ -872,6 +874,7 @@ export async function groundPatternPages(engine: BrainEngine, maintenance: Maint
   };
   // G6: a managed brain publishes the run's grounded pages as one maintenance batch, after every page is grounded.
   const batch: Array<{ slug: string; contentHash: string | null; content: string; expectedRevision: string | null; derived?: Derivation & { declaration: DerivationDeclaration } }> = [];
+  const stampOwnerMember = maintenance && stamp ? await ownerMemberId(engine) : null;
   for (const slug of slugs) {
     throwIfAborted(signal, '[dream] patterns quote verify');
     let contentHash: string | null = null;
@@ -891,7 +894,7 @@ export async function groundPatternPages(engine: BrainEngine, maintenance: Maint
       stats.repaired += ct.normalized + ct.near + tl.normalized + tl.near;
       // #6236: the reflection list is stored once per page (lossless), not on every claim.
       // G6: a page this run wrote takes its provenance stamp in the grounded publication (managed only; stampProvenance skips it).
-      const stamped = maintenance && stamp && derived ? maintenanceStampFrontmatter(snapshot.page.frontmatter, cycleDate, undefined, stamp.reason, stamp.seat) : snapshot.page.frontmatter;
+      const stamped = maintenance && stamp && derived ? maintenanceStampFrontmatter(snapshot.page.frontmatter, cycleDate, undefined, stamp.reason, stamp.seat, { ingestedAt: new Date().toISOString(), ownerMember: stampOwnerMember }) : snapshot.page.frontmatter;
       const { frontmatter } = withClaimSources({ ...stamped, quote_verified_at: cycleDate },
         quarantined.map(c => ({ ...c, detected_at: cycleDate })), sources.map(x => x.path));
       const page = { ...snapshot.page,
