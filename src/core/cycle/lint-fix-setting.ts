@@ -54,3 +54,63 @@ export async function cycleLintExcludes(engine?: BrainEngine | null): Promise<st
   const raw = await engine?.getConfig(CYCLE_LINT_EXCLUDE_KEY).catch(() => null) ?? '';
   return raw.split(',').map(s => s.trim()).filter(name => name && !/[\\/]/.test(name));
 }
+
+export const CYCLE_LINT_SUPPRESS_KEY = 'cycle.lint_suppress';
+
+/** The suppression key for one lint finding: `slug|rule`. */
+export function lintSuppressionKey(slug: string, rule: string): string {
+  return `${slug}|${rule}`;
+}
+
+const LINT_SUPPRESS_RULE = /^[a-z0-9-]+$/;
+
+function parseLintSuppressEntry(entry: string): string | null {
+  const parts = entry.split('|');
+  if (parts.length !== 2) return null;
+  const [slug, rule] = parts;
+  if (!slug || /[\s,]/.test(slug) || !LINT_SUPPRESS_RULE.test(rule)) return null;
+  return lintSuppressionKey(slug, rule);
+}
+
+/**
+ * `cycle.lint_suppress` is a comma-separated list of `slug|rule` pairs naming
+ * individual lint findings the operator has reviewed and acknowledged. The
+ * cycle's lint phase scans and fixes exactly as upstream; a finding whose
+ * pair is listed counts as suppressed instead of remaining, so an
+ * acknowledged finding does not hold the phase at warn forever. `config set`
+ * refuses a malformed entry (not exactly one `|`, an empty slug or one with
+ * whitespace, or a rule outside [a-z0-9-]).
+ */
+export function parseCycleLintSuppress(raw: string): string[] {
+  const entries = raw.split(',').map(s => s.trim()).filter(Boolean);
+  const keys: string[] = [];
+  for (const entry of entries) {
+    const key = parseLintSuppressEntry(entry);
+    if (key === null) {
+      throw opError('invalid_params', `Invalid ${CYCLE_LINT_SUPPRESS_KEY}: expected comma-separated slug|rule pairs.`,
+        `Set ${CYCLE_LINT_SUPPRESS_KEY} to findings to acknowledge, for example: gbrain config set ${CYCLE_LINT_SUPPRESS_KEY} 'concepts/example|empty-section'`, {
+          why: 'The lint phase matches each entry against one finding at a time, so a malformed entry would never apply. Nothing was written.',
+          fix: {
+            argv: ['gbrain', 'config', 'set', CYCLE_LINT_SUPPRESS_KEY, '<PAIRS>'],
+            inputs: [{ name: 'PAIRS', how: 'Comma-separated slug|rule pairs; the slug is the page slug and the rule is the lint rule id (lowercase letters, digits, dashes); ask the user when unclear.' }],
+            consent: [], actor: 'agent', requires_exclusive: false,
+            why: 'The next lint phase counts the listed findings as acknowledged instead of remaining.',
+            verify: { argv: ['gbrain', 'config', 'get', CYCLE_LINT_SUPPRESS_KEY] },
+          },
+        });
+    }
+    keys.push(key);
+  }
+  return keys;
+}
+
+/** The acknowledged lint findings; an unreadable setting or a malformed entry (written with --force) contributes nothing (fail-open to upstream behavior). */
+export async function cycleLintSuppressions(engine?: BrainEngine | null): Promise<Set<string>> {
+  const raw = await engine?.getConfig(CYCLE_LINT_SUPPRESS_KEY).catch(() => null) ?? '';
+  const keys = new Set<string>();
+  for (const entry of raw.split(',').map(s => s.trim()).filter(Boolean)) {
+    const key = parseLintSuppressEntry(entry);
+    if (key !== null) keys.add(key);
+  }
+  return keys;
+}

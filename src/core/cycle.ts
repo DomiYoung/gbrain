@@ -1092,7 +1092,7 @@ function checkAborted(signal?: AbortSignal): void {
 // going through runCycle's full setup cost.
 export async function runPhaseLint(brainDir: string, dryRun: boolean, engine?: BrainEngine | null, signal?: AbortSignal, sourceId?: string, opts: { once?: boolean } = {}): Promise<PhaseResult> {
   try {
-    const [{ runLintCore }, { cycleLintFixEnabled, cycleLintExcludes, cycleLintPhaseEnabled }] = await Promise.all([import('../commands/lint.ts'), import('./cycle/lint-fix-setting.ts')]);
+    const [{ runLintCore }, { cycleLintFixEnabled, cycleLintExcludes, cycleLintPhaseEnabled, cycleLintSuppressions, lintSuppressionKey }, { pathToSlug }] = await Promise.all([import('../commands/lint.ts'), import('./cycle/lint-fix-setting.ts'), import('./sync.ts')]);
     // #6369: `cycle.lint.enabled=false` skips the phase before any scan; `dream --phase lint --once` bypasses it.
     if (!opts.once && !(await cycleLintPhaseEnabled(engine))) {
       return { phase: 'lint', status: 'skipped', duration_ms: 0, summary: 'lint skipped: cycle.lint.enabled=false', details: { reason: 'disabled', enable_hint: 'gbrain config set cycle.lint.enabled true' } };
@@ -1102,11 +1102,27 @@ export async function runPhaseLint(brainDir: string, dryRun: boolean, engine?: B
     // competing module-style engine that nulls the shared db singleton
     // mid-cycle (which broke every phase after lint with a misleading
     // "connect() has not been called").
-    const [lintFix, exclude] = await Promise.all([cycleLintFixEnabled(engine), cycleLintExcludes(engine)]); // `cycle.lint_fix=false`: report-only; #6134 `cycle.lint_exclude`
-    const result = await runLintCore({ target: brainDir, fix: lintFix, dryRun, engine: engine ?? undefined, signal, sourceId, exclude }); // #5180: sourceId scopes the managed-brain coordinator write path
+    const [lintFix, exclude, suppressions] = await Promise.all([cycleLintFixEnabled(engine), cycleLintExcludes(engine), cycleLintSuppressions(engine)]); // `cycle.lint_fix=false`: report-only; #6134 `cycle.lint_exclude`
+    // `cycle.lint_suppress`: acknowledged findings (slug|rule pairs) count as
+    // suppressed instead of remaining. Scan and fix behavior is unchanged;
+    // the per-page hook is attached only when the list is non-empty.
+    let suppressed = 0;
+    const onPageIssues = suppressions.size === 0 ? undefined : (relPath: string, pageIssues: { rule: string; fixable: boolean }[], pageFixed: number) => {
+      const slug = pathToSlug(relPath);
+      let matchedUnfixable = 0;
+      let matchedFixable = 0;
+      for (const issue of pageIssues) {
+        if (!suppressions.has(lintSuppressionKey(slug, issue.rule))) continue;
+        if (issue.fixable) matchedFixable++; else matchedUnfixable++;
+      }
+      if (matchedUnfixable + matchedFixable === 0) return;
+      const pageRemaining = Math.max(0, pageIssues.length - pageFixed);
+      suppressed += Math.min(pageRemaining, matchedUnfixable + Math.max(0, matchedFixable - pageFixed));
+    };
+    const result = await runLintCore({ target: brainDir, fix: lintFix, dryRun, engine: engine ?? undefined, signal, sourceId, exclude, onPageIssues }); // #5180: sourceId scopes the managed-brain coordinator write path
     const issues = result.total_issues ?? 0;
     const fixed = result.total_fixed ?? 0;
-    const remaining = Math.max(0, issues - fixed);
+    const remaining = Math.max(0, issues - fixed - suppressed);
     // 'ok' when nothing noteworthy remains:
     //   - no issues at all, or
     //   - non-dry-run and everything fixable was fixed.
@@ -1116,10 +1132,10 @@ export async function runPhaseLint(brainDir: string, dryRun: boolean, engine?: B
       phase: 'lint',
       status,
       duration_ms: 0, // set by caller
-      summary: dryRun
+      summary: (dryRun
         ? `${issues} issue(s) found (dry-run, no writes)`
-        : lintFix ? `${fixed} fix(es) applied, ${remaining} remaining` : `${issues} issue(s) found (report-only: cycle.lint_fix=false)`,
-      details: { issues, fixed, pages_scanned: result.pages_scanned, dryRun, lint_fix: lintFix, excluded: exclude, write_path: result.write_path, fix_pending: result.fix_pending, ...(result.pending_issues?.length ? { pending: result.pending_issues } : {}) },
+        : lintFix ? `${fixed} fix(es) applied, ${remaining} remaining` : `${issues} issue(s) found (report-only: cycle.lint_fix=false)`) + (suppressed > 0 ? `, ${suppressed} suppressed (acknowledged)` : ''),
+      details: { issues, fixed, pages_scanned: result.pages_scanned, dryRun, lint_fix: lintFix, excluded: exclude, write_path: result.write_path, fix_pending: result.fix_pending, ...(suppressions.size ? { suppressed, lint_suppress_entries: suppressions.size } : {}), ...(result.pending_issues?.length ? { pending: result.pending_issues } : {}) },
     };
   } catch (e) {
     return {

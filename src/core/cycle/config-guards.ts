@@ -1,20 +1,21 @@
 /**
  * Fix wave 11 `config set` guards for cycle keys that are not numeric phase
  * knobs (those live in phase-config-values.ts): `cycle.lint_exclude` refuses
- * a path (#6134), `dream.patterns.last_run` is state the patterns phase
+ * a path (#6134), `cycle.lint_suppress` refuses a malformed slug|rule pair, `dream.patterns.last_run` is state the patterns phase
  * records, so it can only be unset (#6177), and `dream.attribution_checks`
  * takes a boolean word (#5425). Each throws an `invalid_params`
  * OperationError whose fix is a real command; nothing is written.
  */
 import { opError } from '../ops/contract.ts';
-import { CYCLE_LINT_EXCLUDE_KEY, parseCycleLintExclude } from './lint-fix-setting.ts';
+import { CYCLE_LINT_EXCLUDE_KEY, CYCLE_LINT_SUPPRESS_KEY, parseCycleLintExclude, parseCycleLintSuppress } from './lint-fix-setting.ts';
 import { PATTERNS_LAST_RUN_KEY } from './patterns-plan.ts';
 import { ATTRIBUTION_CHECKS_KEY, parseAttributionChecks } from './attribution-checks.ts';
 
-export const CYCLE_GUARDED_KEYS: readonly string[] = [CYCLE_LINT_EXCLUDE_KEY, PATTERNS_LAST_RUN_KEY, ATTRIBUTION_CHECKS_KEY];
+export const CYCLE_GUARDED_KEYS: readonly string[] = [CYCLE_LINT_EXCLUDE_KEY, CYCLE_LINT_SUPPRESS_KEY, PATTERNS_LAST_RUN_KEY, ATTRIBUTION_CHECKS_KEY];
 
 export function assertCycleConfigValue(key: string, value: string): void {
   if (key === CYCLE_LINT_EXCLUDE_KEY) { parseCycleLintExclude(value); return; }
+  if (key === CYCLE_LINT_SUPPRESS_KEY) { parseCycleLintSuppress(value); return; }
   if (key === ATTRIBUTION_CHECKS_KEY) {
     if (parseAttributionChecks(value) !== null) return;
     throw opError('invalid_params', `Invalid ${ATTRIBUTION_CHECKS_KEY}: expected true or false.`,
