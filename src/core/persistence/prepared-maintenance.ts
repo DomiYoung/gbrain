@@ -33,6 +33,7 @@ import type { PreparedMutation } from './coordinator.ts';
 import { withTrustKeep } from './context.ts';
 import { isTerminal, type WriteAuthority, type WriteRequest } from './model.ts';
 import { authorizePageVisibility } from './page-visibility.ts';
+import type { CallerAccess } from '../search/private-visibility.ts';
 import { nativeLockCapability } from './native-lock.ts';
 import { assertPhysicalRoot } from './physical-root.ts';
 import { isConnectorSourceKind } from './connector-identity.ts';
@@ -435,6 +436,62 @@ export async function readFacts(engine: BrainEngine, sourceId: string, ids: numb
   return rows.map(row => ({ ...row, id: Number(row.id) }));
 }
 
+
+export const CONSOLIDATE_OWNER_EVIDENCE_READS_KEY = 'cycle.consolidate.owner_evidence_reads';
+
+/**
+ * cal7 (carried patch; governance-admin paradigm): the owner caller-access
+ * record for the consolidation evidence reads in this module, or null when
+ * the gate is off or no live owner exists.
+ *
+ * The cycle runs with an empty caller identity by upstream design, so the
+ * two evidence snapshot reads (submitMaintenanceConsolidation below and the
+ * consolidation validate in prepareMaintenanceKind) evaluate as an unnamed
+ * remote visitor and can never see an owner-private entity page: every
+ * cluster on such a page fails page_not_found, structurally, forever. This
+ * helper assembles the owner record at the read point from upstream's own
+ * functions (ownerMemberId -> memberIdentity, which refuses a disabled or
+ * removed member -> folderAccessFor), in the shape of the local owner
+ * record (cli/as-preview): the owner flag relaxes only the privacy part;
+ * the member part (readable_by, folder rules) applies unchanged, and
+ * lineage stays off so ownerReadsRestricted can never take effect. The
+ * record exists only inside the withCallerAccess scope of those two reads;
+ * it is never installed on the cycle, the phase or the write authority.
+ *
+ * The gate is a permission-relaxing switch, so it fails closed: only an
+ * explicit stored `true` opens it, and any failure (config unreadable,
+ * owner unset or ill-formed, member not live) returns null, which is
+ * exactly today's behavior. Use is auditable after the fact: a submission
+ * whose evidence was read under this record carries
+ * `evidence_access: 'owner'` in its journal intent, and the publish-time
+ * read re-derives the record only for intents carrying that marker.
+ */
+export async function ownerEvidenceAccess(engine: BrainEngine): Promise<Partial<CallerAccess> | null> {
+  try {
+    const raw = await engine.getConfig(CONSOLIDATE_OWNER_EVIDENCE_READS_KEY).catch(() => null);
+    if (raw?.trim().toLowerCase() !== 'true') return null;
+    const { ownerMemberId } = await import('../access/owner.ts');
+    const owner = await ownerMemberId(engine);
+    if (!owner) return null;
+    const { memberIdentity } = await import('../access/members.ts');
+    const { identity } = await memberIdentity(engine, owner);
+    const { folderAccessFor } = await import('../access/caller.ts');
+    const folder = await folderAccessFor(engine, identity);
+    return { identity, ...folder, owner: true, hidePrivate: false, lineage: false, ownerReadsRestricted: false,
+      privateReadableSources: [], privateFactSources: [], audienceKindMembers: [], labelledOnly: false };
+  } catch {
+    return null;
+  }
+}
+
+/** One evidence snapshot read under the owner record when one was assembled; otherwise exactly the upstream read. */
+async function readEvidenceSnapshot(engine: Pick<BrainEngine, 'readPageSnapshot'>, access: Partial<CallerAccess> | null,
+  slug: string, sourceId: string) {
+  if (!access) return engine.readPageSnapshot(slug, { sourceId, excludePrivate: true });
+  const { withCallerAccess } = await import('../search/private-visibility.ts');
+  return withCallerAccess(access, () => engine.readPageSnapshot(slug, { sourceId, excludePrivate: true }));
+}
+
 export async function submitMaintenanceConsolidation(engine: BrainEngine, authority: MaintenanceAuthority,
   slug: string, cluster: FactRow[], take: { claim: string; weight: number; source: string; since: string },
   derivation?: DerivationDeclaration): Promise<Record<string, unknown>> {
@@ -454,14 +511,15 @@ export async function submitMaintenanceConsolidation(engine: BrainEngine, author
     }
   }
   const pages: EvidencePage[] = [];
+  const evidenceAccess = await ownerEvidenceAccess(engine);
   for (const pageSlug of [...new Set([slug, ...facts.map(f => f.value.source_markdown_slug).filter((s): s is string => typeof s === 'string' && !!s)])].sort()) {
-    const snapshot = await engine.readPageSnapshot(pageSlug, { sourceId, excludePrivate: true });
+    const snapshot = await readEvidenceSnapshot(engine, evidenceAccess, pageSlug, sourceId);
     if (!snapshot) throw opError('page_not_found', 'The consolidation evidence page is unavailable.',
       `Evidence page ${pageSlug} in '${sourceId}' was deleted or made private after clustering; nothing was submitted. The next consolidate run re-clusters without it.`);
     pages.push({ slug: pageSlug, revision: snapshot.revision, id: snapshot.page.id });
   }
   const target = pages.find(p => p.slug === slug)!;
-  const intent = { kind: 'managed_maintenance_consolidate', expected_revision: target.revision, facts, pages, ...take, ...(derivation ? { derivation } : {}) };
+  const intent = { kind: 'managed_maintenance_consolidate', expected_revision: target.revision, facts, pages, ...take, ...(evidenceAccess ? { evidence_access: 'owner' } : {}), ...(derivation ? { derivation } : {}) };
   const requestId = maintenanceRequestId({ source: authority.writer.sourceIncarnation, slug, intent });
   return submitMaintenance(engine, authority, slug, intent, requestId);
 }
@@ -775,6 +833,7 @@ async function prepareMaintenanceKind(engine: BrainEngine, row: WriteRequest, co
   const p = row.intent;
   const facts = p.facts as FactSnapshot[];
   const pages = p.pages as EvidencePage[];
+  const validateEvidenceAccess = p.evidence_access === 'owner' ? await ownerEvidenceAccess(engine) : null;
   if (sameInstantTies(facts.map(f => ({ id: f.id, at: Date.parse(String(f.value.valid_from)), metric: (f.value.claim_metric as string | null) ?? null,
     unit: (f.value.claim_unit as string | null) ?? null, period: (f.value.claim_period as string | null) ?? null }))).length) {
     return { observedRevision: p.expected_revision as string, noop: true, apply: async () => ({ status: 'skipped', reason: 'same_instant_typed_claims', noop: true,
@@ -821,7 +880,7 @@ async function prepareMaintenanceKind(engine: BrainEngine, row: WriteRequest, co
     validate: async tx => {
       await prepared.validate?.(tx);
       for (const page of pages) {
-        const current = await tx.readPageSnapshot(page.slug, { sourceId: row.source_id, excludePrivate: true });
+        const current = await readEvidenceSnapshot(tx, validateEvidenceAccess, page.slug, row.source_id);
         if (!current || current.page.id !== page.id || current.revision !== page.revision) {
           throw opError('revision_conflict', 'A consolidation evidence page changed.',
             `Evidence page ${page.slug} in ${row.source_id} changed while consolidation request ${row.request_id} was being prepared; nothing was written. The next consolidate run re-clusters from the current pages.`,
