@@ -1631,6 +1631,7 @@ export const KNOWN_CONFIG_KEYS: readonly string[] = [
   'cycle.consolidate.enabled', // #6667: default on; read in cycle/phases/consolidate.ts
   'cycle.consolidate.cluster_threshold', // #5363: (0, 1], default 0.85; read + validated in cycle/phases/consolidate.ts
   'cycle.consolidate.owner_evidence_reads', // carried patch (realign-748 cal7): default off, explicit true only; persistence/prepared-maintenance.ts ownerEvidenceAccess
+  'cycle.consolidate.owner_private_facts', // carried patch (cal13): default off, explicit true only; persistence/prepared-maintenance.ts privateClusterEligible + cycle/phases/consolidate.ts
   // A11: IANA timezone for offset-less frontmatter datetimes in effective_date.
   // Unset → UTC (date-only values are always UTC calendar dates). Validated at set time.
   'brain.timezone',

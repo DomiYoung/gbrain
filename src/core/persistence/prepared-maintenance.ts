@@ -492,12 +492,87 @@ async function readEvidenceSnapshot(engine: Pick<BrainEngine, 'readPageSnapshot'
   return withCallerAccess(access, () => engine.readPageSnapshot(slug, { sourceId, excludePrivate: true }));
 }
 
+export const CONSOLIDATE_OWNER_PRIVATE_FACTS_KEY = 'cycle.consolidate.owner_private_facts';
+
+/**
+ * cal13 (carried patch; governance-admin paradigm, follows cal7): the
+ * owner-private facts carve-out for consolidation writes. Upstream
+ * requires every consolidated fact to be world-visible at submit and at
+ * publish, so the phase-side gate in cycle/phases/consolidate.ts would be
+ * useless on its own: clusters of owner-private facts are refused here.
+ * A cluster qualifies only when it is homogeneous (every fact private),
+ * the gate key stores an explicit `true`, an owner member is configured,
+ * and the target page is itself owner-private
+ * (pageAllowsOwnerPrivateFacts). The submit check below stamps
+ * `private_facts: 'owner'` into the intent, and the publish-time
+ * validate re-derives this check for stamped intents, so closing the
+ * gate in between fails the publication closed. Every failure here
+ * returns false, which is exactly upstream behavior.
+ */
+export async function ownerPrivateFactsEnabled(engine: BrainEngine): Promise<boolean> {
+  try {
+    const raw = await engine.getConfig(CONSOLIDATE_OWNER_PRIVATE_FACTS_KEY).catch(() => null);
+    return raw?.trim().toLowerCase() === 'true';
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Whether an entity page's posture can receive owner-private facts: the
+ * page must itself be private, and its named readers (frontmatter
+ * readable_by and/or the page_readers column) must either be absent
+ * (owner-private by default) or include the owner. A page readable by
+ * others but not the owner (a family member's own page) never qualifies:
+ * governance may organize it, but consolidation under the owner's
+ * authority does not touch it.
+ */
+export function pageAllowsOwnerPrivateFacts(
+  page: { frontmatter?: unknown; page_readers?: unknown },
+  ownerMember: string | null,
+): boolean {
+  if (!ownerMember) return false;
+  const fm = (page.frontmatter ?? {}) as { visibility?: unknown; readable_by?: unknown };
+  if (fm.visibility !== 'private') return false;
+  const readers = new Set<string>();
+  if (Array.isArray(page.page_readers)) for (const r of page.page_readers) readers.add(String(r));
+  if (Array.isArray(fm.readable_by)) for (const r of fm.readable_by) readers.add(String(r));
+  if (readers.size === 0) return true;
+  return readers.has(`member:${ownerMember}`);
+}
+
+export async function privateClusterEligible(
+  engine: BrainEngine,
+  sourceId: string,
+  slug: string,
+  visibilities: string[],
+): Promise<boolean> {
+  try {
+    if (visibilities.length === 0 || !visibilities.every(v => v === 'private')) return false;
+    if (!await ownerPrivateFactsEnabled(engine)) return false;
+    const { ownerMemberId } = await import('../access/owner.ts');
+    const owner = await ownerMemberId(engine);
+    if (!owner) return false;
+    const rows = await engine.executeRaw<{ frontmatter: unknown; page_readers: unknown }>(
+      `SELECT frontmatter, page_readers FROM pages WHERE source_id = $1 AND slug = $2 AND deleted_at IS NULL LIMIT 1`,
+      [sourceId, slug]);
+    return rows.length > 0 && pageAllowsOwnerPrivateFacts(rows[0], owner);
+  } catch {
+    return false;
+  }
+}
+
 export async function submitMaintenanceConsolidation(engine: BrainEngine, authority: MaintenanceAuthority,
   slug: string, cluster: FactRow[], take: { claim: string; weight: number; source: string; since: string },
   derivation?: DerivationDeclaration): Promise<Record<string, unknown>> {
   const sourceId = authority.writer.sourceId;
   const facts = await readFacts(engine, sourceId, cluster.map(f => f.id));
-  if (facts.length !== cluster.length || facts.some(f => f.value.visibility !== 'world' || f.value.expired_at || f.value.consolidated_at)) {
+  // cal13: a homogeneous all-private cluster may proceed under the
+  // owner-private gate (posture re-checked here at the write point, not
+  // trusted from the phase); the intent is stamped below so the
+  // publish-time validate re-derives the carve-out.
+  const privateFactsOk = await privateClusterEligible(engine, sourceId, slug, facts.map(f => String(f.value.visibility)));
+  if (facts.length !== cluster.length || facts.some(f => (f.value.visibility !== 'world' && !(privateFactsOk && f.value.visibility === 'private')) || f.value.expired_at || f.value.consolidated_at)) {
     throw opError('revision_conflict', 'The consolidation facts are no longer eligible.',
       `Facts on ${slug} in '${sourceId}' were expired, consolidated or made private after clustering; nothing was submitted. The next consolidate run re-clusters the current facts.`);
   }
@@ -519,7 +594,7 @@ export async function submitMaintenanceConsolidation(engine: BrainEngine, author
     pages.push({ slug: pageSlug, revision: snapshot.revision, id: snapshot.page.id });
   }
   const target = pages.find(p => p.slug === slug)!;
-  const intent = { kind: 'managed_maintenance_consolidate', expected_revision: target.revision, facts, pages, ...take, ...(evidenceAccess ? { evidence_access: 'owner' } : {}), ...(derivation ? { derivation } : {}) };
+  const intent = { kind: 'managed_maintenance_consolidate', expected_revision: target.revision, facts, pages, ...take, ...(evidenceAccess ? { evidence_access: 'owner' } : {}), ...(privateFactsOk ? { private_facts: 'owner' } : {}), ...(derivation ? { derivation } : {}) };
   const requestId = maintenanceRequestId({ source: authority.writer.sourceIncarnation, slug, intent });
   return submitMaintenance(engine, authority, slug, intent, requestId);
 }
@@ -834,6 +909,13 @@ async function prepareMaintenanceKind(engine: BrainEngine, row: WriteRequest, co
   const facts = p.facts as FactSnapshot[];
   const pages = p.pages as EvidencePage[];
   const validateEvidenceAccess = p.evidence_access === 'owner' ? await ownerEvidenceAccess(engine) : null;
+  // cal13: re-derive the owner-private carve-out at prepare time for
+  // intents stamped at submit (same placement as cal7's record above);
+  // the validate closure only reads this boolean, because an engine
+  // query inside the publication transaction can deadlock the engine.
+  const validatePrivateFacts = p.private_facts === 'owner'
+    ? await privateClusterEligible(engine, row.source_id, row.slug, facts.map(f => String(f.value.visibility)))
+    : false;
   if (sameInstantTies(facts.map(f => ({ id: f.id, at: Date.parse(String(f.value.valid_from)), metric: (f.value.claim_metric as string | null) ?? null,
     unit: (f.value.claim_unit as string | null) ?? null, period: (f.value.claim_period as string | null) ?? null }))).length) {
     return { observedRevision: p.expected_revision as string, noop: true, apply: async () => ({ status: 'skipped', reason: 'same_instant_typed_claims', noop: true,
@@ -888,7 +970,10 @@ async function prepareMaintenanceKind(engine: BrainEngine, row: WriteRequest, co
         }
       }
       const current = await readFacts(tx, row.source_id, facts.map(f => f.id), true);
-      if (digest(current) !== digest(facts) || current.some(f => f.value.visibility !== 'world' || f.value.expired_at || f.value.consolidated_at ||
+      // cal13: validatePrivateFacts was re-derived at prepare time for
+      // intents stamped private_facts:'owner'; the digest check below
+      // binds it to these exact facts, so nothing is trusted stale.
+      if (digest(current) !== digest(facts) || current.some(f => (f.value.visibility !== 'world' && !(validatePrivateFacts && f.value.visibility === 'private')) || f.value.expired_at || f.value.consolidated_at ||
         f.value.valid_until && Date.parse(String(f.value.valid_until)) <= Date.now())) {
         throw opError('revision_conflict', 'The consolidation evidence changed.',
           `Facts behind consolidation request ${row.request_id} on ${row.slug} in ${row.source_id} changed or expired before it published; nothing was written. The next consolidate run re-clusters the current facts.`,

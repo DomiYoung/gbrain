@@ -32,7 +32,9 @@ import { sameInstantTies, type SameInstantTie } from '../../facts/claim-ties.ts'
 import { createHash } from 'node:crypto';
 import { isAborted } from '../../abort-check.ts';
 import { classifyItemFailure, ItemRun } from '../../item-failure.ts';
-import { consolidationCloses, maintenancePreflight, submitMaintenanceConsolidation, type MaintenanceAuthority } from '../../persistence/prepared-maintenance.ts';
+import { consolidationCloses, maintenancePreflight, ownerPrivateFactsEnabled, pageAllowsOwnerPrivateFacts, submitMaintenanceConsolidation, type MaintenanceAuthority } from '../../persistence/prepared-maintenance.ts';
+
+export { ownerPrivateFactsEnabled, pageAllowsOwnerPrivateFacts };
 import { clearConsolidationTies, consolidationRestored, factPreimages, holdConsolidationTie, recordConsolidationGeneration } from '../../generations/adapters/fact-rows.ts';
 import { managedPersistenceEnabled } from '../../persistence/ownership.ts';
 import { DreamWriteDeferralPass } from '../dream-write-deferral.ts';
@@ -114,6 +116,29 @@ function sampleBucketFailure(failures: BucketFailure[], failure: BucketFailure):
 }
 
 export const CLUSTER_THRESHOLD_KEY = 'cycle.consolidate.cluster_threshold';
+/**
+ * cal13 (carried patch; governance-admin paradigm, follows cal7): the
+ * phase-side half of the owner-private facts gate. The gate reader, the
+ * posture predicate and the write-point eligibility check live in
+ * persistence/prepared-maintenance.ts (next to cal7) and are imported
+ * above; the rules in brief: on a managed brain, private facts become
+ * candidates only when cycle.consolidate.owner_private_facts stores an
+ * explicit `true`; a private fact is only ever promoted onto its own
+ * entity page, only when that page is itself owner-private; clusters
+ * never mix visibility classes; readers-sourced facts stay excluded.
+ * Gate off is exactly upstream behavior.
+ */
+
+/** The configured owner member id for posture checks, or null (private buckets then never qualify). */
+async function resolveOwnerMember(engine: BrainEngine): Promise<string | null> {
+  try {
+    const { ownerMemberId } = await import('../../access/owner.ts');
+    return await ownerMemberId(engine);
+  } catch {
+    return null;
+  }
+}
+
 export const DEFAULT_CLUSTER_THRESHOLD = 0.85;
 
 /**
@@ -180,11 +205,15 @@ export async function runPhaseConsolidate(
   if (disabled) return disabled;
   const dryRun = opts.dryRun === true;
   const managed = await managedPersistenceEnabled(engine);
+  const privateFactsGate = managed ? await ownerPrivateFactsEnabled(engine) : false;
+  const ownerMember = privateFactsGate ? await resolveOwnerMember(engine) : null;
   const { threshold, thresholdInvalid } = await resolveClusterThreshold(engine, opts.clusterThreshold);
   const minPerBucket = opts.minFactsPerBucket ?? 3;
   const minOldestAgeMs = opts.minOldestAgeMs ?? 24 * 60 * 60 * 1000;
 
   let factsConsolidated = 0;
+  let privateFactsPostureSkipped = 0;
+  let privateFactsConsolidated = 0;
   let takesWritten = 0;
   let bucketsProcessed = 0;
   let bucketsSkipped = 0;
@@ -215,11 +244,11 @@ export async function runPhaseConsolidate(
         AND entity_slug IS NOT NULL
         AND EXISTS (SELECT 1 FROM pages bucket_page WHERE bucket_page.source_id = facts.source_id AND bucket_page.slug = facts.entity_slug AND bucket_page.deleted_at IS NULL)
         AND (attributed_to IS NULL OR attributed_to = 'user')
-        AND ($2::boolean=false OR visibility='world')
+        AND ($2::boolean=false OR visibility='world' OR ($4::boolean=true AND visibility='private'))
         AND ($1::text IS NULL OR source_id=$1) AND NOT ${readersSourcedFactSql('facts')}
       GROUP BY source_id, entity_slug
       HAVING COUNT(*) >= $3
-    `, [opts.sourceId ?? null, managed, minPerBucket]);
+    `, [opts.sourceId ?? null, managed, minPerBucket, privateFactsGate]);
   } catch (err) {
     return {
       phase: 'consolidate',
@@ -259,16 +288,33 @@ export async function runPhaseConsolidate(
       const candidates = await engine.listFactsByEntity(b.source_id, b.entity_slug, {
         activeOnly: true,
         unconsolidatedOnly: true,
-        visibility: managed ? ['world'] : undefined,
+        visibility: managed ? (privateFactsGate ? ['world', 'private'] : ['world']) : undefined,
         limit: 100,
         eligibility: {},
       });
       // Takes here are the user's own (holder 'self'): a claim the assistant or
       // a named third party asserted is never promoted into one.
-      const unconsolidated = (await withoutReadersSourced(engine, candidates)).filter(f => (!managed || f.visibility === 'world') && (!f.attributed_to || f.attributed_to === 'user'));
+      let unconsolidated = (await withoutReadersSourced(engine, candidates)).filter(f => (!managed || f.visibility === 'world' || (privateFactsGate && f.visibility === 'private')) && (!f.attributed_to || f.attributed_to === 'user'));
       if (unconsolidated.length < minPerBucket) {
         bucketsSkipped += 1;
         continue;
+      }
+
+      // cal13: private candidates survive only on an owner-private entity
+      // page; anywhere else they are dropped (never widened) and counted.
+      if (privateFactsGate && unconsolidated.some(f => f.visibility === 'private')) {
+        const postureRows = await engine.executeRaw<{ frontmatter: unknown; page_readers: unknown }>(
+          `SELECT frontmatter, page_readers FROM pages WHERE source_id = $1 AND slug = $2 AND deleted_at IS NULL LIMIT 1`,
+          [b.source_id, b.entity_slug],
+        );
+        if (postureRows.length === 0 || !pageAllowsOwnerPrivateFacts(postureRows[0], ownerMember)) {
+          privateFactsPostureSkipped += unconsolidated.filter(f => f.visibility === 'private').length;
+          unconsolidated = unconsolidated.filter(f => f.visibility !== 'private');
+          if (unconsolidated.length < minPerBucket) {
+            bucketsSkipped += 1;
+            continue;
+          }
+        }
       }
 
       // Age gate: oldest must be at least minOldestAgeMs old.
@@ -285,8 +331,12 @@ export async function runPhaseConsolidate(
       // #5575 ENG-3: a take's tier is the least trusted fact in its cluster, so
       // external facts cluster apart from owner facts and their takes are external.
       const taint = new Map((await readTaintInputs(engine, unconsolidated.map(f => ({ table: 'facts' as const, id: f.id })))).map(i => [Number(i.id), i]));
-      const clusters = [false, true].flatMap(external =>
-        clusterFacts(unconsolidated.filter(f => isExternalTier(taint.get(f.id)!.tier) === external), threshold, claims));
+      // cal13: with the private gate open, clusters never mix visibility
+      // classes: a take's claim text comes from one class only, so a
+      // private fact can never ride into a take alongside world facts.
+      const visClasses: Array<string | null> = privateFactsGate ? ['world', 'private'] : [null];
+      const clusters = [false, true].flatMap(external => visClasses.flatMap(vis =>
+        clusterFacts(unconsolidated.filter(f => isExternalTier(taint.get(f.id)!.tier) === external && (vis === null || (f.visibility ?? 'world') === vis)), threshold, claims)));
 
       // Resolve entity_slug → page_id. If page missing in this source, skip.
       const pageRows = await engine.executeRaw<{ id: number }>(
@@ -328,6 +378,7 @@ export async function runPhaseConsolidate(
           // Pretend we did it.
           takesWritten += 1;
           factsConsolidated += cluster.length;
+          if (cluster[0]?.visibility === 'private') privateFactsConsolidated += cluster.length;
           nextRowNum += 1;
           if (preview.length < DRY_RUN_CLUSTER_CAP) {
             const text = (f: FactRow) => (showPrivate || f.visibility === 'world' ? f.fact : null);
@@ -343,6 +394,7 @@ export async function runPhaseConsolidate(
             declareDerivation(derivation.trust, inputs));
           factsConsolidated += Number(receipt.facts_consolidated ?? 0);
           takesWritten += Number(receipt.takes_written ?? 0);
+          if (cluster[0]?.visibility === 'private') privateFactsConsolidated += Number(receipt.facts_consolidated ?? 0);
           if (receipt.reason === 'retired_take') clustersSkippedRetired++;
           if (receipt.reason === 'same_instant_typed_claims') clustersHeldSameInstant++;
           continue;
@@ -429,6 +481,7 @@ export async function runPhaseConsolidate(
         if (!written?.takeId) continue;
         if (written.created) takesWritten += 1;
         factsConsolidated += cluster.length;
+        if (cluster[0]?.visibility === 'private') privateFactsConsolidated += cluster.length;
       }
       run.succeed();
     } catch (error) {
@@ -458,6 +511,9 @@ export async function runPhaseConsolidate(
       ...(thresholdInvalid !== undefined ? { cluster_threshold_invalid: thresholdInvalid } : {}),
       ...(dryRun ? { clusters: preview } : {}),
       facts_consolidated: factsConsolidated,
+      owner_private_facts_gate: privateFactsGate,
+      private_facts_posture_skipped: privateFactsPostureSkipped,
+      private_facts_consolidated: privateFactsConsolidated,
       takes_written: takesWritten,
       buckets_processed: bucketsProcessed,
       buckets_skipped: bucketsSkipped,
